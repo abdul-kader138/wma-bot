@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Conversation;
 use App\Models\ServiceRequest;
 use App\Services\ClaudeAgent;
+use App\Services\FaqMatcher;
 use App\Services\WhatsAppClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,7 +24,7 @@ class HandleIncomingMessage implements ShouldQueue
 
     public function __construct(public array $value) {}
 
-    public function handle(WhatsAppClient $wa, ClaudeAgent $agent): void
+    public function handle(WhatsAppClient $wa, ClaudeAgent $agent, FaqMatcher $faqs): void
     {
         $msg = $wa->parseIncoming($this->value);
         if (! $msg) {
@@ -73,6 +74,14 @@ class HandleIncomingMessage implements ShouldQueue
 
             case 'IN_SERVICE':
                 $this->appendHistory($convo, 'user', $input);
+
+                if ($faq = $faqs->match($input, $convo->service)) {
+                    $answer = $faq->answerFor($convo->language ?? 'en');
+                    $wa->sendText($phone, $answer);
+                    $this->appendHistory($convo, 'assistant', $answer);
+                    break;
+                }
+
                 $this->runAgent($wa, $agent, $convo, $phone);
                 break;
 

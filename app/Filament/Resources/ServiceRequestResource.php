@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServiceRequestResource\Pages;
+use App\Models\Service;
 use App\Models\ServiceRequest;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,37 +18,51 @@ class ServiceRequestResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
 
-    protected static ?string $navigationLabel = 'Service Requests';
-
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.nav.service_requests');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.service_request.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.service_request.label_plural');
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Request Details')->schema([
+            Forms\Components\Section::make(__('admin.service_request.sections.details'))->schema([
                 Forms\Components\TextInput::make('wa_phone')
-                    ->label('WhatsApp Phone')
+                    ->label(__('admin.service_request.fields.phone'))
                     ->disabled(),
 
                 Forms\Components\TextInput::make('service')
-                    ->label('Service')
+                    ->label(__('admin.service_request.fields.service'))
                     ->disabled(),
 
                 Forms\Components\Select::make('status')
+                    ->label(__('admin.service_request.fields.status'))
                     ->options([
-                        'new'         => 'New',
-                        'in_progress' => 'In Progress',
-                        'done'        => 'Done',
+                        'new'         => __('admin.service_request.status.new'),
+                        'in_progress' => __('admin.service_request.status.in_progress'),
+                        'done'        => __('admin.service_request.status.done'),
                     ])
                     ->required(),
 
                 Forms\Components\KeyValue::make('payload')
-                    ->label('Collected Details')
+                    ->label(__('admin.service_request.fields.payload'))
                     ->disabled()
                     ->columnSpanFull(),
 
                 Forms\Components\Textarea::make('staff_notes')
-                    ->label('Staff Notes')
+                    ->label(__('admin.service_request.fields.staff_notes'))
                     ->rows(4)
                     ->columnSpanFull(),
             ])->columns(2),
@@ -59,11 +74,12 @@ class ServiceRequestResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('wa_phone')
-                    ->label('Phone')
+                    ->label(__('admin.service_request.fields.phone_short'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('service')
+                    ->label(__('admin.service_request.fields.service'))
                     ->colors([
                         'primary' => 'ticket',
                         'warning' => 'license',
@@ -72,6 +88,8 @@ class ServiceRequestResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('status')
+                    ->label(__('admin.service_request.fields.status'))
+                    ->formatStateUsing(fn (string $state) => __("admin.service_request.status.{$state}"))
                     ->colors([
                         'danger'  => 'new',
                         'warning' => 'in_progress',
@@ -80,12 +98,12 @@ class ServiceRequestResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Received')
+                    ->label(__('admin.service_request.fields.received'))
                     ->dateTime()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Last Updated')
+                    ->label(__('admin.service_request.fields.last_updated'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -93,28 +111,26 @@ class ServiceRequestResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')
+                    ->label(__('admin.service_request.fields.status'))
                     ->options([
-                        'new'         => 'New',
-                        'in_progress' => 'In Progress',
-                        'done'        => 'Done',
+                        'new'         => __('admin.service_request.status.new'),
+                        'in_progress' => __('admin.service_request.status.in_progress'),
+                        'done'        => __('admin.service_request.status.done'),
                     ]),
                 SelectFilter::make('service')
-                    ->options(
-                        collect(config('services_bot.services'))
-                            ->mapWithKeys(fn ($s, $k) => [$k => $s['label']['en']])
-                            ->toArray()
-                    ),
+                    ->label(__('admin.service_request.fields.service'))
+                    ->options(fn () => Service::options(app()->getLocale())),
             ])
             ->actions([
                 Tables\Actions\Action::make('mark_in_progress')
-                    ->label('In Progress')
+                    ->label(__('admin.service_request.actions.in_progress'))
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->visible(fn (ServiceRequest $r) => $r->status === 'new')
                     ->action(fn (ServiceRequest $r) => $r->update(['status' => 'in_progress'])),
 
                 Tables\Actions\Action::make('mark_done')
-                    ->label('Done')
+                    ->label(__('admin.service_request.actions.done'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (ServiceRequest $r) => in_array($r->status, ['new', 'in_progress']))
@@ -124,7 +140,7 @@ class ServiceRequestResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('mark_done')
-                    ->label('Mark as Done')
+                    ->label(__('admin.service_request.actions.mark_as_done'))
                     ->icon('heroicon-o-check-circle')
                     ->action(fn ($records) => $records->each->update(['status' => 'done']))
                     ->requiresConfirmation(),
@@ -139,8 +155,8 @@ class ServiceRequestResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListServiceRequests::route('/'),
-            'edit'   => Pages\EditServiceRequest::route('/{record}/edit'),
+            'index' => Pages\ListServiceRequests::route('/'),
+            'edit'  => Pages\EditServiceRequest::route('/{record}/edit'),
         ];
     }
 

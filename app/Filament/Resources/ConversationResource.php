@@ -16,9 +16,22 @@ class ConversationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
-    protected static ?string $navigationLabel = 'Conversations';
-
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.nav.conversations');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.conversation.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.conversation.label_plural');
+    }
 
     public static function form(Form $form): Form
     {
@@ -30,15 +43,16 @@ class ConversationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('wa_phone')
-                    ->label('Phone')
+                    ->label(__('admin.conversation.fields.phone'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('step')
+                    ->label('Step')
+                    ->formatStateUsing(fn (string $state) => __("admin.conversation.steps.{$state}"))
                     ->colors([
                         'gray'    => 'NEW',
                         'warning' => 'AWAIT_LANG',
-                        'warning' => 'AWAIT_SERVICE',
                         'primary' => 'IN_SERVICE',
                         'success' => 'DONE',
                     ])
@@ -48,10 +62,11 @@ class ConversationResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('service')
+                    ->label(__('admin.service_request.fields.service'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Last Activity')
+                    ->label(__('admin.conversation.fields.last_activity'))
                     ->dateTime()
                     ->sortable(),
             ])
@@ -59,16 +74,16 @@ class ConversationResource extends Resource
             ->filters([
                 SelectFilter::make('step')
                     ->options([
-                        'NEW'           => 'New',
-                        'AWAIT_LANG'    => 'Awaiting Language',
-                        'AWAIT_SERVICE' => 'Awaiting Service',
-                        'IN_SERVICE'    => 'In Service',
-                        'DONE'          => 'Done',
+                        'NEW'           => __('admin.conversation.steps.NEW'),
+                        'AWAIT_LANG'    => __('admin.conversation.steps.AWAIT_LANG'),
+                        'AWAIT_SERVICE' => __('admin.conversation.steps.AWAIT_SERVICE'),
+                        'IN_SERVICE'    => __('admin.conversation.steps.IN_SERVICE'),
+                        'DONE'          => __('admin.conversation.steps.DONE'),
                     ]),
             ])
             ->actions([
                 Tables\Actions\Action::make('reset')
-                    ->label('Reset')
+                    ->label(__('admin.conversation.actions.reset'))
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
                     ->requiresConfirmation()

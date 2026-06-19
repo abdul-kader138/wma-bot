@@ -14,23 +14,23 @@ class StatsOverview extends BaseWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('New Requests', ServiceRequest::where('status', 'new')->count())
-                ->description('Awaiting staff action')
+            Stat::make(__('admin.stats.new_requests'), ServiceRequest::where('status', 'new')->count())
+                ->description(__('admin.stats.awaiting_staff'))
                 ->descriptionIcon('heroicon-m-inbox')
                 ->color('danger'),
 
-            Stat::make('In Progress', ServiceRequest::where('status', 'in_progress')->count())
-                ->description('Being handled')
+            Stat::make(__('admin.stats.in_progress'), ServiceRequest::where('status', 'in_progress')->count())
+                ->description(__('admin.stats.being_handled'))
                 ->descriptionIcon('heroicon-m-arrow-path')
                 ->color('warning'),
 
-            Stat::make('Completed', ServiceRequest::where('status', 'done')->count())
-                ->description('All time')
+            Stat::make(__('admin.stats.completed'), ServiceRequest::where('status', 'done')->count())
+                ->description(__('admin.stats.all_time'))
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color('success'),
 
-            Stat::make('Active Conversations', Conversation::whereIn('step', ['IN_SERVICE', 'AWAIT_LANG', 'AWAIT_SERVICE'])->count())
-                ->description('Currently open chats')
+            Stat::make(__('admin.stats.active_conversations'), Conversation::whereIn('step', ['IN_SERVICE', 'AWAIT_LANG', 'AWAIT_SERVICE'])->count())
+                ->description(__('admin.stats.open_chats'))
                 ->descriptionIcon('heroicon-m-chat-bubble-left-right')
                 ->color('primary'),
         ];

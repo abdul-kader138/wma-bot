@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FaqResource\Pages;
 use App\Models\Faq;
+use App\Models\Service;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -18,40 +19,51 @@ class FaqResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
 
-    protected static ?string $navigationLabel = 'FAQs';
-
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.nav.faqs');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.faq.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.faq.label_plural');
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('FAQ')->schema([
+            Forms\Components\Section::make(__('admin.faq.sections.faq'))->schema([
                 Forms\Components\Select::make('service')
-                    ->label('Applies to')
-                    ->placeholder('All services')
+                    ->label(__('admin.faq.fields.applies_to'))
+                    ->placeholder(__('admin.faq.fields.all_services'))
                     ->options(
-                        collect(config('services_bot.services'))
-                            ->mapWithKeys(fn ($s, $k) => [$k => $s['label']['en']])
-                            ->toArray()
+                        Service::options(app()->getLocale())
                     ),
 
                 Forms\Components\Toggle::make('is_active')
-                    ->label('Active')
+                    ->label(__('admin.faq.fields.active'))
                     ->default(true),
 
                 Forms\Components\TextInput::make('question')
-                    ->label('Reference question (for staff)')
+                    ->label(__('admin.faq.fields.question'))
                     ->required()
                     ->columnSpanFull(),
 
                 Forms\Components\TagsInput::make('keywords')
-                    ->label('Trigger phrases')
-                    ->helperText('Words or short phrases that should trigger this answer, e.g. "price", "how much", "opening hours".')
+                    ->label(__('admin.faq.fields.keywords'))
+                    ->helperText(__('admin.faq.fields.keywords_help'))
                     ->required()
                     ->columnSpanFull(),
             ])->columns(2),
 
-            Forms\Components\Section::make('Answer')->schema(
+            Forms\Components\Section::make(__('admin.faq.sections.answer'))->schema(
                 collect(config('services_bot.languages'))
                     ->map(fn ($name, $code) => Forms\Components\Textarea::make("answer.{$code}")
                         ->label($name)
@@ -73,19 +85,19 @@ class FaqResource extends Resource
                     ->limit(60),
 
                 Tables\Columns\TextColumn::make('service')
-                    ->label('Applies to')
+                    ->label(__('admin.faq.fields.applies_to'))
                     ->formatStateUsing(fn (?string $state) => $state
-                        ? (config("services_bot.services.{$state}.label.en") ?? $state)
-                        : 'All services')
+                        ? (Service::where('slug', $state)->first()?->label[app()->getLocale()] ?? $state)
+                        : __('admin.faq.fields.all_services'))
                     ->badge(),
 
                 Tables\Columns\TextColumn::make('keywords')
-                    ->label('Triggers')
+                    ->label(__('admin.faq.fields.triggers'))
                     ->formatStateUsing(fn (array $state) => implode(', ', $state))
                     ->limit(50),
 
                 Tables\Columns\ToggleColumn::make('is_active')
-                    ->label('Active'),
+                    ->label(__('admin.faq.fields.active')),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
@@ -95,14 +107,12 @@ class FaqResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->filters([
                 SelectFilter::make('service')
-                    ->label('Applies to')
+                    ->label(__('admin.faq.fields.applies_to'))
                     ->options(
-                        collect(config('services_bot.services'))
-                            ->mapWithKeys(fn ($s, $k) => [$k => $s['label']['en']])
-                            ->toArray()
+                        Service::options(app()->getLocale())
                     ),
                 TernaryFilter::make('is_active')
-                    ->label('Active'),
+                    ->label(__('admin.faq.fields.active')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

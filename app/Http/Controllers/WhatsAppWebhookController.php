@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\HandleIncomingMessage;
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
 {
     public function verify(Request $request)
     {
-        $verifyToken = config('services.whatsapp.verify_token');
+        $verifyToken = Setting::get('whatsapp_verify_token') ?: config('services.whatsapp.verify_token');
 
         if ($request->query('hub_mode') === 'subscribe'
             && $request->query('hub_verify_token') === $verifyToken) {
@@ -39,6 +41,10 @@ class WhatsAppWebhookController extends Controller
     {
         $secret = config('services.whatsapp.app_secret');
         if (! $secret) {
+            if (app()->environment('production')) {
+                Log::warning('WHATSAPP_APP_SECRET is not set; incoming webhook requests are not being verified.');
+            }
+
             return;
         }
 

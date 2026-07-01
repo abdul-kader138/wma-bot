@@ -3,7 +3,10 @@
 namespace App\Jobs;
 
 use App\Models\Conversation;
+use App\Models\Setting;
 use App\Models\ServiceRequest;
+use App\Notifications\BotJobFailedNotification;
+use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
 use App\Services\WhatsAppClient;
@@ -14,6 +17,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class HandleIncomingMessage implements ShouldQueue
 {
@@ -99,6 +103,30 @@ class HandleIncomingMessage implements ShouldQueue
             'error' => $e->getMessage(),
             'value' => $this->value,
         ]);
+
+        if ($email = Setting::get('staff_notification_email')) {
+            try {
+                Notification::route('mail', $email)
+                    ->notify(new BotJobFailedNotification($e->getMessage(), $this->value));
+            } catch (\Throwable $notifyError) {
+                Log::error('Failed to send bot failure notification', ['error' => $notifyError->getMessage()]);
+            }
+        }
+    }
+
+    private function notifyStaff(ServiceRequest $serviceRequest): void
+    {
+        $email = Setting::get('staff_notification_email');
+        if (! $email) {
+            return;
+        }
+
+        try {
+            Notification::route('mail', $email)
+                ->notify(new NewServiceRequestNotification($serviceRequest));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send staff notification email', ['error' => $e->getMessage()]);
+        }
     }
 
     private function runAgent(WhatsAppClient $wa, ClaudeAgent $agent, Conversation $convo, string $phone): void
@@ -106,12 +134,14 @@ class HandleIncomingMessage implements ShouldQueue
         $reply = $agent->handle($convo);
 
         if ($reply['type'] === 'tool') {
-            ServiceRequest::create([
+            $serviceRequest = ServiceRequest::create([
                 'wa_phone' => $phone,
                 'service'  => $convo->service,
                 'payload'  => $reply['input'],
                 'status'   => 'new',
             ]);
+
+            $this->notifyStaff($serviceRequest);
 
             $lang         = $convo->language ?? 'en';
             $confirmation = config("services_bot.replies.confirmation.{$lang}")

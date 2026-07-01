@@ -108,6 +108,12 @@ class SystemSettings extends Page implements HasForms
             // Email
             'mail_from_name'    => Setting::get('mail_from_name',    config('mail.from.name', '')),
             'mail_from_address' => Setting::get('mail_from_address', config('mail.from.address', '')),
+            'mail_host'         => Setting::get('mail_host',         ''),
+            'mail_port'         => Setting::get('mail_port',         587),
+            'mail_username'     => Setting::get('mail_username',     ''),
+            'mail_password'     => Setting::get('mail_password',     ''),
+            'mail_encryption'   => Setting::get('mail_encryption',   'tls'),
+            'staff_notification_email' => Setting::get('staff_notification_email', ''),
         ]);
     }
 
@@ -413,7 +419,50 @@ class SystemSettings extends Page implements HasForms
                                         ->required()
                                         ->maxLength(255),
                                 ]),
+
+                                TextInput::make('staff_notification_email')
+                                    ->label('Staff Notification Email')
+                                    ->email()
+                                    ->maxLength(255)
+                                    ->helperText('Where alerts go when a new WhatsApp request comes in, or the bot fails. Leave blank to disable.'),
                             ]),
+
+                            Section::make('SMTP Server')
+                                ->description('Configure an SMTP provider (e.g. Brevo, Gmail) to actually deliver emails. Leave the host blank to keep logging emails instead of sending them.')
+                                ->schema([
+                                    Grid::make(2)->schema([
+                                        TextInput::make('mail_host')
+                                            ->label('SMTP Host')
+                                            ->placeholder('smtp-relay.brevo.com')
+                                            ->maxLength(255),
+
+                                        TextInput::make('mail_port')
+                                            ->label('SMTP Port')
+                                            ->numeric()
+                                            ->placeholder('587'),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        TextInput::make('mail_username')
+                                            ->label('SMTP Username')
+                                            ->maxLength(255),
+
+                                        TextInput::make('mail_password')
+                                            ->label('SMTP Password')
+                                            ->password()
+                                            ->revealable()
+                                            ->autocomplete('new-password')
+                                            ->maxLength(255),
+                                    ]),
+
+                                    Select::make('mail_encryption')
+                                        ->label('Encryption')
+                                        ->options([
+                                            'tls' => 'TLS',
+                                            'ssl' => 'SSL',
+                                        ])
+                                        ->native(false),
+                                ]),
                         ]),
 
                 ])->persistTabInQueryString('tab'),
@@ -451,6 +500,12 @@ class SystemSettings extends Page implements HasForms
             'bot_fallback_message'     => 'bot',
             'mail_from_name'           => 'email',
             'mail_from_address'        => 'email',
+            'mail_host'                => 'email',
+            'mail_port'                => 'email',
+            'mail_username'            => 'email',
+            'mail_password'            => 'email',
+            'mail_encryption'          => 'email',
+            'staff_notification_email' => 'email',
         ];
 
         foreach ($data as $key => $value) {

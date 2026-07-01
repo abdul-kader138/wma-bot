@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -24,15 +25,16 @@ class ClaudeAgent
 
         try {
             $response = Http::withHeaders([
-                'x-api-key'         => config('services.anthropic.key'),
+                'x-api-key'         => Setting::get('claude_api_key') ?: config('services.anthropic.key'),
                 'anthropic-version' => '2023-06-01',
                 'content-type'      => 'application/json',
             ])->timeout(40)->post('https://api.anthropic.com/v1/messages', [
-                'model'      => config('services.anthropic.model'),
-                'max_tokens' => 1024,
-                'system'     => $system,
-                'tools'      => [$tool],
-                'messages'   => $messages,
+                'model'       => Setting::get('claude_model') ?: config('services.anthropic.model'),
+                'max_tokens'  => (int) Setting::get('claude_max_tokens', 1024),
+                'temperature' => (float) Setting::get('claude_temperature', 0.7),
+                'system'      => $system,
+                'tools'       => [$tool],
+                'messages'    => $messages,
             ])->throw()->json();
         } catch (\Throwable $e) {
             Log::error('Claude API call failed', ['error' => $e->getMessage()]);

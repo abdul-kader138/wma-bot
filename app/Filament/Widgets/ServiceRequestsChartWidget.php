@@ -9,6 +9,8 @@ class ServiceRequestsChartWidget extends ChartWidget
 {
     protected static ?int $sort = 2;
 
+    protected static ?string $pollingInterval = '30s';
+
     protected int|string|array $columnSpan = 2;
 
     public ?string $filter = '14';

@@ -12,6 +12,8 @@ class RecentServiceRequestsWidget extends TableWidget
 {
     protected static ?int $sort = 3;
 
+    protected static ?string $pollingInterval = '30s';
+
     protected int|string|array $columnSpan = 1;
 
     public function getHeading(): ?string

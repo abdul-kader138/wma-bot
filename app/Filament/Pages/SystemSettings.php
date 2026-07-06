@@ -89,10 +89,7 @@ class SystemSettings extends Page implements HasForms
             'favicon'                => Setting::get('favicon'),
 
             // WhatsApp
-            'whatsapp_phone_number_id' => Setting::get('whatsapp_phone_number_id', env('WHATSAPP_PHONE_NUMBER_ID', '')),
-            'whatsapp_access_token'    => Setting::get('whatsapp_access_token',    ''),
             'whatsapp_verify_token'    => Setting::get('whatsapp_verify_token',    env('WHATSAPP_VERIFY_TOKEN', '')),
-            'whatsapp_api_version'     => Setting::get('whatsapp_api_version',     env('WHATSAPP_API_VERSION', 'v22.0')),
 
             // Claude AI
             'claude_api_key'     => Setting::get('claude_api_key',     ''),
@@ -301,28 +298,8 @@ class SystemSettings extends Page implements HasForms
                         ->icon('heroicon-o-chat-bubble-left-right')
                         ->schema([
                             Section::make(__('admin.settings.sections.wa_api'))
-                                ->description('Configure your Meta WhatsApp Business API credentials.')
+                                ->description('This token verifies the single webhook callback URL shared by all of your WhatsApp numbers. Manage individual phone numbers and their access tokens under WhatsApp Accounts.')
                                 ->schema([
-                                    Grid::make(2)->schema([
-                                        TextInput::make('whatsapp_phone_number_id')
-                                            ->label('Phone Number ID')
-                                            ->helperText('Found in Meta Business Suite → WhatsApp → API Setup.')
-                                            ->maxLength(100),
-
-                                        TextInput::make('whatsapp_api_version')
-                                            ->label('API Version')
-                                            ->placeholder('v22.0')
-                                            ->maxLength(10),
-                                    ]),
-
-                                    TextInput::make('whatsapp_access_token')
-                                        ->label('Access Token')
-                                        ->password()
-                                        ->revealable()
-                                        ->maxLength(500)
-                                        ->autocomplete('new-password')
-                                        ->helperText('Permanent or temporary access token from Meta.'),
-
                                     TextInput::make('whatsapp_verify_token')
                                         ->label('Webhook Verify Token')
                                         ->password()
@@ -487,10 +464,7 @@ class SystemSettings extends Page implements HasForms
             'app_icon'                 => 'appearance',
             'login_image'              => 'appearance',
             'favicon'                  => 'appearance',
-            'whatsapp_phone_number_id' => 'whatsapp',
-            'whatsapp_access_token'    => 'whatsapp',
             'whatsapp_verify_token'    => 'whatsapp',
-            'whatsapp_api_version'     => 'whatsapp',
             'claude_api_key'           => 'claude',
             'claude_model'             => 'claude',
             'claude_max_tokens'        => 'claude',

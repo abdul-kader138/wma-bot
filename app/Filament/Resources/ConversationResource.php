@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ConversationResource\Pages;
 use App\Models\Conversation;
+use App\Models\WhatsAppAccount;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -47,6 +48,12 @@ class ConversationResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('whatsAppAccount.name')
+                    ->label(__('admin.whatsapp_account.label'))
+                    ->badge()
+                    ->color('gray')
+                    ->sortable(),
+
                 Tables\Columns\BadgeColumn::make('step')
                     ->label('Step')
                     ->formatStateUsing(fn (string $state) => __("admin.conversation.steps.{$state}"))
@@ -80,6 +87,10 @@ class ConversationResource extends Resource
                         'IN_SERVICE'    => __('admin.conversation.steps.IN_SERVICE'),
                         'DONE'          => __('admin.conversation.steps.DONE'),
                     ]),
+
+                SelectFilter::make('whatsapp_account_id')
+                    ->label(__('admin.whatsapp_account.label'))
+                    ->options(fn () => WhatsAppAccount::pluck('name', 'id')),
             ])
             ->actions([
                 Tables\Actions\Action::make('reset')

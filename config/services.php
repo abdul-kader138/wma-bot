@@ -36,11 +36,8 @@ return [
     ],
 
     'whatsapp' => [
-        'token'        => env('WHATSAPP_TOKEN'),
-        'phone_id'     => env('WHATSAPP_PHONE_ID'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
         'app_secret'   => env('WHATSAPP_APP_SECRET'),
-        'version'      => env('WHATSAPP_VERSION', 'v21.0'),
     ],
 
     'anthropic' => [

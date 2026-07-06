@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Setting;
+use App\Models\WhatsAppAccount;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -11,12 +11,10 @@ class WhatsAppClient
     private string $url;
     private string $token;
 
-    public function __construct()
+    public function __construct(WhatsAppAccount $account)
     {
-        $phoneId     = Setting::get('whatsapp_phone_number_id') ?: config('services.whatsapp.phone_id');
-        $version     = Setting::get('whatsapp_api_version') ?: config('services.whatsapp.version', 'v21.0');
-        $this->url   = "https://graph.facebook.com/{$version}/{$phoneId}/messages";
-        $this->token = Setting::get('whatsapp_access_token') ?: config('services.whatsapp.token');
+        $this->url   = "https://graph.facebook.com/{$account->api_version}/{$account->phone_number_id}/messages";
+        $this->token = $account->access_token;
     }
 
     public function sendText(string $to, string $body): void

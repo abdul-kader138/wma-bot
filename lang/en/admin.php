@@ -11,6 +11,7 @@ return [
         'users'            => 'Users',
         'roles'            => 'Roles',
         'system_settings'  => 'System Settings',
+        'whatsapp_accounts' => 'WhatsApp Accounts',
         'groups' => [
             'administration' => 'Administration',
         ],
@@ -135,6 +136,29 @@ return [
             'verified'         => 'Verified',
             'not_verified'     => 'Not verified',
             'role'             => 'Role',
+        ],
+    ],
+
+    'whatsapp_account' => [
+        'label'        => 'WhatsApp Account',
+        'label_plural' => 'WhatsApp Accounts',
+        'sections' => [
+            'identity'    => 'Identity',
+            'credentials' => 'Meta API Credentials',
+        ],
+        'fields' => [
+            'name'             => 'Name',
+            'name_help'        => 'A friendly label to identify this number, e.g. "Sales" or "Support".',
+            'phone_number_id'  => 'Phone Number ID',
+            'phone_number_id_help' => 'Found in Meta Business Suite → WhatsApp → API Setup.',
+            'waba_id'          => 'WhatsApp Business Account ID',
+            'access_token'     => 'Access Token',
+            'access_token_help'=> 'Permanent or temporary access token from Meta for this number.',
+            'api_version'      => 'API Version',
+            'is_active'        => 'Active',
+            'is_active_help'   => 'Inactive accounts will not receive or send WhatsApp messages.',
+            'is_default'       => 'Default',
+            'is_default_help'  => 'Used as a fallback when a number cannot be otherwise identified.',
         ],
     ],
 

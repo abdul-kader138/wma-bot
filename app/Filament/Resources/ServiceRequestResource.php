@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ServiceRequestResource\Pages;
 use App\Models\Service;
 use App\Models\ServiceRequest;
+use App\Models\WhatsAppAccount;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -78,6 +79,12 @@ class ServiceRequestResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('whatsAppAccount.name')
+                    ->label(__('admin.whatsapp_account.label'))
+                    ->badge()
+                    ->color('gray')
+                    ->sortable(),
+
                 Tables\Columns\BadgeColumn::make('service')
                     ->label(__('admin.service_request.fields.service'))
                     ->colors([
@@ -120,6 +127,9 @@ class ServiceRequestResource extends Resource
                 SelectFilter::make('service')
                     ->label(__('admin.service_request.fields.service'))
                     ->options(fn () => Service::options(app()->getLocale())),
+                SelectFilter::make('whatsapp_account_id')
+                    ->label(__('admin.whatsapp_account.label'))
+                    ->options(fn () => WhatsAppAccount::pluck('name', 'id')),
             ])
             ->actions([
                 Tables\Actions\Action::make('mark_in_progress')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\HandleIncomingMessage;
 use App\Models\Setting;
+use App\Models\WhatsAppAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -28,9 +29,23 @@ class WhatsAppWebhookController extends Controller
         foreach ($request->input('entry', []) as $entry) {
             foreach ($entry['changes'] ?? [] as $change) {
                 $value = $change['value'] ?? null;
-                if ($value && ! empty($value['messages'])) {
-                    HandleIncomingMessage::dispatch($value);
+                if (! $value || empty($value['messages'])) {
+                    continue;
                 }
+
+                $phoneNumberId = $value['metadata']['phone_number_id'] ?? null;
+                $account       = $phoneNumberId
+                    ? WhatsAppAccount::active()->where('phone_number_id', $phoneNumberId)->first()
+                    : null;
+
+                if (! $account) {
+                    Log::warning('Unrecognized WhatsApp phone_number_id in webhook payload', [
+                        'phone_number_id' => $phoneNumberId,
+                    ]);
+                    continue;
+                }
+
+                HandleIncomingMessage::dispatch($value, $account->id);
             }
         }
 

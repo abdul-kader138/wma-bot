@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Conversation;
 use App\Models\Setting;
 use App\Models\ServiceRequest;
+use App\Models\WhatsAppAccount;
 use App\Notifications\BotJobFailedNotification;
 use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
@@ -26,10 +27,13 @@ class HandleIncomingMessage implements ShouldQueue
     public int $tries   = 3;
     public int $timeout = 60;
 
-    public function __construct(public array $value) {}
+    public function __construct(public array $value, public int $whatsAppAccountId) {}
 
-    public function handle(WhatsAppClient $wa, ClaudeAgent $agent, FaqMatcher $faqs): void
+    public function handle(ClaudeAgent $agent, FaqMatcher $faqs): void
     {
+        $account = WhatsAppAccount::findOrFail($this->whatsAppAccountId);
+        $wa      = new WhatsAppClient($account);
+
         $msg = $wa->parseIncoming($this->value);
         if (! $msg) {
             return;
@@ -42,7 +46,7 @@ class HandleIncomingMessage implements ShouldQueue
 
         $phone = $msg['phone'];
         $convo = Conversation::firstOrCreate(
-            ['wa_phone' => $phone],
+            ['wa_phone' => $phone, 'whatsapp_account_id' => $account->id],
             ['step' => 'NEW', 'history' => []]
         );
 
@@ -135,10 +139,11 @@ class HandleIncomingMessage implements ShouldQueue
 
         if ($reply['type'] === 'tool') {
             $serviceRequest = ServiceRequest::create([
-                'wa_phone' => $phone,
-                'service'  => $convo->service,
-                'payload'  => $reply['input'],
-                'status'   => 'new',
+                'whatsapp_account_id' => $convo->whatsapp_account_id,
+                'wa_phone'            => $phone,
+                'service'             => $convo->service,
+                'payload'             => $reply['input'],
+                'status'              => 'new',
             ]);
 
             $this->notifyStaff($serviceRequest);

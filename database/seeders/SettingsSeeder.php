@@ -28,10 +28,7 @@ class SettingsSeeder extends Seeder
             ['group' => 'appearance', 'key' => 'favicon',                'value' => null,      'type' => 'string', 'label' => 'Favicon',               'is_public' => true],
 
             // WhatsApp
-            ['group' => 'whatsapp', 'key' => 'whatsapp_phone_number_id', 'value' => '', 'type' => 'string', 'label' => 'Phone Number ID',     'is_public' => false],
-            ['group' => 'whatsapp', 'key' => 'whatsapp_access_token',    'value' => '', 'type' => 'string', 'label' => 'Access Token',        'is_public' => false],
-            ['group' => 'whatsapp', 'key' => 'whatsapp_verify_token',    'value' => '', 'type' => 'string', 'label' => 'Webhook Verify Token', 'is_public' => false],
-            ['group' => 'whatsapp', 'key' => 'whatsapp_api_version',     'value' => 'v22.0', 'type' => 'string', 'label' => 'API Version',    'is_public' => false],
+            ['group' => 'whatsapp', 'key' => 'whatsapp_verify_token', 'value' => '', 'type' => 'string', 'label' => 'Webhook Verify Token', 'is_public' => false],
 
             // Claude AI
             ['group' => 'claude', 'key' => 'claude_api_key',     'value' => '',                        'type' => 'string',  'label' => 'API Key',       'is_public' => false],

@@ -29,10 +29,24 @@ class HandleIncomingMessage implements ShouldQueue
 
     public function __construct(public array $value, public int $whatsAppAccountId) {}
 
+    public function backoff(): array
+    {
+        return [5, 15, 30];
+    }
+
     public function handle(ClaudeAgent $agent, FaqMatcher $faqs): void
     {
         $account = WhatsAppAccount::findOrFail($this->whatsAppAccountId);
-        $wa      = new WhatsAppClient($account);
+
+        if (! $account->is_active) {
+            Log::warning('Skipping message for deactivated WhatsApp account', [
+                'whatsapp_account_id' => $account->id,
+            ]);
+
+            return;
+        }
+
+        $wa = new WhatsAppClient($account);
 
         $msg = $wa->parseIncoming($this->value);
         if (! $msg) {

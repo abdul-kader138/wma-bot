@@ -106,6 +106,7 @@ class WhatsAppClient
         try {
             Http::withToken($this->token)
                 ->acceptJson()
+                ->timeout(10)
                 ->post($this->url, $payload)
                 ->throw();
         } catch (\Throwable $e) {

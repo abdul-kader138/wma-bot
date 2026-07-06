@@ -35,3 +35,29 @@ disown
 
 # 9. Confirm the worker is actually running
 ps aux | grep "queue:work" | grep -v grep
+
+
+########################################
+
+# to run multiple worker
+# Stop whatever's currently running (if any)
+pkill -f "queue:work"
+
+# Start 4 worker processes in parallel
+for i in 1 2 3 4; do
+  nohup php artisan queue:work --sleep=3 --tries=3 --max-time=3600 >> storage/logs/worker.log 2>&1 &
+  disown
+done
+
+Verify all 4 are actually running:
+ps aux | grep "queue:work" | grep -v grep
+You should see 4 separate PIDs.
+
+After every deploy going forward
+
+Same pattern as before, just repeated 4 times instead of once:
+pkill -f "queue:work"
+for i in 1 2 3 4; do
+  nohup php artisan queue:work --sleep=3 --tries=3 --max-time=3600 >> storage/logs/worker.log 2>&1 &
+  disown
+done

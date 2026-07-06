@@ -11,6 +11,7 @@ return [
         'users'            => 'ব্যবহারকারী',
         'roles'            => 'ভূমিকা',
         'system_settings'  => 'সিস্টেম সেটিংস',
+        'whatsapp_accounts' => 'হোয়াটসঅ্যাপ অ্যাকাউন্ট',
         'groups' => [
             'administration' => 'প্রশাসন',
         ],
@@ -135,6 +136,29 @@ return [
             'verified'         => 'যাচাইকৃত',
             'not_verified'     => 'যাচাই হয়নি',
             'role'             => 'ভূমিকা',
+        ],
+    ],
+
+    'whatsapp_account' => [
+        'label'        => 'হোয়াটসঅ্যাপ অ্যাকাউন্ট',
+        'label_plural' => 'হোয়াটসঅ্যাপ অ্যাকাউন্টসমূহ',
+        'sections' => [
+            'identity'    => 'পরিচয়',
+            'credentials' => 'Meta API ক্রেডেনশিয়াল',
+        ],
+        'fields' => [
+            'name'             => 'নাম',
+            'name_help'        => 'এই নম্বরটি শনাক্ত করতে একটি বন্ধুত্বপূর্ণ লেবেল, যেমন "সেলস" বা "সাপোর্ট"।',
+            'phone_number_id'  => 'ফোন নম্বর আইডি',
+            'phone_number_id_help' => 'Meta Business Suite → WhatsApp → API Setup-এ পাওয়া যাবে।',
+            'waba_id'          => 'হোয়াটসঅ্যাপ বিজনেস অ্যাকাউন্ট আইডি',
+            'access_token'     => 'অ্যাক্সেস টোকেন',
+            'access_token_help'=> 'এই নম্বরের জন্য Meta থেকে স্থায়ী বা সাময়িক অ্যাক্সেস টোকেন।',
+            'api_version'      => 'API সংস্করণ',
+            'is_active'        => 'সক্রিয়',
+            'is_active_help'   => 'নিষ্ক্রিয় অ্যাকাউন্ট হোয়াটসঅ্যাপ বার্তা পাঠাতে বা গ্রহণ করতে পারবে না।',
+            'is_default'       => 'ডিফল্ট',
+            'is_default_help'  => 'কোনো নম্বর অন্যভাবে শনাক্ত করা না গেলে ফলব্যাক হিসেবে ব্যবহৃত হয়।',
         ],
     ],
 

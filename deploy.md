@@ -36,6 +36,10 @@ disown
 # 9. Confirm the worker is actually running
 ps aux | grep "queue:work" | grep -v grep
 
+########################################
+# enable shield
+php artisan shield:generate --all --panel=admin --ignore-existing-policies --no-interaction
+
 
 ########################################
 

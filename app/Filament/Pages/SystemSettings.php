@@ -78,6 +78,9 @@ class SystemSettings extends Page implements HasForms
             'support_email'    => Setting::get('support_email',    ''),
             'maintenance_mode' => Setting::get('maintenance_mode', false),
 
+            // Security
+            'two_factor_enabled' => Setting::get('two_factor_enabled', true),
+
             // Appearance
             'admin_theme'            => Setting::get('admin_theme',            'amber'),
             'admin_panel_theme_mode' => Setting::get('admin_panel_theme_mode', 'dark'),
@@ -293,6 +296,19 @@ class SystemSettings extends Page implements HasForms
                                 ]),
                         ]),
 
+                    // ── Security ──────────────────────────────────────────────
+                    Tab::make(__('admin.settings.tabs.security'))
+                        ->icon('heroicon-o-shield-check')
+                        ->schema([
+                            Section::make(__('admin.settings.sections.two_factor'))
+                                ->description('Control two-factor authentication for the whole admin panel.')
+                                ->schema([
+                                    Toggle::make('two_factor_enabled')
+                                        ->label(__('admin.settings.fields.two_factor_enabled'))
+                                        ->helperText(__('admin.settings.fields.two_factor_enabled_help')),
+                                ]),
+                        ]),
+
                     // ── WhatsApp ──────────────────────────────────────────────
                     Tab::make(__('admin.settings.tabs.whatsapp'))
                         ->icon('heroicon-o-chat-bubble-left-right')
@@ -456,6 +472,7 @@ class SystemSettings extends Page implements HasForms
             'support_email'            => 'general',
             'maintenance_mode'         => 'general',
             'admin_locale'             => 'general',
+            'two_factor_enabled'       => 'security',
             'admin_theme'              => 'appearance',
             'admin_panel_theme_mode'   => 'appearance',
             'auth_theme_mode'          => 'appearance',

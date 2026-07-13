@@ -27,14 +27,24 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'         => 'datetime',
+            'password'                  => 'hashed',
+            'two_factor_secret'         => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at'   => 'datetime',
         ];
+    }
+
+    public function hasEnabledTwoFactorAuthentication(): bool
+    {
+        return filled($this->two_factor_secret) && filled($this->two_factor_confirmed_at);
     }
 
     public function canAccessPanel(Panel $panel): bool

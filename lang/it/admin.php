@@ -2,6 +2,15 @@
 
 return [
 
+    'auth' => [
+        'two_factor' => [
+            'heading'       => 'Autenticazione a due fattori',
+            'code_label'    => 'Codice di autenticazione',
+            'code_helper'   => 'Inserisci il codice a 6 cifre dalla tua app di autenticazione, oppure un codice di recupero.',
+            'back_to_login' => 'Torna al login',
+        ],
+    ],
+
     'nav' => [
         'dashboard'        => 'Pannello',
         'services'         => 'Servizi',
@@ -169,6 +178,7 @@ return [
         'tabs' => [
             'general'    => 'Generale',
             'appearance' => 'Aspetto',
+            'security'   => 'Sicurezza',
             'whatsapp'   => 'WhatsApp',
             'claude'     => 'Claude AI',
             'bot'        => 'Comportamento Bot',
@@ -180,6 +190,7 @@ return [
             'panel_mode'   => 'Modalità Pannello',
             'auth_bg'      => 'Sfondo Pagina di Accesso',
             'branding'     => 'Asset Branding',
+            'two_factor'   => 'Autenticazione a Due Fattori',
             'wa_api'       => 'WhatsApp Business API',
             'claude_api'   => 'Anthropic Claude API',
             'response'     => 'Impostazioni Risposta',
@@ -193,6 +204,8 @@ return [
             'maintenance_help'        => 'Se abilitata, il pannello admin mostrerà un avviso di manutenzione.',
             'default_language'        => 'Lingua Predefinita',
             'default_language_help'   => 'La lingua mostrata nella pagina di accesso e usata come predefinita. I singoli admin possono comunque cambiare lingua dal selettore in alto.',
+            'two_factor_enabled'      => 'Abilita Autenticazione a Due Fattori',
+            'two_factor_enabled_help' => 'Attiva o disattiva la funzione di autenticazione a due fattori per l\'intero pannello admin. Se disattivata, nessuno dovrà inserire un codice al login e gli admin non potranno attivarla dal proprio profilo — le configurazioni esistenti restano salvate ma inattive finché non viene riattivata.',
         ],
     ],
 
@@ -221,17 +234,42 @@ return [
 
     'profile' => [
         'sections' => [
-            'picture'  => 'Foto Profilo',
-            'details'  => 'Informazioni Personali',
-            'security' => 'Cambia Password',
+            'picture'    => 'Foto Profilo',
+            'details'    => 'Informazioni Personali',
+            'security'   => 'Cambia Password',
+            'two_factor' => 'Autenticazione a Due Fattori',
         ],
         'descriptions' => [
-            'picture'  => 'Carica un\'immagine quadrata. Verrà visualizzata come cerchio.',
-            'details'  => 'Aggiorna il tuo nome e indirizzo email.',
-            'security' => 'Lascia vuoto per mantenere la password attuale.',
+            'picture'    => 'Carica un\'immagine quadrata. Verrà visualizzata come cerchio.',
+            'details'    => 'Aggiorna il tuo nome e indirizzo email.',
+            'security'   => 'Lascia vuoto per mantenere la password attuale.',
+            'two_factor' => 'Aggiungi un ulteriore livello di sicurezza al tuo account usando un\'app di autenticazione.',
         ],
         'fields' => [
             'avatar' => 'Avatar',
+        ],
+        'two_factor' => [
+            'enabled'                  => 'L\'autenticazione a due fattori è attiva.',
+            'disabled'                 => 'L\'autenticazione a due fattori non è attiva.',
+            'disabled_globally'        => 'Un amministratore ha disattivato l\'autenticazione a due fattori per questa applicazione.',
+            'enable_action'            => 'Attiva',
+            'disable_action'           => 'Disattiva',
+            'disable_confirm_heading'  => 'Disattivare l\'autenticazione a due fattori?',
+            'disable_confirm_body'     => 'Non ti verrà più richiesto un codice per accedere.',
+            'show_recovery_codes'      => 'Mostra codici di recupero',
+            'regenerate_recovery_codes' => 'Rigenera codici di recupero',
+            'setup_heading'            => 'Scansiona il codice QR',
+            'setup_description'        => 'Scansiona questo codice QR con la tua app di autenticazione (Google Authenticator, Authy, 1Password, ecc.), quindi inserisci il codice a 6 cifre generato per confermare.',
+            'secret_label'             => 'Oppure inserisci questo codice manualmente',
+            'code_label'               => 'Codice di conferma',
+            'code_helper'              => 'Inserisci il codice a 6 cifre dalla tua app di autenticazione.',
+            'invalid_code'             => 'Il codice fornito non è valido.',
+            'confirm_action'           => 'Conferma',
+            'recovery_codes_heading'   => 'Codici di recupero',
+            'recovery_codes_description' => 'Conserva questi codici in un luogo sicuro. Ognuno può essere usato una sola volta per accedere se perdi l\'accesso alla tua app di autenticazione.',
+            'enabled_notification'    => 'Autenticazione a due fattori attivata.',
+            'disabled_notification'   => 'Autenticazione a due fattori disattivata.',
+            'regenerated_notification' => 'Codici di recupero rigenerati.',
         ],
     ],
 

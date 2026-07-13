@@ -2,6 +2,15 @@
 
 return [
 
+    'auth' => [
+        'two_factor' => [
+            'heading'       => 'Two-factor authentication',
+            'code_label'    => 'Authentication code',
+            'code_helper'   => 'Enter the 6-digit code from your authenticator app, or one of your recovery codes.',
+            'back_to_login' => 'Back to login',
+        ],
+    ],
+
     'nav' => [
         'dashboard'        => 'Dashboard',
         'services'         => 'Services',
@@ -169,6 +178,7 @@ return [
         'tabs' => [
             'general'    => 'General',
             'appearance' => 'Appearance',
+            'security'   => 'Security',
             'whatsapp'   => 'WhatsApp',
             'claude'     => 'Claude AI',
             'bot'        => 'Bot Behaviour',
@@ -180,6 +190,7 @@ return [
             'panel_mode'   => 'Panel Mode',
             'auth_bg'      => 'Auth Page Background',
             'branding'     => 'Branding Assets',
+            'two_factor'   => 'Two-Factor Authentication',
             'wa_api'       => 'WhatsApp Business API',
             'claude_api'   => 'Anthropic Claude API',
             'response'     => 'Response Settings',
@@ -193,6 +204,8 @@ return [
             'maintenance_help'        => 'When enabled, the admin panel will display a maintenance notice.',
             'default_language'        => 'Default Language',
             'default_language_help'   => 'The language shown on the login page and used as the panel default. Individual admins can still switch language using the topbar selector.',
+            'two_factor_enabled'      => 'Enable Two-Factor Authentication',
+            'two_factor_enabled_help' => 'Turns the two-factor authentication feature on or off for the entire admin panel. When off, no one is challenged for a code at login, and admins cannot enable it on their profile — existing setups are kept but inactive until this is switched back on.',
         ],
     ],
 
@@ -221,17 +234,42 @@ return [
 
     'profile' => [
         'sections' => [
-            'picture'  => 'Profile Picture',
-            'details'  => 'Personal Information',
-            'security' => 'Change Password',
+            'picture'    => 'Profile Picture',
+            'details'    => 'Personal Information',
+            'security'   => 'Change Password',
+            'two_factor' => 'Two-Factor Authentication',
         ],
         'descriptions' => [
-            'picture'  => 'Upload a square image. It will be displayed as a circle.',
-            'details'  => 'Update your name and email address.',
-            'security' => 'Leave blank to keep your current password.',
+            'picture'    => 'Upload a square image. It will be displayed as a circle.',
+            'details'    => 'Update your name and email address.',
+            'security'   => 'Leave blank to keep your current password.',
+            'two_factor' => 'Add an extra layer of security to your account using an authenticator app.',
         ],
         'fields' => [
             'avatar' => 'Avatar',
+        ],
+        'two_factor' => [
+            'enabled'                  => 'Two-factor authentication is enabled.',
+            'disabled'                 => 'Two-factor authentication is not enabled.',
+            'disabled_globally'        => 'Two-factor authentication has been turned off for this application by an administrator.',
+            'enable_action'            => 'Enable',
+            'disable_action'           => 'Disable',
+            'disable_confirm_heading'  => 'Disable two-factor authentication?',
+            'disable_confirm_body'     => 'You will no longer be asked for a code when signing in.',
+            'show_recovery_codes'      => 'Show recovery codes',
+            'regenerate_recovery_codes' => 'Regenerate recovery codes',
+            'setup_heading'            => 'Scan the QR code',
+            'setup_description'        => 'Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password, etc.), then enter the 6-digit code it generates to confirm.',
+            'secret_label'             => 'Or enter this code manually',
+            'code_label'               => 'Confirmation code',
+            'code_helper'              => 'Enter the 6-digit code from your authenticator app.',
+            'invalid_code'             => 'The provided code was invalid.',
+            'confirm_action'           => 'Confirm',
+            'recovery_codes_heading'   => 'Recovery codes',
+            'recovery_codes_description' => 'Store these codes in a secure place. Each one can be used once to sign in if you lose access to your authenticator app.',
+            'enabled_notification'    => 'Two-factor authentication enabled.',
+            'disabled_notification'   => 'Two-factor authentication disabled.',
+            'regenerated_notification' => 'Recovery codes regenerated.',
         ],
     ],
 

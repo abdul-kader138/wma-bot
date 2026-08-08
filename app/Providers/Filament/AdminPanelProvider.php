@@ -24,6 +24,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -117,6 +118,20 @@ class AdminPanelProvider extends PanelProvider
             'orange'         => 'sunset',
             default          => array_key_exists($theme, self::$authBackgrounds) ? $theme : 'midnight',
         };
+    }
+
+    // ── Resolve browser-tab favicon from stored setting ───────────────────────
+    // "favicon" overrides "app_icon" when both are set — matches the field
+    // helper text in SystemSettings ("Overrides the app icon for browser tabs").
+    protected static function resolveFaviconUrl(): ?string
+    {
+        try {
+            $path = Setting::get('favicon') ?: Setting::get('app_icon');
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $path ? Storage::disk('public')->url($path) : null;
     }
 
     // ── Panel dark-mode resolution ────────────────────────────────────────────
@@ -228,6 +243,7 @@ CSS . $custom;
             ->login(Login::class)
             ->profile(EditProfile::class, isSimple: false)
             ->brandName(fn () => Setting::get('app_name', config('app.name')))
+            ->favicon(fn () => self::resolveFaviconUrl())
             ->colors(self::resolveThemeColors())
             ->defaultThemeMode(self::resolveDefaultThemeMode())
             ->darkMode(...array_values(self::resolveDarkModeArgs()))

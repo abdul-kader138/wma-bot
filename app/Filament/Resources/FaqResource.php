@@ -93,7 +93,7 @@ class FaqResource extends Resource
 
                 Tables\Columns\TextColumn::make('keywords')
                     ->label(__('admin.faq.fields.triggers'))
-                    ->formatStateUsing(fn (array $state) => implode(', ', $state))
+                    ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : (string) $state)
                     ->limit(50),
 
                 Tables\Columns\ToggleColumn::make('is_active')

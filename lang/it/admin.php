@@ -93,9 +93,21 @@ return [
     'conversation' => [
         'label'        => 'Conversazione',
         'label_plural' => 'Conversazioni',
+        'sections' => [
+            'details'    => 'Dettagli',
+            'transcript' => 'Trascrizione della conversazione',
+        ],
         'fields' => [
             'phone'         => 'Telefono',
             'last_activity' => 'Ultima Attività',
+            'started_at'    => 'Iniziata',
+            'language'      => 'Lingua',
+            'role'          => 'Da',
+            'message'       => 'Messaggio',
+        ],
+        'roles' => [
+            'user'      => 'Cliente',
+            'assistant' => 'Bot',
         ],
         'steps' => [
             'NEW'           => 'Nuova',

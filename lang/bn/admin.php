@@ -93,9 +93,21 @@ return [
     'conversation' => [
         'label'        => 'কথোপকথন',
         'label_plural' => 'কথোপকথনসমূহ',
+        'sections' => [
+            'details'    => 'বিস্তারিত',
+            'transcript' => 'কথোপকথনের বিবরণ',
+        ],
         'fields' => [
             'phone'         => 'ফোন',
             'last_activity' => 'শেষ কার্যকলাপ',
+            'started_at'    => 'শুরু হয়েছে',
+            'language'      => 'ভাষা',
+            'role'          => 'প্রেরক',
+            'message'       => 'বার্তা',
+        ],
+        'roles' => [
+            'user'      => 'গ্রাহক',
+            'assistant' => 'বট',
         ],
         'steps' => [
             'NEW'           => 'নতুন',

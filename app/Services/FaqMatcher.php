@@ -3,11 +3,15 @@
 namespace App\Services;
 
 use App\Models\Faq;
+use App\Models\Setting;
 use Illuminate\Support\Collection;
 
 class FaqMatcher
 {
     private const FUZZY_THRESHOLD = 0.5;
+
+    /** Below this length, skip the "needle contains input" reverse check to avoid short/generic messages over-matching. */
+    private const MIN_LENGTH_FOR_REVERSE_CONTAINS = 8;
 
     public function match(string $text, ?string $service): ?Faq
     {
@@ -19,9 +23,18 @@ class FaqMatcher
         $candidates = $this->candidates($service);
 
         foreach ($candidates as $faq) {
-            foreach ($faq->keywords as $keyword) {
-                $needle = $this->normalize($keyword);
-                if ($needle !== '' && str_contains($normalized, $needle)) {
+            foreach ($this->triggerTexts($faq) as $trigger) {
+                $needle = $this->normalize($trigger);
+                if ($needle === '') {
+                    continue;
+                }
+
+                if (str_contains($normalized, $needle)) {
+                    return $faq;
+                }
+
+                if (mb_strlen($normalized) >= self::MIN_LENGTH_FOR_REVERSE_CONTAINS
+                    && str_contains($needle, $normalized)) {
                     return $faq;
                 }
             }
@@ -39,7 +52,15 @@ class FaqMatcher
             }
         }
 
-        return $bestScore >= self::FUZZY_THRESHOLD ? $best : null;
+        $threshold = (float) (Setting::get('faq_confidence_threshold') ?? self::FUZZY_THRESHOLD);
+
+        return $bestScore >= $threshold ? $best : null;
+    }
+
+    /** Question text (all languages) plus trigger phrases — anything the user might literally type. */
+    private function triggerTexts(Faq $faq): array
+    {
+        return array_merge($faq->questionVariants(), $faq->keywords ?? []);
     }
 
     protected function candidates(?string $service): Collection
@@ -52,9 +73,9 @@ class FaqMatcher
 
     private function overlapScore(array $words, Faq $faq): float
     {
-        $targetWords = $this->words($this->normalize($faq->question));
-        foreach ($faq->keywords as $keyword) {
-            $targetWords = array_merge($targetWords, $this->words($this->normalize($keyword)));
+        $targetWords = [];
+        foreach ($this->triggerTexts($faq) as $text) {
+            $targetWords = array_merge($targetWords, $this->words($this->normalize($text)));
         }
         $targetWords = array_unique($targetWords);
 
@@ -63,9 +84,11 @@ class FaqMatcher
         }
 
         $intersection = array_intersect($words, $targetWords);
-        $union        = array_unique(array_merge($words, $targetWords));
 
-        return count($intersection) / count($union);
+        // Overlap coefficient (intersection / smaller set), not Jaccard (intersection / union):
+        // a short user message shouldn't be penalized just because the FAQ's combined
+        // question + trigger phrases are much longer.
+        return count($intersection) / min(count($words), count($targetWords));
     }
 
     /** Words of 3+ characters, to keep short stop words from diluting the overlap score. */

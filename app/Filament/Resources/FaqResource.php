@@ -51,17 +51,22 @@ class FaqResource extends Resource
                     ->label(__('admin.faq.fields.active'))
                     ->default(true),
 
-                Forms\Components\TextInput::make('question')
-                    ->label(__('admin.faq.fields.question'))
-                    ->required()
-                    ->columnSpanFull(),
-
                 Forms\Components\TagsInput::make('keywords')
                     ->label(__('admin.faq.fields.keywords'))
                     ->helperText(__('admin.faq.fields.keywords_help'))
                     ->required()
                     ->columnSpanFull(),
             ])->columns(2),
+
+            Forms\Components\Section::make(__('admin.faq.fields.question'))->schema(
+                collect(config('services_bot.languages'))
+                    ->map(fn ($name, $code) => Forms\Components\TextInput::make("question.{$code}")
+                        ->label($name)
+                        ->required($code === 'en')
+                        ->columnSpanFull())
+                    ->values()
+                    ->toArray()
+            ),
 
             Forms\Components\Section::make(__('admin.faq.sections.answer'))->schema(
                 collect(config('services_bot.languages'))
@@ -81,6 +86,7 @@ class FaqResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('question')
+                    ->formatStateUsing(fn (Faq $record) => $record->questionFor(app()->getLocale()))
                     ->searchable()
                     ->limit(60),
 

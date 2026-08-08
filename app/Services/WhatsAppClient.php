@@ -52,10 +52,10 @@ class WhatsAppClient
 
     public function sendServiceButtons(string $to, string $lang): void
     {
-        $buttons = [];
+        $rows = [];
         foreach (Service::toConfig() as $key => $svc) {
-            $title     = $svc['label'][$lang] ?? $svc['label']['en'];
-            $buttons[] = ['type' => 'reply', 'reply' => ['id' => $key, 'title' => $title]];
+            $title  = $svc['label'][$lang] ?? $svc['label']['en'];
+            $rows[] = ['id' => $key, 'title' => $title];
         }
 
         $prompt = config("services_bot.replies.choose_service.{$lang}")
@@ -66,9 +66,14 @@ class WhatsAppClient
             'to'                => $to,
             'type'              => 'interactive',
             'interactive'       => [
-                'type'   => 'button',
+                'type'   => 'list',
                 'body'   => ['text' => $prompt],
-                'action' => ['buttons' => array_slice($buttons, 0, 3)],
+                'action' => [
+                    'button'   => 'Select',
+                    // WhatsApp list messages support up to 10 rows — take the slice here
+                    // only to stay within that API limit, not an arbitrary app choice.
+                    'sections' => [['title' => 'Services', 'rows' => array_slice($rows, 0, 10)]],
+                ],
             ],
         ]);
     }

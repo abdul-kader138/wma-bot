@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="WMA Bot" />
+  <title>WhatsApp Number Setup Guide</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="whatsapp-setup-guide.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">WhatsApp Number Setup Guide</h1>
+<p class="subtitle">How to get your WABA ID, Phone Number ID, and Access
+Token from Meta, and connect a number to the bot</p>
+<p class="author">WMA Bot</p>
+<p class="date">August 2026</p>
+</header>
+<h1 id="overview">Overview</h1>
+<p>To connect a WhatsApp number to the bot, you need three things from
+Meta, plus one secret you create yourself:</p>
+<ol type="1">
+<li><strong>WABA ID</strong> (WhatsApp Business Account ID)</li>
+<li><strong>Phone Number ID</strong></li>
+<li><strong>Access Token</strong></li>
+<li><strong>Webhook Verify Token</strong> — a password you invent
+yourself (not from Meta)</li>
+</ol>
+<p>This guide shows exactly where to find each one.</p>
+<h1 id="step-1-create-a-meta-app">Step 1 — Create a Meta App</h1>
+<ol type="1">
+<li>Go to <strong>developers.facebook.com</strong> and log in with a
+Facebook account.</li>
+<li>Click <strong>My Apps → Create App</strong>.</li>
+<li>Choose the <strong>Business</strong> app type.</li>
+<li>Give the app a name (e.g. “WMA Bot”) and create it.</li>
+<li>On the app dashboard, find <strong>WhatsApp</strong> in the product
+list and click <strong>Set up</strong>.</li>
+</ol>
+<h1 id="step-2-get-the-waba-id-and-phone-number-id">Step 2 — Get the
+WABA ID and Phone Number ID</h1>
+<p>After adding the WhatsApp product, Meta opens the <strong>API
+Setup</strong> page. This page shows:</p>
+<ul>
+<li>A <strong>From</strong> dropdown with a phone number (Meta gives you
+a free test number automatically).</li>
+<li>Below it, a box labeled <strong>Phone number ID</strong> with a long
+number and a <strong>Copy</strong> button.</li>
+<li>The <strong>WhatsApp Business Account ID</strong> is shown either on
+this same page or under <strong>WhatsApp → Configuration → the account
+name link</strong>.</li>
+</ul>
+<p>Copy both values into a safe place (e.g. a password manager or a
+notes file):</p>
+<pre><code>WABA ID:          123456789012345
+Phone Number ID:  109876543210987</code></pre>
+<p><strong>Note:</strong> the Phone Number ID is not the same as the
+phone number itself. It is an internal ID, always a long number.</p>
+<p>If you want to use your <strong>own business phone number</strong>
+instead of the free test number:</p>
+<ol type="1">
+<li>On the API Setup page, click <strong>Add phone number</strong>.</li>
+<li>Enter your business details and the phone number.</li>
+<li>Verify it by SMS or a phone call code.</li>
+<li>Once verified, it becomes selectable in the <strong>From</strong>
+dropdown, with its own Phone Number ID.</li>
+</ol>
+<h1 id="step-3-get-an-access-token">Step 3 — Get an Access Token</h1>
+<h2 id="quick-option-for-testing-only">Quick option (for testing
+only)</h2>
+<p>On the same <strong>API Setup</strong> page, there is a
+<strong>Temporary access token</strong> box with a <strong>Copy</strong>
+button. This works immediately but <strong>expires after 24
+hours</strong>, so it is only good for a quick test.</p>
+<h2 id="permanent-option-for-production-use">Permanent option (for
+production use)</h2>
+<ol type="1">
+<li>Go to <strong>business.facebook.com</strong> → <strong>Settings →
+Business Settings</strong>.</li>
+<li>In the left menu, open <strong>Users → System Users</strong>.</li>
+<li>Click <strong>Add</strong> to create a new system user (e.g. name it
+“wma-bot”), role <strong>Admin</strong>.</li>
+<li>Click <strong>Add Assets</strong>, select your WhatsApp app/account,
+and grant <strong>Full control</strong>.</li>
+<li>With the system user selected, click <strong>Generate new
+token</strong>.</li>
+<li>Choose your app, and select these permissions:
+<ul>
+<li><code>whatsapp_business_messaging</code></li>
+<li><code>whatsapp_business_management</code></li>
+</ul></li>
+<li>Click <strong>Generate token</strong> and copy it immediately — Meta
+only shows it once.</li>
+</ol>
+<p>This token does not expire, so it is what should be used in the live
+bot.</p>
+<h1 id="step-4-get-the-app-secret">Step 4 — Get the App Secret</h1>
+<ol type="1">
+<li>On the Meta App dashboard, go to <strong>Settings →
+Basic</strong>.</li>
+<li>Find <strong>App Secret</strong>, click <strong>Show</strong>, and
+copy it.</li>
+</ol>
+<p>This value is not entered in the admin panel. It goes into the
+server’s <code>.env</code> file as:</p>
+<pre><code>WHATSAPP_APP_SECRET=paste_it_here</code></pre>
+<p>Then the server needs <code>php artisan config:cache</code> run once
+to pick it up. (Ask your developer/hosting person to do this if you
+don’t manage the server yourself.)</p>
+<h1 id="step-5-create-the-webhook-verify-token">Step 5 — Create the
+Webhook Verify Token</h1>
+<p>This one is not from Meta — you make it up yourself. Any random
+string works, for example:</p>
+<pre><code>wma-bot-8f2a91c4</code></pre>
+<p>Use the <strong>same string</strong> in two places:</p>
+<ol type="1">
+<li><strong>Admin panel → System Settings → WhatsApp tab → Webhook
+Verify Token</strong> — paste it and Save.</li>
+<li><strong>Meta App dashboard → WhatsApp → Configuration → Webhook →
+Edit</strong> — paste the same string into the <strong>Verify
+token</strong> field.</li>
+</ol>
+<p>The <strong>Callback URL</strong> in that same Meta screen should
+be:</p>
+<pre><code>https://tmmtravels.it/api/webhook/whatsapp</code></pre>
+<p>Click <strong>Verify and Save</strong>, then click
+<strong>Manage</strong> next to Webhook fields and subscribe to
+<strong>messages</strong>.</p>
+<h1 id="step-6-add-the-number-in-the-admin-panel">Step 6 — Add the
+Number in the Admin Panel</h1>
+<p>Once you have the WABA ID, Phone Number ID, and Access Token:</p>
+<ol type="1">
+<li>Log in to the admin panel.</li>
+<li>Left menu → <strong>Administration → WhatsApp Accounts →
+Create</strong>.</li>
+<li>Fill in the form:</li>
+</ol>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>What to enter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Name</td>
+<td>Any label, e.g. “Main Support Line”</td>
+</tr>
+<tr class="even">
+<td>WABA ID</td>
+<td>From Step 2</td>
+</tr>
+<tr class="odd">
+<td>Phone Number ID</td>
+<td>From Step 2</td>
+</tr>
+<tr class="even">
+<td>API Version</td>
+<td>Leave as <code>v22.0</code></td>
+</tr>
+<tr class="odd">
+<td>Access Token</td>
+<td>From Step 3</td>
+</tr>
+<tr class="even">
+<td>Active</td>
+<td>Turn on</td>
+</tr>
+<tr class="odd">
+<td>Default</td>
+<td>Turn on if this is the main/primary number</td>
+</tr>
+</tbody>
+</table>
+<ol start="4" type="1">
+<li>Click <strong>Save</strong>.</li>
+</ol>
+<h1 id="step-7-test-it">Step 7 — Test It</h1>
+<ol type="1">
+<li>From your own phone, send a WhatsApp message to the number.
+<ul>
+<li>If using Meta’s free test number, that phone must first be added
+under <strong>API Setup → Manage phone number list</strong> (Meta only
+allows up to 5 test recipients).</li>
+</ul></li>
+<li>Check the admin panel → <strong>Conversations</strong> — a new
+conversation should appear within a few seconds.</li>
+<li>If nothing shows up:
+<ul>
+<li>Confirm the webhook shows a green “Verified” status in Meta.</li>
+<li>Confirm the Webhook Verify Token matches exactly in both places
+(Step 5).</li>
+<li>Ask your developer to check <code>storage/logs/laravel.log</code> on
+the server and confirm the background queue worker is running.</li>
+</ul></li>
+</ol>
+<h1 id="summary-checklist">Summary Checklist</h1>
+<ul class="task-list">
+<li><label><input type="checkbox" />WABA ID copied</label></li>
+<li><label><input type="checkbox" />Phone Number ID copied</label></li>
+<li><label><input type="checkbox" />Access Token generated (permanent,
+for production)</label></li>
+<li><label><input type="checkbox" />App Secret added to server
+<code>.env</code></label></li>
+<li><label><input type="checkbox" />Webhook Verify Token created and
+matches in both Meta and admin panel</label></li>
+<li><label><input type="checkbox" />Callback URL set in Meta and shows
+“Verified”</label></li>
+<li><label><input type="checkbox" />Subscribed to the
+<code>messages</code> webhook field</label></li>
+<li><label><input type="checkbox" />WhatsApp Account created in admin
+panel with all credentials</label></li>
+<li><label><input type="checkbox" />Test message sent and conversation
+appears in admin panel</label></li>
+</ul>
+</body>
+</html>

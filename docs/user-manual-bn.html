@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="bn" xml:lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="ডব্লিউএমএ বট" />
+  <title>ব্যবহারকারী ম্যানুয়াল</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="user-manual-bn.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ব্যবহারকারী ম্যানুয়াল</h1>
+<p class="subtitle">সেবা ও সাধারণ প্রশ্ন তৈরির সহজ নির্দেশিকা</p>
+<p class="author">ডব্লিউএমএ বট</p>
+<p class="date">১৩ জুলাই ২০২৬</p>
+</header>
+<h1 id="পরচত">পরিচিতি</h1>
+<p>এই ম্যানুয়ালটি অ্যাডমিন ব্যবহারকারীর জন্য। এখানে সংক্ষেপে দেখানো হয়েছে
+কীভাবে অ্যাডমিন প্যানেলে নতুন সেবা তৈরি করবেন এবং সাধারণ প্রশ্ন যোগ
+করবেন।</p>
+<h1 id="নতন-সব-তর">নতুন সেবা তৈরি</h1>
+<ol type="1">
+<li>অ্যাডমিন প্যানেলে লগইন করুন।</li>
+<li>বাম পাশের মেনু থেকে <strong>সেবাসমূহ</strong> খুলুন।</li>
+<li><strong>Create</strong> বা <strong>নতুন তৈরি করুন</strong> বোতামে ক্লিক
+করুন।</li>
+<li><strong>মূল তথ্য</strong> ট্যাবে তথ্য পূরণ করুন।</li>
+</ol>
+<ul>
+<li><strong>Slug:</strong> ছোট ইংরেজি আইডি, যেমন visa_consultation</li>
+<li><strong>ব্যাজের রঙ:</strong> তালিকা থেকে একটি রঙ নির্বাচন করুন</li>
+<li><strong>সক্রিয়:</strong> ব্যবহারকারীর কাছে দেখাতে চাইলে চালু রাখুন</li>
+<li><strong>ক্রম:</strong> ছোট সংখ্যা দিলে আগে দেখাবে</li>
+<li><strong>English:</strong> সেবার ইংরেজি নাম</li>
+<li><strong>বাংলা:</strong> সেবার বাংলা নাম</li>
+</ul>
+<ol start="5" type="1">
+<li><strong>বট সেটিংস</strong> ট্যাবে যান।</li>
+</ol>
+<ul>
+<li><strong>প্রম্পট লেবেল:</strong> সেবাটি কী কাজ করে তার ছোট ইংরেজি
+বর্ণনা</li>
+<li><strong>টুল ফাংশনের নাম:</strong> যেমন submit_visa_request</li>
+<li><strong>টুলের বিবরণ:</strong> কখন bot অনুরোধটি সংরক্ষণ করবে তা
+লিখুন</li>
+</ul>
+<ol start="6" type="1">
+<li><strong>ডেটা ক্ষেত্র</strong> ট্যাবে যান।</li>
+<li><strong>Add field</strong> ক্লিক করে bot ব্যবহারকারীর কাছ থেকে যে তথ্য
+নেবে তা যোগ করুন।</li>
+</ol>
+<p>প্রতিটি field-এ চারটি বিষয় থাকে:</p>
+<ul>
+<li><strong>Field name:</strong> তথ্যের নাম, যেমন full_name</li>
+<li><strong>Type:</strong> Text, number, অথবা yes/no</li>
+<li><strong>Required:</strong> এই তথ্য বাধ্যতামূলক কি না</li>
+<li><strong>Description:</strong> bot যেন বুঝতে পারে, এই তথ্য কী</li>
+</ul>
+<ol start="8" type="1">
+<li>সব তথ্য ঠিক হলে <strong>Save</strong> বা <strong>Create</strong> ক্লিক
+করুন।</li>
+</ol>
+<h1 id="সবর-উদহরণ">সেবার উদাহরণ</h1>
+<p>নতুন সেবা: <strong>ভিসা পরামর্শ</strong></p>
+<ul>
+<li><strong>Slug:</strong> visa_consultation</li>
+<li><strong>English:</strong> Visa consultation</li>
+<li><strong>বাংলা:</strong> ভিসা পরামর্শ</li>
+<li><strong>প্রম্পট লেবেল:</strong> a visa consultation enquiry</li>
+<li><strong>টুল ফাংশনের নাম:</strong>
+submit_visa_consultation_request</li>
+<li><strong>টুলের বিবরণ:</strong> সব প্রয়োজনীয় তথ্য নেওয়ার পর ভিসা পরামর্শের
+অনুরোধ সংরক্ষণ করুন।</li>
+</ul>
+<p>ডেটা ক্ষেত্র:</p>
+<ul>
+<li><strong>full_name:</strong> Text, Required, ব্যবহারকারীর পূর্ণ নাম</li>
+<li><strong>nationality:</strong> Text, Required, ব্যবহারকারীর
+জাতীয়তা</li>
+<li><strong>visa_type:</strong> Text, Required, কোন ধরনের ভিসার সহায়তা
+দরকার</li>
+<li><strong>notes:</strong> Text, Not required, অতিরিক্ত তথ্য</li>
+</ul>
+<h1 id="সধরণ-পরশন-তর">সাধারণ প্রশ্ন তৈরি</h1>
+<ol type="1">
+<li>বাম পাশের মেনু থেকে <strong>সাধারণ প্রশ্ন</strong> খুলুন।</li>
+<li><strong>Create</strong> বা <strong>নতুন তৈরি করুন</strong> ক্লিক
+করুন।</li>
+<li><strong>প্রযোজ্য</strong> ফিল্ডে FAQ কোন সেবার জন্য হবে তা নির্বাচন করুন।
+যদি সব সেবার জন্য হয়, তাহলে <strong>সকল সেবা</strong> রাখুন।</li>
+<li><strong>সক্রিয়</strong> চালু রাখুন।</li>
+<li><strong>রেফারেন্স প্রশ্ন</strong> লিখুন।</li>
+<li><strong>ট্রিগার বাক্যাংশ</strong> যোগ করুন। ব্যবহারকারী যেসব শব্দ লিখতে
+পারে, সেগুলো দিন।</li>
+<li><strong>উত্তর</strong> অংশে বাংলা এবং দরকারি অন্য ভাষার উত্তর
+লিখুন।</li>
+<li><strong>Save</strong> ক্লিক করুন।</li>
+</ol>
+<h1 id="faq-উদহরণ">FAQ উদাহরণ</h1>
+<ul>
+<li><strong>প্রযোজ্য:</strong> সকল সেবা</li>
+<li><strong>রেফারেন্স প্রশ্ন:</strong> অফিস কখন খোলা থাকে?</li>
+<li><strong>ট্রিগার বাক্যাংশ:</strong> অফিস সময়, কখন খোলা, opening
+hour</li>
+<li><strong>বাংলা উত্তর:</strong> আমাদের অফিস সোমবার থেকে শুক্রবার সকাল ৯টা
+থেকে সন্ধ্যা ৬টা পর্যন্ত খোলা থাকে।</li>
+</ul>
+<p>আরেকটি সেবা নির্দিষ্ট উদাহরণ:</p>
+<ul>
+<li><strong>প্রযোজ্য:</strong> টিকিট বুকিং</li>
+<li><strong>রেফারেন্স প্রশ্ন:</strong> টিকিট বুকিং করতে কী তথ্য লাগে?</li>
+<li><strong>ট্রিগার বাক্যাংশ:</strong> টিকিট, বুকিং, কি লাগবে</li>
+<li><strong>বাংলা উত্তর:</strong> টিকিট বুকিংয়ের জন্য পূর্ণ নাম, রুট, ভ্রমণের
+তারিখ এবং যাত্রীর সংখ্যা দরকার।</li>
+</ul>
+<h1 id="পরকষ-করর-নযম">পরীক্ষা করার নিয়ম</h1>
+<p>সেবা বা FAQ তৈরি করার পর WhatsApp থেকে পরীক্ষা করুন।</p>
+<ol type="1">
+<li>নতুন conversation শুরু করুন।</li>
+<li>ভাষা নির্বাচন করুন।</li>
+<li>সেবা তালিকায় নতুন সেবা দেখা যাচ্ছে কি না দেখুন।</li>
+<li>সেবা নির্বাচন করলে bot সঠিক তথ্য চাইছে কি না দেখুন।</li>
+<li>FAQ keyword লিখে bot সঠিক উত্তর দিচ্ছে কি না দেখুন।</li>
+</ol>
+<h1 id="সধরণ-সমসয">সাধারণ সমস্যা</h1>
+<ul>
+<li>সেবা দেখা যাচ্ছে না: <strong>সক্রিয়</strong> চালু করুন।</li>
+<li>সেবা নিচে দেখাচ্ছে: <strong>ক্রম</strong> ছোট করুন।</li>
+<li>Save হচ্ছে না: required ফিল্ড পূরণ করুন।</li>
+<li>FAQ উত্তর আসছে না: আরও সহজ trigger phrase যোগ করুন।</li>
+<li>বাংলা উত্তর আসছে না: বাংলা উত্তর ফিল্ড পূরণ করুন।</li>
+</ul>
+<h1 id="গরতবপরণ-পরমরশ">গুরুত্বপূর্ণ পরামর্শ</h1>
+<ul>
+<li>Slug একবার ঠিক করলে বারবার পরিবর্তন করবেন না।</li>
+<li>অপ্রয়োজনীয় field required করবেন না।</li>
+<li>FAQ trigger phrase ছোট ও সহজ রাখুন।</li>
+<li>পরিবর্তনের পর সবসময় WhatsApp দিয়ে পরীক্ষা করুন।</li>
+</ul>
+</body>
+</html>

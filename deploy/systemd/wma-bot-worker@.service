@@ -1,0 +1,16 @@
+[Unit]
+Description=WMA Bot Queue Worker #%i
+After=network.target mysql.service redis-server.service
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/var/www/tmmtravels
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/www/tmmtravels/storage/logs/worker-%i.log
+StandardError=append:/var/www/tmmtravels/storage/logs/worker-%i.log
+
+[Install]
+WantedBy=multi-user.target

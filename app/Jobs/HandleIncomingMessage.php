@@ -13,6 +13,7 @@ use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
 use App\Services\WhatsAppClient;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -26,7 +27,9 @@ class HandleIncomingMessage implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries   = 3;
-    public int $timeout = 60;
+
+    // Headroom for: lock wait (up to 10s) + Claude call (up to 40s) + WhatsApp send (up to 10s) + overhead.
+    public int $timeout = 90;
 
     public function __construct(public array $value, public int $whatsAppAccountId) {}
 
@@ -60,6 +63,32 @@ class HandleIncomingMessage implements ShouldQueue
         }
 
         $phone = $msg['phone'];
+
+        // Serialize processing per customer: with more than one queue worker running,
+        // two rapid messages from the same person could otherwise be picked up by two
+        // workers at once and race on the same Conversation row (lost updates, or the
+        // AI tool call firing twice and creating duplicate ServiceRequest rows).
+        $lock = Cache::lock("conversation-lock:{$account->id}:{$phone}", 30);
+
+        try {
+            $lock->block(10, function () use ($agent, $faqs, $account, $phone, $msg, $wa) {
+                $this->processMessage($agent, $faqs, $account, $phone, $msg, $wa);
+            });
+        } catch (LockTimeoutException) {
+            // Another message from this same customer is still being processed right
+            // now. Put this one back on the queue briefly rather than racing it.
+            $this->release(3);
+        }
+    }
+
+    private function processMessage(
+        ClaudeAgent $agent,
+        FaqMatcher $faqs,
+        WhatsAppAccount $account,
+        string $phone,
+        array $msg,
+        WhatsAppClient $wa,
+    ): void {
         $convo = Conversation::firstOrCreate(
             ['wa_phone' => $phone, 'whatsapp_account_id' => $account->id],
             ['step' => 'NEW', 'history' => []]

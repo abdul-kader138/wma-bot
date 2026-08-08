@@ -115,6 +115,7 @@ class ServiceRequestResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->recordUrl(fn (ServiceRequest $record) => static::getUrl('edit', ['record' => $record]))
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')

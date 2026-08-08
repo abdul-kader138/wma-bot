@@ -77,6 +77,7 @@ class SystemSettings extends Page implements HasForms
             'app_tagline'      => Setting::get('app_tagline',      ''),
             'support_email'    => Setting::get('support_email',    ''),
             'maintenance_mode' => Setting::get('maintenance_mode', false),
+            'admin_locale'     => Setting::get('admin_locale',     config('locales.default', 'en')),
 
             // Security
             'two_factor_enabled' => Setting::get('two_factor_enabled', true),

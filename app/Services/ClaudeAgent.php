@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\Service;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +17,7 @@ class ClaudeAgent
      */
     public function handle(Conversation $convo): array
     {
-        $service      = config("services_bot.services.{$convo->service}");
+        $service      = Service::toConfig()[$convo->service] ?? null;
         $languageName = config("services_bot.languages.{$convo->language}", 'English');
 
         $tool     = $this->buildTool($service);

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Conversation;
+use App\Models\Service;
 use App\Models\Setting;
 use App\Models\ServiceRequest;
 use App\Models\WhatsAppAccount;
@@ -86,7 +87,7 @@ class HandleIncomingMessage implements ShouldQueue
                 break;
 
             case 'AWAIT_SERVICE':
-                if (! array_key_exists($input, config('services_bot.services'))) {
+                if (! array_key_exists($input, Service::toConfig())) {
                     $wa->sendServiceButtons($phone, $convo->language ?? 'en');
                     break;
                 }

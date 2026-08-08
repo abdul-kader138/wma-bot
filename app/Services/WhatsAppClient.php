@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Service;
 use App\Models\WhatsAppAccount;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -52,7 +53,7 @@ class WhatsAppClient
     public function sendServiceButtons(string $to, string $lang): void
     {
         $buttons = [];
-        foreach (config('services_bot.services') as $key => $svc) {
+        foreach (Service::toConfig() as $key => $svc) {
             $title     = $svc['label'][$lang] ?? $svc['label']['en'];
             $buttons[] = ['type' => 'reply', 'reply' => ['id' => $key, 'title' => $title]];
         }

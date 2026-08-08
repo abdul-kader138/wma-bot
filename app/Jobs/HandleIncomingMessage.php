@@ -68,7 +68,12 @@ class HandleIncomingMessage implements ShouldQueue
         // two rapid messages from the same person could otherwise be picked up by two
         // workers at once and race on the same Conversation row (lost updates, or the
         // AI tool call firing twice and creating duplicate ServiceRequest rows).
-        $lock = Cache::lock("conversation-lock:{$account->id}:{$phone}", 30);
+        //
+        // The lock's own TTL (how long it stays valid before auto-expiring as a crash
+        // safety net) must be >= the longest this job can legitimately run — otherwise
+        // a slow Claude response could let the lock expire mid-processing and let a
+        // second worker in anyway. Match it to the job timeout below.
+        $lock = Cache::lock("conversation-lock:{$account->id}:{$phone}", 90);
 
         try {
             $lock->block(10, function () use ($agent, $faqs, $account, $phone, $msg, $wa) {

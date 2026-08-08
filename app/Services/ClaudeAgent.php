@@ -29,14 +29,24 @@ class ClaudeAgent
                 'x-api-key'         => Setting::get('claude_api_key') ?: config('services.anthropic.key'),
                 'anthropic-version' => '2023-06-01',
                 'content-type'      => 'application/json',
-            ])->timeout(40)->post('https://api.anthropic.com/v1/messages', [
-                'model'       => Setting::get('claude_model') ?: config('services.anthropic.model'),
-                'max_tokens'  => (int) Setting::get('claude_max_tokens', 1024),
-                'temperature' => (float) Setting::get('claude_temperature', 0.7),
-                'system'      => $system,
-                'tools'       => [$tool],
-                'messages'    => $messages,
-            ])->throw()->json();
+            ])
+                ->timeout(40)
+                // Retry transient failures here (rate limit / overload / connection blip)
+                // rather than failing the whole job, which would re-run everything from
+                // scratch — including re-sending the WhatsApp reply if one already went out.
+                ->retry(2, 500, function (\Throwable $e) {
+                    return $e instanceof \Illuminate\Http\Client\ConnectionException
+                        || ($e instanceof \Illuminate\Http\Client\RequestException
+                            && in_array($e->response->status(), [429, 500, 502, 503, 529]));
+                })
+                ->post('https://api.anthropic.com/v1/messages', [
+                    'model'       => Setting::get('claude_model') ?: config('services.anthropic.model'),
+                    'max_tokens'  => (int) Setting::get('claude_max_tokens', 1024),
+                    'temperature' => (float) Setting::get('claude_temperature', 0.7),
+                    'system'      => $system,
+                    'tools'       => [$tool],
+                    'messages'    => $messages,
+                ])->throw()->json();
         } catch (\Throwable $e) {
             Log::error('Claude API call failed', ['error' => $e->getMessage()]);
             throw $e;

@@ -109,14 +109,26 @@ class FaqMatcher
     // new phonetic-matching pass (overlapScore()) makes each candidate more expensive
     // to score, so re-querying the FAQ table on every message is no longer free.
     // Busted in Faq::booted() on save/delete.
+    //
+    // Caches raw attribute arrays, not live Faq objects: serializing whole Eloquent
+    // models through Redis is fragile across process/deploy boundaries (a long-running
+    // Horizon worker that read this key before a class change can fail to unserialize
+    // it, producing a __PHP_Incomplete_Class object instead of a Faq — that's what
+    // broke here). Faq::hydrate() rebuilds real model instances from plain arrays on
+    // every read, so the cached payload is just scalars/arrays, same as
+    // Service::toConfig() already does.
     private function activeFaqs(?int $whatsappAccountId): Collection
     {
-        return Cache::rememberForever("faqs:active:{$whatsappAccountId}", function () use ($whatsappAccountId) {
+        $rows = Cache::rememberForever("faqs:active:{$whatsappAccountId}", function () use ($whatsappAccountId) {
             return Faq::query()
                 ->where('is_active', true)
                 ->where('whatsapp_account_id', $whatsappAccountId)
-                ->get();
+                ->get()
+                ->map(fn (Faq $faq) => $faq->getAttributes())
+                ->all();
         });
+
+        return Faq::hydrate($rows);
     }
 
     private function overlapScore(array $words, Faq $faq): float

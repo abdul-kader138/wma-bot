@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
+use App\Contracts\MessagingChannel;
 use App\Models\Service;
 use App\Models\WhatsAppAccount;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WhatsAppClient
+class WhatsAppClient implements MessagingChannel
 {
     private string $url;
     private string $token;

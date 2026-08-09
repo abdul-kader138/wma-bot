@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Contracts\MessagingChannel;
 use App\Models\ClaudeDailyUsage;
 use App\Models\Conversation;
 use App\Models\Service;
@@ -106,7 +107,7 @@ class HandleIncomingMessage implements ShouldQueue
         WhatsAppAccount $account,
         string $phone,
         array $msg,
-        WhatsAppClient $wa,
+        MessagingChannel $wa,
     ): void {
         $convo = Conversation::firstOrCreate(
             ['wa_phone' => $phone, 'whatsapp_account_id' => $account->id],
@@ -245,7 +246,7 @@ class HandleIncomingMessage implements ShouldQueue
     //
     // Deliberately the weakest of the three caps: a customer can clear it any time by typing
     // "menu". circuitBreakerTripped() and dailyLimitReached() below are what actually stop abuse.
-    private function sessionLimitReached(Conversation $convo, WhatsAppClient $wa, string $phone): bool
+    private function sessionLimitReached(Conversation $convo, MessagingChannel $wa, string $phone): bool
     {
         $max = max(1, (int) Setting::get('claude_max_messages_per_session', 20));
 
@@ -273,7 +274,7 @@ class HandleIncomingMessage implements ShouldQueue
     // the sum of what customers actually used, and it works identically on every cache
     // driver (production runs Redis, which has no cheap way to enumerate cache keys —
     // see ClaudeUsageTracker).
-    private function circuitBreakerTripped(WhatsAppClient $wa, string $phone, ?string $lang): bool
+    private function circuitBreakerTripped(MessagingChannel $wa, string $phone, ?string $lang): bool
     {
         $cap = (int) Setting::get('claude_daily_global_cap', 0);
 
@@ -307,7 +308,7 @@ class HandleIncomingMessage implements ShouldQueue
     // recorded, so circuitBreakerTripped()'s global sum above always matches. Runs (and
     // increments) even when claude_max_messages_per_day is 0/disabled, since the global
     // breaker still needs an accurate count regardless of whether the per-phone cap is on.
-    private function dailyLimitReached(WhatsAppAccount $account, string $phone, WhatsAppClient $wa, ?string $lang): bool
+    private function dailyLimitReached(WhatsAppAccount $account, string $phone, MessagingChannel $wa, ?string $lang): bool
     {
         $usage = ClaudeDailyUsage::firstOrCreate(
             ['whatsapp_account_id' => $account->id, 'phone' => $phone, 'date' => today()->toDateString()],
@@ -366,7 +367,7 @@ class HandleIncomingMessage implements ShouldQueue
         }
     }
 
-    private function runAgent(WhatsAppClient $wa, ClaudeAgent $agent, Conversation $convo, string $phone): void
+    private function runAgent(MessagingChannel $wa, ClaudeAgent $agent, Conversation $convo, string $phone): void
     {
         // The service the customer picked may have been deactivated or deleted since
         // (Service::toConfig() only returns active ones) — recover instead of letting
@@ -418,7 +419,7 @@ class HandleIncomingMessage implements ShouldQueue
         $wa->sendText($phone, $reply['text']);
     }
 
-    private function sendWelcome(WhatsAppClient $wa, Conversation $convo, string $phone): void
+    private function sendWelcome(MessagingChannel $wa, Conversation $convo, string $phone): void
     {
         if ($welcome = $this->localizedMessage('bot_welcome_message', $convo->language)) {
             $wa->sendText($phone, $welcome);

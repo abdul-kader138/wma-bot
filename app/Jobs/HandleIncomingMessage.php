@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\ServiceRequest;
 use App\Models\WhatsAppAccount;
 use App\Notifications\BotJobFailedNotification;
+use App\Notifications\ClaudeBudgetExhaustedNotification;
 use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
@@ -31,6 +32,10 @@ class HandleIncomingMessage implements ShouldQueue
     // key (Setting::get('claude_api_key')) for the whole app, so the budget protecting
     // it has to be shared too, not per-conversation.
     private const CLAUDE_RATE_LIMIT_KEY = 'claude-api-calls';
+
+    // Global daily circuit breaker key — same reasoning as above, but a 24h window
+    // instead of a 1-minute one.
+    private const CLAUDE_DAILY_GLOBAL_KEY = 'claude-daily-global';
 
     public int $tries   = 3;
 
@@ -116,7 +121,7 @@ class HandleIncomingMessage implements ShouldQueue
         // Reset keywords, covering all supported languages (en/it/bn) so any customer
         // can restart the conversation in their own language.
         if (in_array(mb_strtolower($input), ['menu', 'start', 'restart', 'hi', 'hello', 'ciao', 'হ্যালো', 'শুরু'])) {
-            $convo->update(['step' => 'NEW', 'service' => null, 'history' => []]);
+            $convo->update(['step' => 'NEW', 'service' => null, 'history' => [], 'claude_message_count' => 0]);
         }
 
         switch ($convo->step) {
@@ -148,8 +153,17 @@ class HandleIncomingMessage implements ShouldQueue
                     break;
                 }
 
-                $convo->update(['service' => $input, 'step' => 'IN_SERVICE', 'history' => []]);
+                $convo->update(['service' => $input, 'step' => 'IN_SERVICE', 'history' => [], 'claude_message_count' => 0]);
                 $this->sendWelcome($wa, $convo, $phone);
+
+                // These three gates are all "hard stop" (no queue/retry, just tell the
+                // customer and skip the call) unlike deferIfClaudeRateLimited() above —
+                // see each method's own comment for why it exists and what it protects.
+                if ($this->circuitBreakerTripped($wa, $phone, $convo->language)
+                    || $this->dailyLimitReached($account, $phone, $wa, $convo->language)) {
+                    break;
+                }
+
                 $this->runAgent($wa, $agent, $convo, $phone);
                 break;
 
@@ -170,13 +184,22 @@ class HandleIncomingMessage implements ShouldQueue
                     break;
                 }
 
+                // Severity order: global kill switch first (protects everyone), then the
+                // per-phone daily budget (survives a "menu" reset, unlike the next one),
+                // then the per-session cap (cheapest to hit, resets on "menu").
+                if ($this->circuitBreakerTripped($wa, $phone, $convo->language)
+                    || $this->dailyLimitReached($account, $phone, $wa, $convo->language)
+                    || $this->sessionLimitReached($convo, $wa, $phone)) {
+                    break;
+                }
+
                 $this->appendHistory($convo, 'user', $input);
                 $this->runAgent($wa, $agent, $convo, $phone);
                 break;
 
             case 'DONE':
             default:
-                $convo->update(['step' => 'AWAIT_LANG', 'history' => []]);
+                $convo->update(['step' => 'AWAIT_LANG', 'history' => [], 'claude_message_count' => 0]);
                 $wa->sendLanguageList($phone);
                 break;
         }
@@ -217,6 +240,110 @@ class HandleIncomingMessage implements ShouldQueue
         return false;
     }
 
+    // Per-conversation ceiling on paid Claude calls, distinct from deferIfClaudeRateLimited()'s
+    // shared requests-per-minute budget: this caps how many times a single customer can make
+    // the bot call the API within one session, so one chatty conversation can't run up an
+    // unbounded token bill. Resets whenever the conversation's history resets (new service,
+    // restart keyword, or session end) — see the claude_message_count => 0 updates above.
+    //
+    // Deliberately the weakest of the three caps: a customer can clear it any time by typing
+    // "menu". circuitBreakerTripped() and dailyLimitReached() below are what actually stop abuse.
+    private function sessionLimitReached(Conversation $convo, WhatsAppClient $wa, string $phone): bool
+    {
+        $max = max(1, (int) Setting::get('claude_max_messages_per_session', 20));
+
+        if ($convo->claude_message_count < $max) {
+            return false;
+        }
+
+        if ($message = $this->localizedMessage('claude_session_limit_message', $convo->language)) {
+            $wa->sendText($phone, $message);
+        }
+
+        $convo->update(['step' => 'DONE', 'history' => [], 'claude_message_count' => 0]);
+
+        return true;
+    }
+
+    // Global, across every account and customer: an absolute daily ceiling on Claude calls,
+    // independent of the per-minute burst limiter. This is the "something is badly wrong,
+    // stop spending" circuit breaker — 0 disables it, since a sensible cap depends entirely
+    // on the owner's actual traffic and Anthropic budget. Stays tripped until the day rolls
+    // over; staff are emailed once per day it trips, not once per blocked message.
+    private function circuitBreakerTripped(WhatsAppClient $wa, string $phone, ?string $lang): bool
+    {
+        $cap = (int) Setting::get('claude_daily_global_cap', 0);
+
+        if ($cap <= 0) {
+            return false;
+        }
+
+        if (! RateLimiter::tooManyAttempts(self::CLAUDE_DAILY_GLOBAL_KEY, $cap)) {
+            RateLimiter::hit(self::CLAUDE_DAILY_GLOBAL_KEY, 86400);
+
+            return false;
+        }
+
+        if (Cache::add('claude-breaker-notified:'.now()->toDateString(), true, now()->endOfDay())) {
+            $this->notifyStaffBudgetExhausted($cap);
+        }
+
+        if ($message = $this->localizedMessage('bot_fallback_message', $lang)) {
+            $wa->sendText($phone, $message);
+        }
+
+        return true;
+    }
+
+    // Per phone number, spanning every session — this is what actually stops abuse that
+    // sessionLimitReached() can't: a customer can reset the per-session counter any time by
+    // typing "menu", but this key is scoped to the phone number, not the conversation row,
+    // so it survives that. 0 disables it.
+    private function dailyLimitReached(WhatsAppAccount $account, string $phone, WhatsAppClient $wa, ?string $lang): bool
+    {
+        $max = (int) Setting::get('claude_max_messages_per_day', 100);
+
+        if ($max <= 0) {
+            return false;
+        }
+
+        $key = "claude-daily:{$account->id}:{$phone}";
+
+        if (! RateLimiter::tooManyAttempts($key, $max)) {
+            RateLimiter::hit($key, 86400);
+
+            return false;
+        }
+
+        if ($message = $this->localizedMessage('claude_daily_limit_message', $lang)) {
+            $wa->sendText($phone, $message);
+        }
+
+        return true;
+    }
+
+    private function localizedMessage(string $settingKey, ?string $lang): ?string
+    {
+        $messages = Setting::get($settingKey, []);
+
+        return $messages[$lang ?? 'en'] ?? $messages['en'] ?? null;
+    }
+
+    private function notifyStaffBudgetExhausted(int $cap): void
+    {
+        $email = Setting::get('staff_notification_email');
+        if (! $email) {
+            return;
+        }
+
+        try {
+            Notification::route('mail', $email)
+                ->notify(new ClaudeBudgetExhaustedNotification($cap));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send Claude budget exhausted notification', ['error' => $e->getMessage()]);
+        }
+    }
+
     private function notifyStaff(ServiceRequest $serviceRequest): void
     {
         $email = Setting::get('staff_notification_email');
@@ -243,19 +370,19 @@ class HandleIncomingMessage implements ShouldQueue
                 'service'         => $convo->service,
             ]);
 
-            $lang      = $convo->language ?? 'en';
-            $fallbacks = Setting::get('bot_fallback_message', []);
-            $message   = $fallbacks[$lang] ?? $fallbacks['en'] ?? null;
+            $lang = $convo->language ?? 'en';
 
-            if ($message) {
+            if ($message = $this->localizedMessage('bot_fallback_message', $lang)) {
                 $wa->sendText($phone, $message);
             }
 
-            $convo->update(['step' => 'AWAIT_SERVICE', 'service' => null, 'history' => []]);
+            $convo->update(['step' => 'AWAIT_SERVICE', 'service' => null, 'history' => [], 'claude_message_count' => 0]);
             $wa->sendServiceButtons($phone, $lang);
 
             return;
         }
+
+        $convo->increment('claude_message_count');
 
         $reply = $agent->handle($convo);
 
@@ -275,7 +402,7 @@ class HandleIncomingMessage implements ShouldQueue
                 ?? config('services_bot.replies.confirmation.en');
 
             $wa->sendText($phone, $confirmation);
-            $convo->update(['step' => 'DONE', 'history' => []]);
+            $convo->update(['step' => 'DONE', 'history' => [], 'claude_message_count' => 0]);
 
             return;
         }
@@ -286,11 +413,7 @@ class HandleIncomingMessage implements ShouldQueue
 
     private function sendWelcome(WhatsAppClient $wa, Conversation $convo, string $phone): void
     {
-        $lang     = $convo->language ?? 'en';
-        $messages = Setting::get('bot_welcome_message', []);
-        $welcome  = $messages[$lang] ?? $messages['en'] ?? null;
-
-        if ($welcome) {
+        if ($welcome = $this->localizedMessage('bot_welcome_message', $convo->language)) {
             $wa->sendText($phone, $welcome);
             $this->appendHistory($convo, 'assistant', $welcome);
         }

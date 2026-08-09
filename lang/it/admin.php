@@ -239,6 +239,13 @@ return [
             'last_30_days'  => 'Ultimi 30 giorni',
             'dataset_label' => 'Richieste',
         ],
+        'conversations_chart' => [
+            'heading'       => 'Conversazioni',
+            'last_7_days'   => 'Ultimi 7 giorni',
+            'last_14_days'  => 'Ultimi 14 giorni',
+            'last_30_days'  => 'Ultimi 30 giorni',
+            'dataset_label' => 'Conversazioni',
+        ],
         'recent' => [
             'heading' => 'Richieste Recenti',
         ],

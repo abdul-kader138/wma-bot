@@ -239,6 +239,13 @@ return [
             'last_30_days'  => 'শেষ ৩০ দিন',
             'dataset_label' => 'অনুরোধ',
         ],
+        'conversations_chart' => [
+            'heading'       => 'কথোপকথন',
+            'last_7_days'   => 'শেষ ৭ দিন',
+            'last_14_days'  => 'শেষ ১৪ দিন',
+            'last_30_days'  => 'শেষ ৩০ দিন',
+            'dataset_label' => 'কথোপকথন',
+        ],
         'recent' => [
             'heading' => 'সাম্প্রতিক অনুরোধ',
         ],

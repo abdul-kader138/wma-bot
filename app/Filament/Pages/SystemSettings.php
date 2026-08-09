@@ -101,6 +101,9 @@ class SystemSettings extends Page implements HasForms
             'claude_max_tokens'  => Setting::get('claude_max_tokens',   1024),
             'claude_temperature' => Setting::get('claude_temperature',  0.7),
             'claude_rate_limit_per_minute' => Setting::get('claude_rate_limit_per_minute', 50),
+            'claude_max_messages_per_session' => Setting::get('claude_max_messages_per_session', 20),
+            'claude_max_messages_per_day' => Setting::get('claude_max_messages_per_day', 100),
+            'claude_daily_global_cap'  => Setting::get('claude_daily_global_cap', 0),
 
             // Bot Behaviour
             'faq_confidence_threshold' => Setting::get('faq_confidence_threshold', 0.7),
@@ -113,6 +116,16 @@ class SystemSettings extends Page implements HasForms
                 'en' => "I'm sorry, I don't understand. Please contact our support team.",
                 'it' => 'Mi dispiace, non ho capito. Contatta il nostro team di supporto.',
                 'bn' => 'দুঃখিত, আমি বুঝতে পারিনি। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।',
+            ]),
+            'claude_session_limit_message' => Setting::get('claude_session_limit_message', [
+                'en' => "You've reached the message limit for this session. Please type \"menu\" to start a new conversation.",
+                'it' => 'Hai raggiunto il limite di messaggi per questa sessione. Digita "menu" per iniziare una nuova conversazione.',
+                'bn' => 'আপনি এই সেশনের মেসেজ সীমায় পৌঁছেছেন। নতুন কথোপকথন শুরু করতে "menu" লিখুন।',
+            ]),
+            'claude_daily_limit_message' => Setting::get('claude_daily_limit_message', [
+                'en' => "You've reached today's message limit. Please contact our support team, or try again tomorrow.",
+                'it' => "Hai raggiunto il limite di messaggi di oggi. Contatta il nostro supporto o riprova domani.",
+                'bn' => 'আপনি আজকের মেসেজ সীমায় পৌঁছেছেন। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন, অথবা আগামীকাল আবার চেষ্টা করুন।',
             ]),
 
             // Email
@@ -376,12 +389,37 @@ class SystemSettings extends Page implements HasForms
                                             ->helperText('0 = deterministic, 1 = creative.'),
                                     ]),
 
-                                    TextInput::make('claude_rate_limit_per_minute')
-                                        ->label('Rate Limit (requests/min)')
-                                        ->numeric()
-                                        ->minValue(1)
-                                        ->required()
-                                        ->helperText('Shared across every WhatsApp account and customer — match this to your Anthropic plan\'s requests-per-minute limit. Messages beyond it wait briefly and retry rather than erroring out.'),
+                                    Grid::make(2)->schema([
+                                        TextInput::make('claude_rate_limit_per_minute')
+                                            ->label('Rate Limit (requests/min)')
+                                            ->numeric()
+                                            ->minValue(1)
+                                            ->required()
+                                            ->helperText('Shared across every WhatsApp account and customer — match this to your Anthropic plan\'s requests-per-minute limit. Messages beyond it wait briefly and retry rather than erroring out.'),
+
+                                        TextInput::make('claude_max_messages_per_session')
+                                            ->label('Max AI Replies per Session')
+                                            ->numeric()
+                                            ->minValue(1)
+                                            ->required()
+                                            ->helperText('Per-conversation cap on paid Claude calls (FAQ answers don\'t count). Once a customer hits this, the session ends and they must type "menu" to start over. Weakest guard — a customer can clear it any time by restarting.'),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        TextInput::make('claude_max_messages_per_day')
+                                            ->label('Max AI Replies per Phone/Day')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->required()
+                                            ->helperText('Per-customer daily cap, keyed to their phone number so it survives a "menu" restart — this is what actually stops abuse. 0 disables it.'),
+
+                                        TextInput::make('claude_daily_global_cap')
+                                            ->label('Daily Claude Call Cap (all customers)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->required()
+                                            ->helperText('Absolute ceiling on Claude calls per day across everyone — a circuit breaker for when something is badly wrong. Staff get one email when it trips. 0 disables it (default); set it to match your real daily budget.'),
+                                    ]),
                                 ]),
                         ]),
 
@@ -418,6 +456,34 @@ class SystemSettings extends Page implements HasForms
                                         collect(config('services_bot.languages', ['en' => 'English']))
                                             ->map(fn ($name, $code) =>
                                                 Textarea::make("bot_fallback_message.{$code}")
+                                                    ->label($name)
+                                                    ->rows(2)
+                                                    ->maxLength(1000)
+                                                    ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+
+                                Section::make('Session Limit Message')
+                                    ->description('Sent when a customer hits the "Max AI Replies per Session" cap set in the Claude AI tab, in the customer\'s chosen language.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) =>
+                                                Textarea::make("claude_session_limit_message.{$code}")
+                                                    ->label($name)
+                                                    ->rows(2)
+                                                    ->maxLength(1000)
+                                                    ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+
+                                Section::make('Daily Limit Message')
+                                    ->description('Sent when a customer hits the "Max AI Replies per Phone/Day" cap set in the Claude AI tab, in the customer\'s chosen language.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) =>
+                                                Textarea::make("claude_daily_limit_message.{$code}")
                                                     ->label($name)
                                                     ->rows(2)
                                                     ->maxLength(1000)
@@ -520,9 +586,14 @@ class SystemSettings extends Page implements HasForms
             'claude_max_tokens'        => 'claude',
             'claude_temperature'       => 'claude',
             'claude_rate_limit_per_minute' => 'claude',
+            'claude_max_messages_per_session' => 'claude',
+            'claude_max_messages_per_day' => 'claude',
+            'claude_daily_global_cap'  => 'claude',
             'faq_confidence_threshold' => 'bot',
             'bot_welcome_message'      => 'bot',
             'bot_fallback_message'     => 'bot',
+            'claude_session_limit_message' => 'bot',
+            'claude_daily_limit_message' => 'bot',
             'mail_from_name'           => 'email',
             'mail_from_address'        => 'email',
             'mail_host'                => 'email',

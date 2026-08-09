@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\ClaudeUsageWidget;
+use App\Filament\Widgets\ConversationsChartWidget;
 use App\Filament\Widgets\RecentServiceRequestsWidget;
 use App\Filament\Widgets\ServiceRequestsChartWidget;
 use App\Filament\Widgets\StatsOverview;
@@ -20,6 +22,8 @@ class Dashboard extends BaseDashboard
             StatsOverview::class,
             ServiceRequestsChartWidget::class,
             RecentServiceRequestsWidget::class,
+            ConversationsChartWidget::class,
+            ClaudeUsageWidget::class,
         ];
     }
 

@@ -10,7 +10,9 @@ use App\Models\WhatsAppAccount;
 use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
+use Illuminate\Contracts\Queue\Job as QueueJobContract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -115,6 +117,39 @@ class HandleIncomingMessageStateTest extends TestCase
 
         $this->handleMessage($this->makeTextValue($phone, 'hi', 'm1'));
 
+        $this->assertSentInteractive('list', $phone);
+        $this->assertSame('AWAIT_LANG', Conversation::where('wa_phone', $phone)->first()->step);
+    }
+
+    public function test_first_attempt_is_deduplicated_by_message_id(): void
+    {
+        $phone = '393000000010';
+        Cache::add('wa_msg:dupe1', 1, now()->addHours(24));
+
+        // Same message id already "processed" on a prior delivery — a genuine
+        // duplicate webhook redelivery on attempt 1 must be a no-op.
+        $this->handleMessage($this->makeTextValue($phone, 'hi', 'dupe1'));
+
+        $this->assertNull(Conversation::where('wa_phone', $phone)->first());
+    }
+
+    public function test_released_retry_is_not_swallowed_by_its_own_dedup_key(): void
+    {
+        $phone = '393000000011';
+        // Mirrors what attempt 1 already did before releasing itself back onto the
+        // queue (e.g. lock contention, or the Claude rate limiter): the dedup key
+        // for this message is already cached.
+        Cache::add('wa_msg:retry1', 1, now()->addHours(24));
+
+        $queueJob = $this->createMock(QueueJobContract::class);
+        $queueJob->method('attempts')->willReturn(2);
+
+        $job = new HandleIncomingMessage($this->makeTextValue($phone, 'hi', 'retry1'), $this->account->id);
+        $job->setJob($queueJob);
+        $job->handle($this->createMock(ClaudeAgent::class), app(FaqMatcher::class));
+
+        // Attempt 2 of the SAME job must still be processed — not dropped just
+        // because its own attempt 1 already set the dedup key.
         $this->assertSentInteractive('list', $phone);
         $this->assertSame('AWAIT_LANG', Conversation::where('wa_phone', $phone)->first()->step);
     }

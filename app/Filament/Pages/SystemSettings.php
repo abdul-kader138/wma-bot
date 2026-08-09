@@ -100,6 +100,7 @@ class SystemSettings extends Page implements HasForms
             'claude_model'       => Setting::get('claude_model',        env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001')),
             'claude_max_tokens'  => Setting::get('claude_max_tokens',   1024),
             'claude_temperature' => Setting::get('claude_temperature',  0.7),
+            'claude_rate_limit_per_minute' => Setting::get('claude_rate_limit_per_minute', 50),
 
             // Bot Behaviour
             'faq_confidence_threshold' => Setting::get('faq_confidence_threshold', 0.7),
@@ -374,6 +375,13 @@ class SystemSettings extends Page implements HasForms
                                             ->step(0.1)
                                             ->helperText('0 = deterministic, 1 = creative.'),
                                     ]),
+
+                                    TextInput::make('claude_rate_limit_per_minute')
+                                        ->label('Rate Limit (requests/min)')
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->required()
+                                        ->helperText('Shared across every WhatsApp account and customer — match this to your Anthropic plan\'s requests-per-minute limit. Messages beyond it wait briefly and retry rather than erroring out.'),
                                 ]),
                         ]),
 
@@ -511,6 +519,7 @@ class SystemSettings extends Page implements HasForms
             'claude_model'             => 'claude',
             'claude_max_tokens'        => 'claude',
             'claude_temperature'       => 'claude',
+            'claude_rate_limit_per_minute' => 'claude',
             'faq_confidence_threshold' => 'bot',
             'bot_welcome_message'      => 'bot',
             'bot_fallback_message'     => 'bot',

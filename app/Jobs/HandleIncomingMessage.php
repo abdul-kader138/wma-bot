@@ -21,10 +21,16 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter;
 
 class HandleIncomingMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    // Shared across every WhatsApp account and customer: there's one Anthropic API
+    // key (Setting::get('claude_api_key')) for the whole app, so the budget protecting
+    // it has to be shared too, not per-conversation.
+    private const CLAUDE_RATE_LIMIT_KEY = 'claude-api-calls';
 
     public int $tries   = 3;
 
@@ -57,8 +63,14 @@ class HandleIncomingMessage implements ShouldQueue
             return;
         }
 
-        // Deduplicate: skip if we've processed this message ID already.
-        if ($msg['message_id'] && ! Cache::add("wa_msg:{$msg['message_id']}", 1, now()->addHours(24))) {
+        // Deduplicate: skip if we've processed this message ID already. Only on the
+        // first attempt — $this->release() (lock contention, rate limiting) re-queues
+        // this same job and bumps attempts(), and that retry must go through: the key
+        // was already cached by this job's own first attempt, so without this guard
+        // every released retry would see it as "already handled" and silently no-op,
+        // dropping the message instead of actually retrying it.
+        if ($this->attempts() === 1 && $msg['message_id']
+            && ! Cache::add("wa_msg:{$msg['message_id']}", 1, now()->addHours(24))) {
             return;
         }
 
@@ -127,21 +139,38 @@ class HandleIncomingMessage implements ShouldQueue
                     $wa->sendServiceButtons($phone, $convo->language ?? 'en');
                     break;
                 }
+
+                // Checked before any mutation: if we're over the shared Claude budget,
+                // release the whole job untouched so the retry re-validates this same
+                // service pick from scratch, instead of half-committing (welcome sent,
+                // step already advanced) and then confusing the retry's replay of $input.
+                if ($this->deferIfClaudeRateLimited()) {
+                    break;
+                }
+
                 $convo->update(['service' => $input, 'step' => 'IN_SERVICE', 'history' => []]);
                 $this->sendWelcome($wa, $convo, $phone);
                 $this->runAgent($wa, $agent, $convo, $phone);
                 break;
 
             case 'IN_SERVICE':
-                $this->appendHistory($convo, 'user', $input);
-
                 if ($faq = $faqs->match($input, $convo->service, $account->id)) {
+                    $this->appendHistory($convo, 'user', $input);
                     $answer = $faq->answerFor($convo->language ?? 'en');
                     $wa->sendText($phone, $answer);
                     $this->appendHistory($convo, 'assistant', $answer);
                     break;
                 }
 
+                // Same reasoning as above: gate before appendHistory() so a released
+                // retry doesn't log the customer's message twice (which would also
+                // break the Claude call itself — the API rejects back-to-back turns
+                // with the same role).
+                if ($this->deferIfClaudeRateLimited()) {
+                    break;
+                }
+
+                $this->appendHistory($convo, 'user', $input);
                 $this->runAgent($wa, $agent, $convo, $phone);
                 break;
 
@@ -168,6 +197,24 @@ class HandleIncomingMessage implements ShouldQueue
                 Log::error('Failed to send bot failure notification', ['error' => $notifyError->getMessage()]);
             }
         }
+    }
+
+    // Shared across every account/customer, since there's a single Claude API key.
+    // Returns true (and releases the job for a later retry) if we're over budget;
+    // the caller must bail out immediately without having mutated anything yet.
+    private function deferIfClaudeRateLimited(): bool
+    {
+        $maxPerMinute = max(1, (int) Setting::get('claude_rate_limit_per_minute', 50));
+
+        if (RateLimiter::tooManyAttempts(self::CLAUDE_RATE_LIMIT_KEY, $maxPerMinute)) {
+            $this->release(RateLimiter::availableIn(self::CLAUDE_RATE_LIMIT_KEY));
+
+            return true;
+        }
+
+        RateLimiter::hit(self::CLAUDE_RATE_LIMIT_KEY, 60);
+
+        return false;
     }
 
     private function notifyStaff(ServiceRequest $serviceRequest): void

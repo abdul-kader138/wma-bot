@@ -35,6 +35,7 @@ class SettingsSeeder extends Seeder
             ['group' => 'claude', 'key' => 'claude_model',       'value' => 'claude-haiku-4-5-20251001', 'type' => 'string', 'label' => 'Model',        'is_public' => false],
             ['group' => 'claude', 'key' => 'claude_max_tokens',  'value' => '1024',                    'type' => 'integer', 'label' => 'Max Tokens',    'is_public' => false],
             ['group' => 'claude', 'key' => 'claude_temperature', 'value' => '0.7',                     'type' => 'float',   'label' => 'Temperature',   'is_public' => false],
+            ['group' => 'claude', 'key' => 'claude_rate_limit_per_minute', 'value' => '50', 'type' => 'integer', 'label' => 'Rate Limit (requests/min)', 'is_public' => false],
 
             // Bot Behaviour
             ['group' => 'bot', 'key' => 'faq_confidence_threshold', 'value' => '0.7',                                          'type' => 'float',  'label' => 'FAQ Confidence Threshold', 'is_public' => false],

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Faq;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class FaqMatcher
 {
@@ -99,11 +100,23 @@ class FaqMatcher
 
     protected function candidates(?string $service, ?int $whatsappAccountId = null): Collection
     {
-        return Faq::query()
-            ->where('is_active', true)
-            ->where('whatsapp_account_id', $whatsappAccountId)
-            ->where(fn ($q) => $q->whereNull('service')->orWhere('service', $service))
-            ->get();
+        return $this->activeFaqs($whatsappAccountId)
+            ->filter(fn (Faq $faq) => $faq->service === null || $faq->service === $service)
+            ->values();
+    }
+
+    // Cached like Service::toConfig(): this runs on every incoming message, and the
+    // new phonetic-matching pass (overlapScore()) makes each candidate more expensive
+    // to score, so re-querying the FAQ table on every message is no longer free.
+    // Busted in Faq::booted() on save/delete.
+    private function activeFaqs(?int $whatsappAccountId): Collection
+    {
+        return Cache::rememberForever("faqs:active:{$whatsappAccountId}", function () use ($whatsappAccountId) {
+            return Faq::query()
+                ->where('is_active', true)
+                ->where('whatsapp_account_id', $whatsappAccountId)
+                ->get();
+        });
     }
 
     private function overlapScore(array $words, Faq $faq): float

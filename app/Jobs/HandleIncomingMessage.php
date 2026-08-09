@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\ClaudeDailyUsage;
 use App\Models\Conversation;
 use App\Models\Service;
 use App\Models\Setting;
@@ -32,10 +33,6 @@ class HandleIncomingMessage implements ShouldQueue
     // key (Setting::get('claude_api_key')) for the whole app, so the budget protecting
     // it has to be shared too, not per-conversation.
     private const CLAUDE_RATE_LIMIT_KEY = 'claude-api-calls';
-
-    // Global daily circuit breaker key — same reasoning as above, but a 24h window
-    // instead of a 1-minute one.
-    private const CLAUDE_DAILY_GLOBAL_KEY = 'claude-daily-global';
 
     public int $tries   = 3;
 
@@ -270,6 +267,12 @@ class HandleIncomingMessage implements ShouldQueue
     // stop spending" circuit breaker — 0 disables it, since a sensible cap depends entirely
     // on the owner's actual traffic and Anthropic budget. Stays tripped until the day rolls
     // over; staff are emailed once per day it trips, not once per blocked message.
+    //
+    // Reads claude_daily_usages rather than a cache counter — that table is the same one
+    // dailyLimitReached() below books usage into, so the global total can never drift from
+    // the sum of what customers actually used, and it works identically on every cache
+    // driver (production runs Redis, which has no cheap way to enumerate cache keys —
+    // see ClaudeUsageTracker).
     private function circuitBreakerTripped(WhatsAppClient $wa, string $phone, ?string $lang): bool
     {
         $cap = (int) Setting::get('claude_daily_global_cap', 0);
@@ -278,9 +281,9 @@ class HandleIncomingMessage implements ShouldQueue
             return false;
         }
 
-        if (! RateLimiter::tooManyAttempts(self::CLAUDE_DAILY_GLOBAL_KEY, $cap)) {
-            RateLimiter::hit(self::CLAUDE_DAILY_GLOBAL_KEY, 86400);
+        $total = (int) ClaudeDailyUsage::whereDate('date', today())->sum('count');
 
+        if ($total < $cap) {
             return false;
         }
 
@@ -297,29 +300,33 @@ class HandleIncomingMessage implements ShouldQueue
 
     // Per phone number, spanning every session — this is what actually stops abuse that
     // sessionLimitReached() can't: a customer can reset the per-session counter any time by
-    // typing "menu", but this key is scoped to the phone number, not the conversation row,
-    // so it survives that. 0 disables it.
+    // typing "menu", but this row is keyed to the phone number, not the conversation row, so
+    // it survives that.
+    //
+    // Also does the bookkeeping increment for a granted call — the single place usage gets
+    // recorded, so circuitBreakerTripped()'s global sum above always matches. Runs (and
+    // increments) even when claude_max_messages_per_day is 0/disabled, since the global
+    // breaker still needs an accurate count regardless of whether the per-phone cap is on.
     private function dailyLimitReached(WhatsAppAccount $account, string $phone, WhatsAppClient $wa, ?string $lang): bool
     {
+        $usage = ClaudeDailyUsage::firstOrCreate(
+            ['whatsapp_account_id' => $account->id, 'phone' => $phone, 'date' => today()->toDateString()],
+            ['count' => 0]
+        );
+
         $max = (int) Setting::get('claude_max_messages_per_day', 100);
 
-        if ($max <= 0) {
-            return false;
+        if ($max > 0 && $usage->count >= $max) {
+            if ($message = $this->localizedMessage('claude_daily_limit_message', $lang)) {
+                $wa->sendText($phone, $message);
+            }
+
+            return true;
         }
 
-        $key = "claude-daily:{$account->id}:{$phone}";
+        $usage->increment('count');
 
-        if (! RateLimiter::tooManyAttempts($key, $max)) {
-            RateLimiter::hit($key, 86400);
-
-            return false;
-        }
-
-        if ($message = $this->localizedMessage('claude_daily_limit_message', $lang)) {
-            $wa->sendText($phone, $message);
-        }
-
-        return true;
+        return false;
     }
 
     private function localizedMessage(string $settingKey, ?string $lang): ?string

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class Faq extends Model
 {
@@ -15,6 +16,15 @@ class Faq extends Model
         'answer'    => 'array',
         'is_active' => 'boolean',
     ];
+
+    // Mirrors Service::toConfig()'s caching — FaqMatcher::candidates() reads
+    // through this same key on every incoming message, so it must be busted
+    // on every write, not just left to expire.
+    protected static function booted(): void
+    {
+        static::saved(fn (Faq $f) => Cache::forget("faqs:active:{$f->whatsapp_account_id}"));
+        static::deleted(fn (Faq $f) => Cache::forget("faqs:active:{$f->whatsapp_account_id}"));
+    }
 
     public function answerFor(string $lang): string
     {

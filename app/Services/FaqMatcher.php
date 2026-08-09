@@ -113,20 +113,30 @@ class FaqMatcher
     // Caches raw attribute arrays, not live Faq objects: serializing whole Eloquent
     // models through Redis is fragile across process/deploy boundaries (a long-running
     // Horizon worker that read this key before a class change can fail to unserialize
-    // it, producing a __PHP_Incomplete_Class object instead of a Faq — that's what
-    // broke here). Faq::hydrate() rebuilds real model instances from plain arrays on
-    // every read, so the cached payload is just scalars/arrays, same as
-    // Service::toConfig() already does.
+    // it, producing a __PHP_Incomplete_Class object instead of a Faq). Faq::hydrate()
+    // rebuilds real model instances from plain arrays on every read, so the cached
+    // payload is just scalars/arrays, same as Service::toConfig() already does.
+    //
+    // Self-heals from exactly that stale-object scenario: a corrupt/legacy cached
+    // value (e.g. from before this method cached arrays instead of objects) is
+    // treated as a miss and re-fetched, instead of trusting whatever Cache::get()
+    // handed back. Cache::rememberForever() alone can't do this — it treats any
+    // cache hit as valid regardless of shape.
     private function activeFaqs(?int $whatsappAccountId): Collection
     {
-        $rows = Cache::rememberForever("faqs:active:{$whatsappAccountId}", function () use ($whatsappAccountId) {
-            return Faq::query()
+        $key  = "faqs:active:{$whatsappAccountId}";
+        $rows = Cache::get($key);
+
+        if (! is_array($rows)) {
+            $rows = Faq::query()
                 ->where('is_active', true)
                 ->where('whatsapp_account_id', $whatsappAccountId)
                 ->get()
                 ->map(fn (Faq $faq) => $faq->getAttributes())
                 ->all();
-        });
+
+            Cache::forever($key, $rows);
+        }
 
         return Faq::hydrate($rows);
     }

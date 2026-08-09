@@ -93,4 +93,28 @@ class FaqMatcherTest extends TestCase
 
         $this->assertNotNull($result);
     }
+
+    public function test_banglish_query_matches_bengali_faq(): void
+    {
+        $matcher = $this->matcher([[
+            'question' => ['bn' => 'আমি ইতালিতে নতুন, আমি কি কোর্স করতে বা পাতেন্তে নিতে পারবো?'],
+            'keywords' => [],
+        ]]);
+
+        $result = $matcher->match('ami notun kivabe patenta nite pari', null);
+
+        $this->assertNotNull($result);
+    }
+
+    public function test_banglish_query_does_not_match_unrelated_bengali_faq(): void
+    {
+        $matcher = $this->matcher([[
+            'question' => ['bn' => 'অফিসের ঠিকানা কোথায়?'],
+            'keywords' => [],
+        ]]);
+
+        $result = $matcher->match('ami notun kivabe patenta nite pari', null);
+
+        $this->assertNull($result);
+    }
 }

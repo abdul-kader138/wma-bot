@@ -11,11 +11,13 @@ class WhatsAppClient
 {
     private string $url;
     private string $token;
+    private int $accountId;
 
     public function __construct(WhatsAppAccount $account)
     {
-        $this->url   = "https://graph.facebook.com/{$account->api_version}/{$account->phone_number_id}/messages";
-        $this->token = $account->access_token;
+        $this->url       = "https://graph.facebook.com/{$account->api_version}/{$account->phone_number_id}/messages";
+        $this->token     = $account->access_token;
+        $this->accountId = $account->id;
     }
 
     public function sendText(string $to, string $body): void
@@ -53,7 +55,7 @@ class WhatsAppClient
     public function sendServiceButtons(string $to, string $lang): void
     {
         $rows = [];
-        foreach (Service::toConfig() as $key => $svc) {
+        foreach (Service::toConfig($this->accountId) as $key => $svc) {
             $title  = $svc['label'][$lang] ?? $svc['label']['en'];
             $rows[] = ['id' => $key, 'title' => $title];
         }

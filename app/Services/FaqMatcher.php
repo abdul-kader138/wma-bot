@@ -13,14 +13,14 @@ class FaqMatcher
     /** Below this length, skip the "needle contains input" reverse check to avoid short/generic messages over-matching. */
     private const MIN_LENGTH_FOR_REVERSE_CONTAINS = 8;
 
-    public function match(string $text, ?string $service): ?Faq
+    public function match(string $text, ?string $service, ?int $whatsappAccountId = null): ?Faq
     {
         $normalized = $this->normalize($text);
         if ($normalized === '') {
             return null;
         }
 
-        $candidates = $this->candidates($service);
+        $candidates = $this->candidates($service, $whatsappAccountId);
 
         foreach ($candidates as $faq) {
             foreach ($this->triggerTexts($faq) as $trigger) {
@@ -63,10 +63,11 @@ class FaqMatcher
         return array_merge($faq->questionVariants(), $faq->keywords ?? []);
     }
 
-    protected function candidates(?string $service): Collection
+    protected function candidates(?string $service, ?int $whatsappAccountId = null): Collection
     {
         return Faq::query()
             ->where('is_active', true)
+            ->where('whatsapp_account_id', $whatsappAccountId)
             ->where(fn ($q) => $q->whereNull('service')->orWhere('service', $service))
             ->get();
     }

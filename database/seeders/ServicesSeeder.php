@@ -3,12 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\Service;
+use App\Models\WhatsAppAccount;
 use Illuminate\Database\Seeder;
 
 class ServicesSeeder extends Seeder
 {
     public function run(): void
     {
+        // No account may exist yet on a fresh install (WhatsApp accounts are set up
+        // manually after seeding) — in that case these seed as unassigned and an
+        // admin picks the account later via the Service edit form.
+        $accountId = WhatsAppAccount::where('is_default', true)->value('id')
+            ?? WhatsAppAccount::orderBy('id')->value('id');
+
         $services = [
             [
                 'slug'         => 'ticket',
@@ -65,7 +72,8 @@ class ServicesSeeder extends Seeder
         ];
 
         foreach ($services as $data) {
-            Service::updateOrCreate(['slug' => $data['slug']], $data);
+            $data['whatsapp_account_id'] = $accountId;
+            Service::updateOrCreate(['slug' => $data['slug'], 'whatsapp_account_id' => $accountId], $data);
         }
     }
 }

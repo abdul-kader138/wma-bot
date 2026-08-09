@@ -5,8 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FaqResource\Pages;
 use App\Models\Faq;
 use App\Models\Service;
+use App\Models\WhatsAppAccount;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
@@ -40,11 +42,19 @@ class FaqResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make(__('admin.faq.sections.faq'))->schema([
+                Forms\Components\Select::make('whatsapp_account_id')
+                    ->label('WhatsApp Account')
+                    ->options(WhatsAppAccount::pluck('name', 'id'))
+                    ->default(WhatsAppAccount::where('is_default', true)->value('id'))
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(fn (Forms\Set $set) => $set('service', null)),
+
                 Forms\Components\Select::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
                     ->placeholder(__('admin.faq.fields.all_services'))
                     ->options(
-                        Service::options(app()->getLocale())
+                        fn (Get $get) => Service::options(app()->getLocale(), $get('whatsapp_account_id'))
                     ),
 
                 Forms\Components\Toggle::make('is_active')
@@ -90,10 +100,16 @@ class FaqResource extends Resource
                     ->searchable()
                     ->limit(60),
 
+                Tables\Columns\TextColumn::make('whatsAppAccount.name')
+                    ->label('WhatsApp Account')
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
-                    ->formatStateUsing(fn (?string $state) => $state
-                        ? (Service::where('slug', $state)->first()?->label[app()->getLocale()] ?? $state)
+                    ->formatStateUsing(fn (?string $state, Faq $record) => $state
+                        ? (Service::where('slug', $state)->where('whatsapp_account_id', $record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
                         : __('admin.faq.fields.all_services'))
                     ->badge(),
 
@@ -112,10 +128,21 @@ class FaqResource extends Resource
             ])
             ->defaultSort('updated_at', 'desc')
             ->filters([
+                SelectFilter::make('whatsapp_account_id')
+                    ->label('WhatsApp Account')
+                    ->options(WhatsAppAccount::pluck('name', 'id')),
                 SelectFilter::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
                     ->options(
-                        Service::options(app()->getLocale())
+                        // Slugs are only unique per account, so label each option with
+                        // its account name to disambiguate before the account filter is applied.
+                        Service::query()
+                            ->orderBy('sort_order')
+                            ->get()
+                            ->mapWithKeys(fn (Service $s) => [
+                                $s->slug => ($s->label[app()->getLocale()] ?? $s->label['en'] ?? $s->slug)
+                                    . ' (' . ($s->whatsAppAccount?->name ?? '—') . ')',
+                            ])
                     ),
                 TernaryFilter::make('is_active')
                     ->label(__('admin.faq.fields.active')),

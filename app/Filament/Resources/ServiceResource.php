@@ -6,6 +6,7 @@ use App\Filament\Resources\ServiceResource\Pages\CreateService;
 use App\Filament\Resources\ServiceResource\Pages\EditService;
 use App\Filament\Resources\ServiceResource\Pages\ListServices;
 use App\Models\Service;
+use App\Models\WhatsAppAccount;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
@@ -16,6 +17,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
@@ -25,6 +27,7 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 
@@ -63,15 +66,30 @@ class ServiceResource extends Resource
 
                     Section::make(__('admin.service.sections.identity'))->schema([
                         Grid::make(2)->schema([
+                            Select::make('whatsapp_account_id')
+                                ->label('WhatsApp Account')
+                                ->options(WhatsAppAccount::pluck('name', 'id'))
+                                ->default(WhatsAppAccount::where('is_default', true)->value('id'))
+                                ->required()
+                                ->live()
+                                ->helperText('Which WhatsApp number offers this service.'),
+
                             TextInput::make('slug')
                                 ->label('Slug')
                                 ->required()
-                                ->unique(Service::class, 'slug', ignoreRecord: true)
+                                ->unique(
+                                    Service::class,
+                                    'slug',
+                                    ignoreRecord: true,
+                                    modifyRuleUsing: fn ($rule, Get $get) => $rule->where('whatsapp_account_id', $get('whatsapp_account_id')),
+                                )
                                 ->alphaNum()
                                 ->maxLength(100)
                                 ->helperText('Unique identifier used by the bot (lowercase, no spaces). Auto-filled from English label.')
                                 ->live(onBlur: true),
+                        ]),
 
+                        Grid::make(2)->schema([
                             Select::make('color')
                                 ->label(__('admin.service.fields.color'))
                                 ->options([
@@ -210,6 +228,12 @@ class ServiceResource extends Resource
                     ->sortable()
                     ->width(50),
 
+                TextColumn::make('whatsAppAccount.name')
+                    ->label('WhatsApp Account')
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(),
+
                 TextColumn::make('slug')
                     ->label('Slug')
                     ->badge()
@@ -256,6 +280,11 @@ class ServiceResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
+            ->filters([
+                SelectFilter::make('whatsapp_account_id')
+                    ->label('WhatsApp Account')
+                    ->options(WhatsAppAccount::pluck('name', 'id')),
+            ])
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),

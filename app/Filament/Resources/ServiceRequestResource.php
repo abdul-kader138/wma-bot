@@ -127,7 +127,15 @@ class ServiceRequestResource extends Resource
                     ]),
                 SelectFilter::make('service')
                     ->label(__('admin.service_request.fields.service'))
-                    ->options(fn () => Service::options(app()->getLocale())),
+                    ->options(fn () => Service::query()
+                        ->orderBy('sort_order')
+                        ->get()
+                        ->mapWithKeys(fn (Service $s) => [
+                            // Slugs are only unique per account, so label each option with
+                            // its account name to disambiguate before the account filter is applied.
+                            $s->slug => ($s->label[app()->getLocale()] ?? $s->label['en'] ?? $s->slug)
+                                . ' (' . ($s->whatsAppAccount?->name ?? '—') . ')',
+                        ])),
                 SelectFilter::make('whatsapp_account_id')
                     ->label(__('admin.whatsapp_account.label'))
                     ->options(fn () => WhatsAppAccount::pluck('name', 'id')),

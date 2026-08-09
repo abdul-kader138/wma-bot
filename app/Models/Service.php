@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
 
 class Service extends Model
 {
     protected $fillable = [
-        'slug', 'label', 'prompt_label', 'color', 'icon',
+        'whatsapp_account_id', 'slug', 'label', 'prompt_label', 'color', 'icon',
         'is_active', 'sort_order', 'tool_name', 'tool_description', 'tool_fields',
     ];
 
@@ -20,15 +21,22 @@ class Service extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('services:all'));
-        static::deleted(fn () => Cache::forget('services:all'));
+        static::saved(fn (Service $s) => Cache::forget("services:all:{$s->whatsapp_account_id}"));
+        static::deleted(fn (Service $s) => Cache::forget("services:all:{$s->whatsapp_account_id}"));
     }
 
-    // Returns all active services keyed by slug, same shape as config('services_bot.services')
-    public static function toConfig(): array
+    public function whatsAppAccount(): BelongsTo
     {
-        return Cache::rememberForever('services:all', function () {
+        return $this->belongsTo(WhatsAppAccount::class);
+    }
+
+    // Returns all active services for one WhatsApp account, keyed by slug,
+    // same shape as config('services_bot.services')
+    public static function toConfig(?int $whatsappAccountId): array
+    {
+        return Cache::rememberForever("services:all:{$whatsappAccountId}", function () use ($whatsappAccountId) {
             return static::where('is_active', true)
+                ->where('whatsapp_account_id', $whatsappAccountId)
                 ->orderBy('sort_order')
                 ->get()
                 ->keyBy('slug')
@@ -52,10 +60,11 @@ class Service extends Model
         });
     }
 
-    // Simple slug => label[locale] map for dropdown options
-    public static function options(string $locale = 'en'): array
+    // Simple slug => label[locale] map for dropdown options, scoped to one account
+    public static function options(string $locale = 'en', ?int $whatsappAccountId = null): array
     {
         return static::where('is_active', true)
+            ->where('whatsapp_account_id', $whatsappAccountId)
             ->orderBy('sort_order')
             ->get()
             ->mapWithKeys(fn (Service $s) => [

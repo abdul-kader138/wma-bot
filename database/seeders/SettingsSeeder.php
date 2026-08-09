@@ -38,8 +38,16 @@ class SettingsSeeder extends Seeder
 
             // Bot Behaviour
             ['group' => 'bot', 'key' => 'faq_confidence_threshold', 'value' => '0.7',                                          'type' => 'float',  'label' => 'FAQ Confidence Threshold', 'is_public' => false],
-            ['group' => 'bot', 'key' => 'bot_welcome_message',      'value' => 'Hello! How can I help you today?',              'type' => 'text',   'label' => 'Welcome Message',          'is_public' => false],
-            ['group' => 'bot', 'key' => 'bot_fallback_message',     'value' => "I'm sorry, I don't understand. Please contact support.", 'type' => 'text', 'label' => 'Fallback Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_welcome_message',      'value' => json_encode([
+                'en' => 'Hello! How can I help you today?',
+                'it' => 'Ciao! Come posso aiutarti oggi?',
+                'bn' => 'হ্যালো! আজ আমি আপনাকে কীভাবে সাহায্য করতে পারি?',
+            ]), 'type' => 'json', 'label' => 'Welcome Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_fallback_message',     'value' => json_encode([
+                'en' => "I'm sorry, I don't understand. Please contact support.",
+                'it' => 'Mi dispiace, non ho capito. Contatta il nostro supporto.',
+                'bn' => 'দুঃখিত, আমি বুঝতে পারিনি। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।',
+            ]), 'type' => 'json', 'label' => 'Fallback Message', 'is_public' => false],
 
             // Email
             ['group' => 'email', 'key' => 'mail_from_name',    'value' => 'WMA Bot',          'type' => 'string', 'label' => 'From Name'],

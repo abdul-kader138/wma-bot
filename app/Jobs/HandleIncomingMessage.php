@@ -101,7 +101,9 @@ class HandleIncomingMessage implements ShouldQueue
 
         $input = $msg['reply_id'] ?? trim((string) ($msg['text'] ?? ''));
 
-        if (in_array(mb_strtolower($input), ['menu', 'start', 'restart', 'hi', 'hello', 'ciao', 'hola'])) {
+        // Reset keywords, covering all supported languages (en/it/bn) so any customer
+        // can restart the conversation in their own language.
+        if (in_array(mb_strtolower($input), ['menu', 'start', 'restart', 'hi', 'hello', 'ciao', 'হ্যালো', 'শুরু'])) {
             $convo->update(['step' => 'NEW', 'service' => null, 'history' => []]);
         }
 
@@ -121,18 +123,19 @@ class HandleIncomingMessage implements ShouldQueue
                 break;
 
             case 'AWAIT_SERVICE':
-                if (! array_key_exists($input, Service::toConfig())) {
+                if (! array_key_exists($input, Service::toConfig($account->id))) {
                     $wa->sendServiceButtons($phone, $convo->language ?? 'en');
                     break;
                 }
                 $convo->update(['service' => $input, 'step' => 'IN_SERVICE', 'history' => []]);
+                $this->sendWelcome($wa, $convo, $phone);
                 $this->runAgent($wa, $agent, $convo, $phone);
                 break;
 
             case 'IN_SERVICE':
                 $this->appendHistory($convo, 'user', $input);
 
-                if ($faq = $faqs->match($input, $convo->service)) {
+                if ($faq = $faqs->match($input, $convo->service, $account->id)) {
                     $answer = $faq->answerFor($convo->language ?? 'en');
                     $wa->sendText($phone, $answer);
                     $this->appendHistory($convo, 'assistant', $answer);
@@ -184,6 +187,29 @@ class HandleIncomingMessage implements ShouldQueue
 
     private function runAgent(WhatsAppClient $wa, ClaudeAgent $agent, Conversation $convo, string $phone): void
     {
+        // The service the customer picked may have been deactivated or deleted since
+        // (Service::toConfig() only returns active ones) — recover instead of letting
+        // ClaudeAgent crash trying to build a tool/prompt for a service that no longer exists.
+        if (! array_key_exists($convo->service, Service::toConfig($convo->whatsapp_account_id))) {
+            Log::warning('Conversation service is no longer available; returning customer to service selection', [
+                'conversation_id' => $convo->id,
+                'service'         => $convo->service,
+            ]);
+
+            $lang      = $convo->language ?? 'en';
+            $fallbacks = Setting::get('bot_fallback_message', []);
+            $message   = $fallbacks[$lang] ?? $fallbacks['en'] ?? null;
+
+            if ($message) {
+                $wa->sendText($phone, $message);
+            }
+
+            $convo->update(['step' => 'AWAIT_SERVICE', 'service' => null, 'history' => []]);
+            $wa->sendServiceButtons($phone, $lang);
+
+            return;
+        }
+
         $reply = $agent->handle($convo);
 
         if ($reply['type'] === 'tool') {
@@ -209,6 +235,18 @@ class HandleIncomingMessage implements ShouldQueue
 
         $this->appendHistory($convo, 'assistant', $reply['text']);
         $wa->sendText($phone, $reply['text']);
+    }
+
+    private function sendWelcome(WhatsAppClient $wa, Conversation $convo, string $phone): void
+    {
+        $lang     = $convo->language ?? 'en';
+        $messages = Setting::get('bot_welcome_message', []);
+        $welcome  = $messages[$lang] ?? $messages['en'] ?? null;
+
+        if ($welcome) {
+            $wa->sendText($phone, $welcome);
+            $this->appendHistory($convo, 'assistant', $welcome);
+        }
     }
 
     private function appendHistory(Conversation $convo, string $role, string $content): void

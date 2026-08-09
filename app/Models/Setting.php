@@ -39,10 +39,16 @@ class Setting extends Model
 
     public static function set(string $key, mixed $value, string $group = 'general'): void
     {
-        static::updateOrCreate(
-            ['key' => $key],
-            ['value' => is_array($value) ? json_encode($value) : $value, 'group' => $group]
-        );
+        $attributes = ['value' => is_array($value) ? json_encode($value) : $value, 'group' => $group];
+
+        // An array value only round-trips through getTypedValue() correctly as
+        // 'json' — without this, a brand new setting falls back to the type
+        // column's DB default ('string') and comes back out as a raw JSON string.
+        if (is_array($value)) {
+            $attributes['type'] = 'json';
+        }
+
+        static::updateOrCreate(['key' => $key], $attributes);
         Cache::forget("setting:{$key}");
     }
 

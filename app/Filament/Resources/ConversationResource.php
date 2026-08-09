@@ -74,8 +74,8 @@ class ConversationResource extends Resource
 
                     TextEntry::make('service')
                         ->label(__('admin.service_request.fields.service'))
-                        ->formatStateUsing(fn (?string $state) => $state
-                            ? (Service::where('slug', $state)->first()?->label[app()->getLocale()] ?? $state)
+                        ->formatStateUsing(fn (?string $state, Conversation $record) => $state
+                            ? (Service::where('slug', $state)->where('whatsapp_account_id', $record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
                             : '—'),
 
                     TextEntry::make('created_at')

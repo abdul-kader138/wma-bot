@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Jobs\HandleIncomingMessage;
 use App\Models\Conversation;
 use App\Models\Faq;
+use App\Models\Service;
 use App\Models\WhatsAppAccount;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
@@ -32,6 +33,23 @@ class HandleIncomingMessageFaqTest extends TestCase
             'is_active'       => true,
             'is_default'      => true,
         ]);
+
+        foreach (['ticket', 'license'] as $slug) {
+            Service::create([
+                'whatsapp_account_id' => $this->account->id,
+                'slug'                => $slug,
+                'label'               => ['en' => ucfirst($slug)],
+                'prompt_label'        => $slug,
+                'color'               => 'primary',
+                'is_active'           => true,
+                'sort_order'          => 0,
+                'tool_name'           => "submit_{$slug}_request",
+                'tool_description'    => "Save a completed {$slug} request.",
+                'tool_fields'         => [
+                    ['name' => 'full_name', 'type' => 'string', 'required' => true, 'description' => "Customer's full name"],
+                ],
+            ]);
+        }
     }
 
     private function makeValue(string $from, string $text, string $messageId = 'msg1'): array
@@ -67,8 +85,9 @@ class HandleIncomingMessageFaqTest extends TestCase
         $this->inServiceConversation($phone);
 
         Faq::create([
+            'whatsapp_account_id' => $this->account->id,
             'service'   => null,
-            'question'  => 'What is the price?',
+            'question'  => ['en' => 'What is the price?'],
             'keywords'  => ['price', 'cost', 'how much'],
             'answer'    => ['en' => 'Our standard fee is €50.'],
             'is_active' => true,
@@ -116,8 +135,9 @@ class HandleIncomingMessageFaqTest extends TestCase
         ]);
 
         Faq::create([
+            'whatsapp_account_id' => $this->account->id,
             'service'   => 'ticket',
-            'question'  => 'Ticket price?',
+            'question'  => ['en' => 'Ticket price?'],
             'keywords'  => ['price', 'cost'],
             'answer'    => ['en' => 'Ticket costs €50.'],
             'is_active' => true,

@@ -4,11 +4,15 @@ namespace Tests\Unit;
 
 use App\Models\Faq;
 use App\Services\FaqMatcher;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class FaqMatcherTest extends TestCase
 {
+    use RefreshDatabase;
+
+
     private function matcher(array $faqs): FaqMatcher
     {
         $matcher = $this->getMockBuilder(FaqMatcher::class)
@@ -18,7 +22,7 @@ class FaqMatcherTest extends TestCase
         $matcher->method('candidates')
             ->willReturn(new Collection(array_map(function (array $data) {
                 $faq           = new Faq();
-                $faq->question = $data['question'];
+                $faq->question = is_array($data['question']) ? $data['question'] : ['en' => $data['question']];
                 $faq->keywords = $data['keywords'];
                 $faq->answer   = $data['answer'] ?? ['en' => 'Test answer'];
                 $faq->is_active = true;
@@ -39,7 +43,7 @@ class FaqMatcherTest extends TestCase
         $result = $matcher->match('how much does it cost?', null);
 
         $this->assertNotNull($result);
-        $this->assertSame('What is the price?', $result->question);
+        $this->assertSame('What is the price?', $result->questionFor('en'));
     }
 
     public function test_fuzzy_match_returns_faq_for_paraphrased_question(): void

@@ -103,8 +103,16 @@ class SystemSettings extends Page implements HasForms
 
             // Bot Behaviour
             'faq_confidence_threshold' => Setting::get('faq_confidence_threshold', 0.7),
-            'bot_welcome_message'      => Setting::get('bot_welcome_message',      'Hello! How can I help you today?'),
-            'bot_fallback_message'     => Setting::get('bot_fallback_message',     "I'm sorry, I don't understand. Please contact our support team."),
+            'bot_welcome_message'      => Setting::get('bot_welcome_message', [
+                'en' => 'Hello! How can I help you today?',
+                'it' => 'Ciao! Come posso aiutarti oggi?',
+                'bn' => 'হ্যালো! আজ আমি আপনাকে কীভাবে সাহায্য করতে পারি?',
+            ]),
+            'bot_fallback_message'     => Setting::get('bot_fallback_message', [
+                'en' => "I'm sorry, I don't understand. Please contact our support team.",
+                'it' => 'Mi dispiace, non ho capito. Contatta il nostro team di supporto.',
+                'bn' => 'দুঃখিত, আমি বুঝতে পারিনি। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।',
+            ]),
 
             // Email
             'mail_from_name'    => Setting::get('mail_from_name',    config('mail.from.name', '')),
@@ -382,17 +390,33 @@ class SystemSettings extends Page implements HasForms
                                     ->step(0.05)
                                     ->helperText('Minimum similarity score (0–1) to match a FAQ. Lower = more permissive.'),
 
-                                Textarea::make('bot_welcome_message')
-                                    ->label('Welcome Message')
-                                    ->rows(2)
-                                    ->maxLength(1000)
-                                    ->helperText('Sent when a new conversation starts.'),
+                                Section::make('Welcome Message')
+                                    ->description('Sent right after the customer picks a service, in their chosen language.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) =>
+                                                Textarea::make("bot_welcome_message.{$code}")
+                                                    ->label($name)
+                                                    ->rows(2)
+                                                    ->maxLength(1000)
+                                                    ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
 
-                                Textarea::make('bot_fallback_message')
-                                    ->label('Fallback Message')
-                                    ->rows(2)
-                                    ->maxLength(1000)
-                                    ->helperText('Sent when the bot cannot understand the user.'),
+                                Section::make('Fallback Message')
+                                    ->description('Sent when Claude cannot produce a reply, in the customer\'s chosen language.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) =>
+                                                Textarea::make("bot_fallback_message.{$code}")
+                                                    ->label($name)
+                                                    ->rows(2)
+                                                    ->maxLength(1000)
+                                                    ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
                             ]),
                         ]),
 

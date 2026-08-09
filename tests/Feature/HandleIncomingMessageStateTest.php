@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\HandleIncomingMessage;
 use App\Models\Conversation;
+use App\Models\Service;
 use App\Models\Setting;
 use App\Models\WhatsAppAccount;
 use App\Notifications\NewServiceRequestNotification;
@@ -33,6 +34,21 @@ class HandleIncomingMessageStateTest extends TestCase
             'api_version'     => 'v22.0',
             'is_active'       => true,
             'is_default'      => true,
+        ]);
+
+        Service::create([
+            'whatsapp_account_id' => $this->account->id,
+            'slug'             => 'ticket',
+            'label'            => ['en' => 'Ticket booking', 'it' => 'Biglietti', 'bn' => 'টিকিট বুকিং'],
+            'prompt_label'     => 'booking a travel ticket',
+            'color'            => 'primary',
+            'is_active'        => true,
+            'sort_order'       => 0,
+            'tool_name'        => 'submit_ticket_request',
+            'tool_description' => 'Save a completed ticket booking request.',
+            'tool_fields'      => [
+                ['name' => 'full_name', 'type' => 'string', 'required' => true, 'description' => "Customer's full name"],
+            ],
         ]);
     }
 
@@ -121,7 +137,9 @@ class HandleIncomingMessageStateTest extends TestCase
 
         $this->handleMessage($this->makeReplyValue($phone, 'en', 'm3', 'list'));
 
-        $this->assertSentInteractive('button', $phone);
+        // Services are sent as a 'list' (not 'button') so more than 3 options fit —
+        // see WhatsAppClient::sendServiceButtons().
+        $this->assertSentInteractive('list', $phone);
 
         $convo = Conversation::where('wa_phone', $phone)->first();
         $this->assertSame('AWAIT_SERVICE', $convo->step);
@@ -143,6 +161,33 @@ class HandleIncomingMessageStateTest extends TestCase
         $convo = Conversation::where('wa_phone', $phone)->first();
         $this->assertSame('IN_SERVICE', $convo->step);
         $this->assertSame('ticket', $convo->service);
+    }
+
+    public function test_service_selection_sends_language_specific_welcome_message(): void
+    {
+        Setting::set('bot_welcome_message', [
+            'en' => 'Welcome EN',
+            'it' => 'Welcome IT',
+            'bn' => 'Welcome BN',
+        ], 'bot');
+
+        $phone = '393000000009';
+        Conversation::create(['whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone, 'step' => 'AWAIT_SERVICE', 'language' => 'bn', 'history' => []]);
+
+        $agent = $this->createMock(ClaudeAgent::class);
+        $agent->expects($this->once())
+            ->method('handle')
+            ->willReturn(['type' => 'text', 'text' => 'first question']);
+
+        $this->handleMessage($this->makeReplyValue($phone, 'ticket', 'm9', 'button'), $agent);
+
+        // Sent to the customer in their selected language.
+        $this->assertSentText($phone, 'Welcome BN');
+
+        // Also kept in the transcript history so it's visible in the admin panel.
+        $convo = Conversation::where('wa_phone', $phone)->first();
+        $this->assertSame('assistant', $convo->history[0]['role']);
+        $this->assertSame('Welcome BN', $convo->history[0]['content']);
     }
 
     public function test_done_conversation_resets_to_await_lang(): void

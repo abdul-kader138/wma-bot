@@ -17,7 +17,7 @@ class ClaudeAgent
      */
     public function handle(Conversation $convo): array
     {
-        $service      = Service::toConfig()[$convo->service] ?? null;
+        $service      = Service::toConfig($convo->whatsapp_account_id)[$convo->service] ?? null;
         $languageName = config("services_bot.languages.{$convo->language}", 'English');
 
         $tool     = $this->buildTool($service);
@@ -63,7 +63,12 @@ class ClaudeAgent
             ->pluck('text')
             ->implode("\n");
 
-        return ['type' => 'text', 'text' => $text ?: '…'];
+        if (! $text) {
+            $fallbacks = Setting::get('bot_fallback_message', []);
+            $text      = $fallbacks[$convo->language ?? 'en'] ?? $fallbacks['en'] ?? '…';
+        }
+
+        return ['type' => 'text', 'text' => $text];
     }
 
     private function buildTool(array $service): array
@@ -124,15 +129,24 @@ class ClaudeAgent
 
     private function buildMessages(Conversation $convo): array
     {
+        $history = $convo->history ?? [];
+
+        // Drop any leading assistant-only turns (e.g. a canned welcome message
+        // logged for the admin transcript) — the Anthropic API rejects a message
+        // list that doesn't start with role 'user'.
+        while (! empty($history) && $history[0]['role'] !== 'user') {
+            array_shift($history);
+        }
+
         $messages = [];
-        foreach (($convo->history ?? []) as $turn) {
+        foreach ($history as $turn) {
             $messages[] = ['role' => $turn['role'], 'content' => $turn['content']];
         }
 
         if (empty($messages)) {
             $messages[] = [
                 'role'    => 'user',
-                'content' => '(The customer just selected this service. Greet them and ask for the first detail.)',
+                'content' => '(The customer just selected this service and already received a short welcome message. Skip the greeting — ask directly for the first detail.)',
             ];
         }
 

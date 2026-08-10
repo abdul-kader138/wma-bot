@@ -4,7 +4,10 @@ namespace App\Providers;
 
 use App\Models\Setting;
 use App\Policies\RolePolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
@@ -20,6 +23,21 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Role::class, RolePolicy::class);
         $this->applyMailSettings();
+        $this->configureRateLimiting();
+    }
+
+    /**
+     * Laravel's default `throttle:N,1` keys attempts by domain+IP only, not by route
+     * (see ThrottleRequests::resolveRequestSignature) — so WhatsApp, Messenger, and
+     * Instagram webhook routes would otherwise all drain the same bucket, since Meta
+     * delivers every channel's webhooks from overlapping IP ranges. Keying by path as
+     * well gives each webhook route (and each account behind it) its own 120/min budget.
+     */
+    private function configureRateLimiting(): void
+    {
+        RateLimiter::for('webhook', function (Request $request) {
+            return Limit::perMinute(120)->by($request->path().'|'.$request->ip());
+        });
     }
 
     /**

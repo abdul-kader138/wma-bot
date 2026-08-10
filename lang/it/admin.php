@@ -20,7 +20,7 @@ return [
         'users'            => 'Utenti',
         'roles'            => 'Ruoli',
         'system_settings'  => 'Impostazioni di Sistema',
-        'whatsapp_accounts' => 'Account WhatsApp',
+        'whatsapp_accounts' => 'Account di Messaggistica',
         'groups' => [
             'administration' => 'Amministrazione',
         ],
@@ -69,7 +69,7 @@ return [
             'details' => 'Dettagli Richiesta',
         ],
         'fields' => [
-            'phone'        => 'Telefono WhatsApp',
+            'phone'        => 'Telefono / ID Contatto',
             'service'      => 'Servizio',
             'status'       => 'Stato',
             'payload'      => 'Dettagli Raccolti',
@@ -161,8 +161,8 @@ return [
     ],
 
     'whatsapp_account' => [
-        'label'        => 'Account WhatsApp',
-        'label_plural' => 'Account WhatsApp',
+        'label'        => 'Account di Messaggistica',
+        'label_plural' => 'Account di Messaggistica',
         'sections' => [
             'identity'    => 'Identità',
             'credentials' => 'Credenziali API Meta',
@@ -191,7 +191,7 @@ return [
             'general'    => 'Generale',
             'appearance' => 'Aspetto',
             'security'   => 'Sicurezza',
-            'whatsapp'   => 'WhatsApp',
+            'whatsapp'   => 'Canali di Messaggistica',
             'claude'     => 'Claude AI',
             'bot'        => 'Comportamento Bot',
             'email'      => 'Email',
@@ -204,6 +204,8 @@ return [
             'branding'     => 'Asset Branding',
             'two_factor'   => 'Autenticazione a Due Fattori',
             'wa_api'       => 'WhatsApp Business API',
+            'messenger_api' => 'Facebook Messenger',
+            'instagram_api' => 'Instagram',
             'claude_api'   => 'Anthropic Claude API',
             'response'     => 'Impostazioni Risposta',
             'mail_sender'  => 'Mittente Email',
@@ -296,9 +298,9 @@ return [
         'headline_dark'  => 'Il tuo Centro di Controllo :name.',
         'headline_light' => 'Gestisci il tuo Bot AI con sicurezza.',
         'admin_badge'    => 'Admin',
-        'footer'         => 'Powered by Claude AI & WhatsApp Business API',
+        'footer'         => 'Powered by Claude AI & Meta Messaging APIs',
         'features' => [
-            'Conversazioni WhatsApp potenziate dall\'AI',
+            'Conversazioni WhatsApp, Messenger e Instagram potenziate dall\'AI',
             'Abbinamento e instradamento FAQ intelligente',
             'Gestione richieste di servizio in tempo reale',
             'Cronologia completa delle conversazioni e analisi',

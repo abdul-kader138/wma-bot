@@ -3,7 +3,7 @@
     use App\Providers\Filament\AdminPanelProvider;
 
     $appName    = Setting::get('app_name', config('app.name', 'WMA Bot'));
-    $tagline    = Setting::get('app_tagline', 'WhatsApp AI Assistant powered by Claude');
+    $tagline    = Setting::get('app_tagline', 'Multi-Channel AI Assistant powered by Claude');
     $loginImage = Setting::get('login_image');
     $themeMode  = Setting::get('auth_theme_mode', 'dark');
     $background = session('filament_auth_background')
@@ -338,7 +338,7 @@
                     @if ($isLight)
                         {!! __('admin.brand.headline_light') !!}
                     @else
-                        {!! __('admin.brand.headline_dark', ['name' => '<span style="color:'.$accent.';">WhatsApp Bot</span>']) !!}
+                        {!! __('admin.brand.headline_dark', ['name' => '<span style="color:'.$accent.';">Messaging Bot</span>']) !!}
                     @endif
                 </h2>
                 <p class="auth-bp-muted" style="font-size:.9rem;color:{{ $panelMuted }};line-height:1.6;max-width:28rem;margin:0;">{{ $tagline }}</p>

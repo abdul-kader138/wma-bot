@@ -43,7 +43,7 @@ class FaqResource extends Resource
         return $form->schema([
             Forms\Components\Section::make(__('admin.faq.sections.faq'))->schema([
                 Forms\Components\Select::make('whatsapp_account_id')
-                    ->label('WhatsApp Account')
+                    ->label(__('admin.whatsapp_account.label'))
                     ->options(WhatsAppAccount::pluck('name', 'id'))
                     ->default(WhatsAppAccount::where('is_default', true)->value('id'))
                     ->required()
@@ -101,7 +101,7 @@ class FaqResource extends Resource
                     ->limit(60),
 
                 Tables\Columns\TextColumn::make('whatsAppAccount.name')
-                    ->label('WhatsApp Account')
+                    ->label(__('admin.whatsapp_account.label'))
                     ->badge()
                     ->color('gray')
                     ->toggleable(),
@@ -129,7 +129,7 @@ class FaqResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->filters([
                 SelectFilter::make('whatsapp_account_id')
-                    ->label('WhatsApp Account')
+                    ->label(__('admin.whatsapp_account.label'))
                     ->options(WhatsAppAccount::pluck('name', 'id')),
                 SelectFilter::make('service')
                     ->label(__('admin.faq.fields.applies_to'))

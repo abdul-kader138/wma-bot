@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\VerifiesMetaWebhookSignature;
 use App\Jobs\HandleIncomingMessage;
 use App\Models\Setting;
 use App\Models\WhatsAppAccount;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Log;
  */
 abstract class MetaWebhookController extends Controller
 {
+    use VerifiesMetaWebhookSignature;
+
     abstract protected function platform(): string;
 
     abstract protected function verifyTokenSettingKey(): string;
@@ -37,7 +40,7 @@ abstract class MetaWebhookController extends Controller
 
     public function handle(Request $request)
     {
-        $this->verifySignature($request);
+        $this->verifyWebhookSignature($request, $this->platform(), config("services.{$this->configKey()}.app_secret"));
 
         foreach ($request->input('entry', []) as $entry) {
             $pageId  = $entry['id'] ?? null;
@@ -59,24 +62,5 @@ abstract class MetaWebhookController extends Controller
         }
 
         return response()->json(['status' => 'ok']);
-    }
-
-    private function verifySignature(Request $request): void
-    {
-        $secret = config("services.{$this->configKey()}.app_secret");
-        if (! $secret) {
-            if (app()->environment('production')) {
-                Log::warning(strtoupper($this->configKey())."_APP_SECRET is not set; incoming webhook requests are not being verified.");
-            }
-
-            return;
-        }
-
-        $signature = $request->header('X-Hub-Signature-256', '');
-        $expected  = 'sha256='.hash_hmac('sha256', $request->getContent(), $secret);
-
-        if (! hash_equals($expected, $signature)) {
-            abort(403, 'Invalid signature');
-        }
     }
 }

@@ -85,6 +85,15 @@ class ServiceRequestResource extends Resource
                     ->color('gray')
                     ->sortable(),
 
+                Tables\Columns\BadgeColumn::make('platform')
+                    ->label('Platform')
+                    ->colors([
+                        'success' => 'whatsapp',
+                        'info'    => 'messenger',
+                        'warning' => 'instagram',
+                    ])
+                    ->sortable(),
+
                 Tables\Columns\BadgeColumn::make('service')
                     ->label(__('admin.service_request.fields.service'))
                     ->colors([
@@ -139,6 +148,14 @@ class ServiceRequestResource extends Resource
                 SelectFilter::make('whatsapp_account_id')
                     ->label(__('admin.whatsapp_account.label'))
                     ->options(fn () => WhatsAppAccount::pluck('name', 'id')),
+
+                SelectFilter::make('platform')
+                    ->label('Platform')
+                    ->options([
+                        'whatsapp'  => 'WhatsApp',
+                        'messenger' => 'Facebook Messenger',
+                        'instagram' => 'Instagram',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\Action::make('mark_in_progress')

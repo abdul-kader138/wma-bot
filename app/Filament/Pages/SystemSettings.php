@@ -92,8 +92,10 @@ class SystemSettings extends Page implements HasForms
             'login_image'            => Setting::get('login_image'),
             'favicon'                => Setting::get('favicon'),
 
-            // WhatsApp
+            // WhatsApp / Messenger / Instagram
             'whatsapp_verify_token'    => Setting::get('whatsapp_verify_token',    env('WHATSAPP_VERIFY_TOKEN', '')),
+            'messenger_verify_token'   => Setting::get('messenger_verify_token',   env('MESSENGER_VERIFY_TOKEN', '')),
+            'instagram_verify_token'   => Setting::get('instagram_verify_token',   env('INSTAGRAM_VERIFY_TOKEN', '')),
 
             // Claude AI
             'claude_api_key'     => Setting::get('claude_api_key',     ''),
@@ -332,7 +334,7 @@ class SystemSettings extends Page implements HasForms
                                 ]),
                         ]),
 
-                    // ── WhatsApp ──────────────────────────────────────────────
+                    // ── Messaging Channels (WhatsApp / Messenger / Instagram) ──
                     Tab::make(__('admin.settings.tabs.whatsapp'))
                         ->icon('heroicon-o-chat-bubble-left-right')
                         ->schema([
@@ -345,6 +347,28 @@ class SystemSettings extends Page implements HasForms
                                         ->revealable()
                                         ->maxLength(255)
                                         ->helperText('Secret string used to verify incoming webhook requests.'),
+                                ]),
+
+                            Section::make(__('admin.settings.sections.messenger_api'))
+                                ->description('This token verifies the webhook callback URL shared by all of your Messenger pages. Manage individual pages and their access tokens under WhatsApp Accounts (select "Facebook Messenger" as the platform).')
+                                ->schema([
+                                    TextInput::make('messenger_verify_token')
+                                        ->label('Webhook Verify Token')
+                                        ->password()
+                                        ->revealable()
+                                        ->maxLength(255)
+                                        ->helperText('Set this same value when subscribing your Meta App\'s webhook to the "messages" field for Messenger. App secret is set via MESSENGER_APP_SECRET in your server\'s .env file.'),
+                                ]),
+
+                            Section::make(__('admin.settings.sections.instagram_api'))
+                                ->description('This token verifies the webhook callback URL shared by all of your connected Instagram accounts. Manage individual accounts under WhatsApp Accounts (select "Instagram" as the platform).')
+                                ->schema([
+                                    TextInput::make('instagram_verify_token')
+                                        ->label('Webhook Verify Token')
+                                        ->password()
+                                        ->revealable()
+                                        ->maxLength(255)
+                                        ->helperText('Set this same value when subscribing your Meta App\'s webhook to the "messages" field for Instagram. App secret is set via INSTAGRAM_APP_SECRET in your server\'s .env file.'),
                                 ]),
                         ]),
 
@@ -581,6 +605,8 @@ class SystemSettings extends Page implements HasForms
             'login_image'              => 'appearance',
             'favicon'                  => 'appearance',
             'whatsapp_verify_token'    => 'whatsapp',
+            'messenger_verify_token'   => 'whatsapp',
+            'instagram_verify_token'   => 'whatsapp',
             'claude_api_key'           => 'claude',
             'claude_model'             => 'claude',
             'claude_max_tokens'        => 'claude',

@@ -27,6 +27,7 @@ class WhatsAppAccount extends Model
         'external_id',
         'waba_id',
         'access_token',
+        'app_secret',
         'api_version',
         'is_active',
         'is_default',
@@ -36,6 +37,7 @@ class WhatsAppAccount extends Model
     {
         return [
             'access_token' => 'encrypted',
+            'app_secret'   => 'encrypted',
             'is_active'    => 'boolean',
             'is_default'   => 'boolean',
         ];

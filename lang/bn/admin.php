@@ -20,7 +20,7 @@ return [
         'users'            => 'ব্যবহারকারী',
         'roles'            => 'ভূমিকা',
         'system_settings'  => 'সিস্টেম সেটিংস',
-        'whatsapp_accounts' => 'হোয়াটসঅ্যাপ অ্যাকাউন্ট',
+        'whatsapp_accounts' => 'মেসেজিং অ্যাকাউন্ট',
         'groups' => [
             'administration' => 'প্রশাসন',
         ],
@@ -69,7 +69,7 @@ return [
             'details' => 'অনুরোধের বিবরণ',
         ],
         'fields' => [
-            'phone'        => 'হোয়াটসঅ্যাপ ফোন',
+            'phone'        => 'ফোন / যোগাযোগ আইডি',
             'service'      => 'সেবা',
             'status'       => 'অবস্থা',
             'payload'      => 'সংগৃহীত তথ্য',
@@ -161,8 +161,8 @@ return [
     ],
 
     'whatsapp_account' => [
-        'label'        => 'হোয়াটসঅ্যাপ অ্যাকাউন্ট',
-        'label_plural' => 'হোয়াটসঅ্যাপ অ্যাকাউন্টসমূহ',
+        'label'        => 'মেসেজিং অ্যাকাউন্ট',
+        'label_plural' => 'মেসেজিং অ্যাকাউন্টসমূহ',
         'sections' => [
             'identity'    => 'পরিচয়',
             'credentials' => 'Meta API ক্রেডেনশিয়াল',
@@ -191,7 +191,7 @@ return [
             'general'    => 'সাধারণ',
             'appearance' => 'চেহারা',
             'security'   => 'নিরাপত্তা',
-            'whatsapp'   => 'হোয়াটসঅ্যাপ',
+            'whatsapp'   => 'মেসেজিং চ্যানেল',
             'claude'     => 'ক্লড AI',
             'bot'        => 'বট আচরণ',
             'email'      => 'ইমেইল',
@@ -204,6 +204,8 @@ return [
             'branding'     => 'ব্র্যান্ডিং সম্পদ',
             'two_factor'   => 'দ্বি-স্তর যাচাইকরণ',
             'wa_api'       => 'WhatsApp Business API',
+            'messenger_api' => 'Facebook Messenger',
+            'instagram_api' => 'Instagram',
             'claude_api'   => 'Anthropic Claude API',
             'response'     => 'প্রতিক্রিয়া সেটিংস',
             'mail_sender'  => 'মেইল প্রেরক',
@@ -296,9 +298,9 @@ return [
         'headline_dark'  => 'আপনার :name নিয়ন্ত্রণ কেন্দ্র।',
         'headline_light' => 'আত্মবিশ্বাসের সাথে আপনার AI বট পরিচালনা করুন।',
         'admin_badge'    => 'অ্যাডমিন',
-        'footer'         => 'Claude AI ও WhatsApp Business API দ্বারা পরিচালিত',
+        'footer'         => 'Claude AI ও Meta Messaging API দ্বারা পরিচালিত',
         'features' => [
-            'AI-চালিত WhatsApp কথোপকথন',
+            'AI-চালিত WhatsApp, Messenger ও Instagram কথোপকথন',
             'স্মার্ট FAQ ম্যাচিং ও রাউটিং',
             'রিয়েল-টাইম সেবা অনুরোধ ব্যবস্থাপনা',
             'সম্পূর্ণ কথোপকথন ইতিহাস ও বিশ্লেষণ',

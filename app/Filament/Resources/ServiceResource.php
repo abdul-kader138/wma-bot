@@ -67,12 +67,12 @@ class ServiceResource extends Resource
                     Section::make(__('admin.service.sections.identity'))->schema([
                         Grid::make(2)->schema([
                             Select::make('whatsapp_account_id')
-                                ->label('WhatsApp Account')
+                                ->label(__('admin.whatsapp_account.label'))
                                 ->options(WhatsAppAccount::pluck('name', 'id'))
                                 ->default(WhatsAppAccount::where('is_default', true)->value('id'))
                                 ->required()
                                 ->live()
-                                ->helperText('Which WhatsApp number offers this service.'),
+                                ->helperText('Which account offers this service.'),
 
                             TextInput::make('slug')
                                 ->label('Slug')
@@ -108,7 +108,7 @@ class ServiceResource extends Resource
                             Toggle::make('is_active')
                                 ->label(__('admin.service.fields.is_active'))
                                 ->default(true)
-                                ->helperText('Inactive services will not be shown to WhatsApp users.'),
+                                ->helperText('Inactive services will not be shown to users.'),
 
                             TextInput::make('sort_order')
                                 ->label(__('admin.service.fields.sort_order'))
@@ -229,7 +229,7 @@ class ServiceResource extends Resource
                     ->width(50),
 
                 TextColumn::make('whatsAppAccount.name')
-                    ->label('WhatsApp Account')
+                    ->label(__('admin.whatsapp_account.label'))
                     ->badge()
                     ->color('gray')
                     ->toggleable(),
@@ -282,7 +282,7 @@ class ServiceResource extends Resource
             ->reorderable('sort_order')
             ->filters([
                 SelectFilter::make('whatsapp_account_id')
-                    ->label('WhatsApp Account')
+                    ->label(__('admin.whatsapp_account.label'))
                     ->options(WhatsAppAccount::pluck('name', 'id')),
             ])
             ->actions([

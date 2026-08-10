@@ -131,6 +131,14 @@ class WhatsAppAccountResource extends Resource
                         ->required()
                         ->maxLength(1000)
                         ->autocomplete('new-password'),
+
+                    TextInput::make('app_secret')
+                        ->label('App Secret Override')
+                        ->helperText('Only needed if this account\'s number/page/IG account belongs to a different Meta App than the one configured in System Settings — e.g. a separate Meta Business account. Leave blank to use the shared secret from .env.')
+                        ->password()
+                        ->revealable()
+                        ->maxLength(1000)
+                        ->autocomplete('new-password'),
                 ]),
         ]);
     }

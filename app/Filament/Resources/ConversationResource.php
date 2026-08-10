@@ -57,6 +57,16 @@ class ConversationResource extends Resource
                         ->badge()
                         ->color('gray'),
 
+                    TextEntry::make('platform')
+                        ->label('Platform')
+                        ->badge()
+                        ->color(fn (string $state) => match ($state) {
+                            'whatsapp'  => 'success',
+                            'messenger' => 'info',
+                            'instagram' => 'warning',
+                            default     => 'gray',
+                        }),
+
                     TextEntry::make('step')
                         ->label('Step')
                         ->badge()
@@ -123,6 +133,15 @@ class ConversationResource extends Resource
                     ->color('gray')
                     ->sortable(),
 
+                Tables\Columns\BadgeColumn::make('platform')
+                    ->label('Platform')
+                    ->colors([
+                        'success' => 'whatsapp',
+                        'info'    => 'messenger',
+                        'warning' => 'instagram',
+                    ])
+                    ->sortable(),
+
                 Tables\Columns\BadgeColumn::make('step')
                     ->label('Step')
                     ->formatStateUsing(fn (string $state) => __("admin.conversation.steps.{$state}"))
@@ -161,6 +180,14 @@ class ConversationResource extends Resource
                 SelectFilter::make('whatsapp_account_id')
                     ->label(__('admin.whatsapp_account.label'))
                     ->options(fn () => WhatsAppAccount::pluck('name', 'id')),
+
+                SelectFilter::make('platform')
+                    ->label('Platform')
+                    ->options([
+                        'whatsapp'  => 'WhatsApp',
+                        'messenger' => 'Facebook Messenger',
+                        'instagram' => 'Instagram',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

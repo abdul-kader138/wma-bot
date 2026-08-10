@@ -1,5 +1,8 @@
 *.log
 .DS_Store
+*.sqlite
+*.sqlite-journal
+/testing
 .env
 .env.backup
 .env.production

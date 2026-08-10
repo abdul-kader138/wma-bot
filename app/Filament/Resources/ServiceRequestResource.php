@@ -126,6 +126,8 @@ class ServiceRequestResource extends Resource
             ])
             ->recordUrl(fn (ServiceRequest $record) => static::getUrl('edit', ['record' => $record]))
             ->defaultSort('created_at', 'desc')
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('admin.service_request.fields.status'))

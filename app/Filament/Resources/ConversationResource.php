@@ -167,6 +167,10 @@ class ConversationResource extends Resource
             ])
             ->recordUrl(fn (Conversation $record) => static::getUrl('view', ['record' => $record]))
             ->defaultSort('updated_at', 'desc')
+            // Explicit page-size options (no "all") — conversations can grow into the
+            // thousands across multiple channels, so an unbounded page isn't offered.
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->filters([
                 SelectFilter::make('step')
                     ->options([

@@ -2,11 +2,14 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Widgets\Concerns\BreaksDownByAccount;
 use App\Models\ServiceRequest;
 use Filament\Widgets\ChartWidget;
 
 class ServiceRequestsChartWidget extends ChartWidget
 {
+    use BreaksDownByAccount;
+
     protected static ?int $sort = 2;
 
     protected static ?string $pollingInterval = '30s';
@@ -39,30 +42,19 @@ class ServiceRequestsChartWidget extends ChartWidget
         $days  = (int) ($this->filter ?? 14);
         $start = now()->subDays($days - 1)->startOfDay();
 
-        $counts = ServiceRequest::where('created_at', '>=', $start)
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->pluck('count', 'date');
-
-        $labels = [];
-        $data   = [];
+        $labels   = [];
+        $dateKeys = [];
 
         for ($i = $days - 1; $i >= 0; $i--) {
-            $date     = now()->subDays($i)->format('Y-m-d');
-            $label    = now()->subDays($i)->format($days > 14 ? 'M d' : 'd M');
-            $labels[] = $label;
-            $data[]   = $counts->get($date, 0);
+            $dateKeys[] = now()->subDays($i)->format('Y-m-d');
+            $labels[]   = now()->subDays($i)->format($days > 14 ? 'M d' : 'd M');
         }
 
         return [
-            'datasets' => [[
-                'label'           => __('admin.dashboard.chart.dataset_label'),
-                'data'            => $data,
-                'backgroundColor' => 'rgba(245, 158, 11, 0.65)',
-                'borderColor'     => 'rgb(245, 158, 11)',
-                'borderWidth'     => 1,
-                'borderRadius'    => 4,
-            ]],
+            'datasets' => $this->accountDatasets(
+                ServiceRequest::where('created_at', '>=', $start),
+                $dateKeys,
+            ),
             'labels' => $labels,
         ];
     }

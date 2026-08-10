@@ -231,14 +231,7 @@ class ServiceResource extends Resource
                 TextColumn::make('whatsAppAccount.name')
                     ->label(__('admin.whatsapp_account.label'))
                     ->badge()
-                    ->color('gray')
-                    ->toggleable(),
-
-                TextColumn::make('slug')
-                    ->label('Slug')
-                    ->badge()
-                    ->color('gray')
-                    ->searchable(),
+                    ->color('gray'),
 
                 TextColumn::make('label')
                     ->label(__('admin.service.fields.label_en'))
@@ -247,11 +240,22 @@ class ServiceResource extends Resource
                         $query->whereRaw("JSON_EXTRACT(label, '$.en') LIKE ?", ["%{$search}%"])
                     )
                     ->description(fn (Service $r) =>
-                        collect(['it', 'bn'])
-                            ->map(fn ($l) => $r->label[$l] ?? null)
+                        collect([$r->slug, $r->label['it'] ?? null, $r->label['bn'] ?? null])
                             ->filter()
                             ->join(' · ')
                     ),
+
+                ToggleColumn::make('is_active')
+                    ->label(__('admin.service.fields.is_active')),
+
+                // Hidden by default so the columns above fit without horizontal
+                // scrolling — still searchable/available via the table's column toggle.
+                TextColumn::make('slug')
+                    ->label('Slug')
+                    ->badge()
+                    ->color('gray')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 BadgeColumn::make('color')
                     ->label(__('admin.service.fields.color'))
@@ -262,16 +266,15 @@ class ServiceResource extends Resource
                         'danger'  => 'danger',
                         'info'    => 'info',
                         'gray'    => 'gray',
-                    ]),
+                    ])
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('tool_fields')
                     ->label('Fields')
                     ->formatStateUsing(fn ($state) => is_array($state) ? count($state) . ' fields' : '—')
                     ->badge()
-                    ->color('gray'),
-
-                ToggleColumn::make('is_active')
-                    ->label(__('admin.service.fields.is_active')),
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->dateTime('d M Y')
@@ -280,6 +283,8 @@ class ServiceResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->filters([
                 SelectFilter::make('whatsapp_account_id')
                     ->label(__('admin.whatsapp_account.label'))

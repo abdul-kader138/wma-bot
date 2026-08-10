@@ -103,8 +103,7 @@ class FaqResource extends Resource
                 Tables\Columns\TextColumn::make('whatsAppAccount.name')
                     ->label(__('admin.whatsapp_account.label'))
                     ->badge()
-                    ->color('gray')
-                    ->toggleable(),
+                    ->color('gray'),
 
                 Tables\Columns\TextColumn::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
@@ -113,13 +112,16 @@ class FaqResource extends Resource
                         : __('admin.faq.fields.all_services'))
                     ->badge(),
 
+                Tables\Columns\ToggleColumn::make('is_active')
+                    ->label(__('admin.faq.fields.active')),
+
+                // Hidden by default so the columns above fit without horizontal
+                // scrolling — still available via the table's column toggle.
                 Tables\Columns\TextColumn::make('keywords')
                     ->label(__('admin.faq.fields.triggers'))
                     ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : (string) $state)
-                    ->limit(50),
-
-                Tables\Columns\ToggleColumn::make('is_active')
-                    ->label(__('admin.faq.fields.active')),
+                    ->limit(50)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
@@ -127,6 +129,8 @@ class FaqResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('updated_at', 'desc')
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10)
             ->filters([
                 SelectFilter::make('whatsapp_account_id')
                     ->label(__('admin.whatsapp_account.label'))

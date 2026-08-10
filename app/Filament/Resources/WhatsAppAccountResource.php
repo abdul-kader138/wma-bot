@@ -8,6 +8,7 @@ use App\Filament\Resources\WhatsAppAccountResource\Pages\ListWhatsAppAccounts;
 use App\Models\WhatsAppAccount;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
@@ -16,6 +17,7 @@ use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -59,9 +61,18 @@ class WhatsAppAccountResource extends Resource
                         ->required()
                         ->maxLength(100),
 
-                    TextInput::make('waba_id')
-                        ->label(__('admin.whatsapp_account.fields.waba_id'))
-                        ->maxLength(100),
+                    Select::make('platform')
+                        ->label('Platform')
+                        ->options([
+                            'whatsapp'  => 'WhatsApp',
+                            'messenger' => 'Facebook Messenger',
+                            'instagram' => 'Instagram',
+                        ])
+                        ->default('whatsapp')
+                        ->required()
+                        ->live()
+                        ->native(false)
+                        ->helperText('Which platform this account sends and receives through.'),
                 ]),
 
                 Grid::make(2)->schema([
@@ -72,20 +83,35 @@ class WhatsAppAccountResource extends Resource
 
                     Toggle::make('is_default')
                         ->label(__('admin.whatsapp_account.fields.is_default'))
-                        ->helperText(__('admin.whatsapp_account.fields.is_default_help')),
+                        ->helperText('The default account for this platform when a service doesn\'t specify one.'),
                 ]),
             ]),
 
             Section::make(__('admin.whatsapp_account.sections.credentials'))
-                ->description('Configure this number\'s Meta WhatsApp Business API credentials.')
+                ->description('Configure this account\'s Meta API credentials — the fields differ by platform above.')
                 ->schema([
                     Grid::make(2)->schema([
                         TextInput::make('phone_number_id')
                             ->label(__('admin.whatsapp_account.fields.phone_number_id'))
                             ->helperText(__('admin.whatsapp_account.fields.phone_number_id_help'))
-                            ->required()
+                            ->visible(fn ($get) => $get('platform') === 'whatsapp')
+                            ->required(fn ($get) => $get('platform') === 'whatsapp')
                             ->unique(WhatsAppAccount::class, 'phone_number_id', ignoreRecord: true)
                             ->maxLength(100),
+
+                        TextInput::make('waba_id')
+                            ->label(__('admin.whatsapp_account.fields.waba_id'))
+                            ->visible(fn ($get) => $get('platform') === 'whatsapp')
+                            ->maxLength(100),
+
+                        TextInput::make('external_id')
+                            ->label(fn ($get) => $get('platform') === 'instagram' ? 'Instagram Business Account ID' : 'Facebook Page ID')
+                            ->helperText('From the Meta App dashboard for the linked Page (Messenger) or connected Instagram Professional account.')
+                            ->visible(fn ($get) => in_array($get('platform'), ['messenger', 'instagram']))
+                            ->required(fn ($get) => in_array($get('platform'), ['messenger', 'instagram']))
+                            ->unique(WhatsAppAccount::class, 'external_id', ignoreRecord: true)
+                            ->maxLength(100)
+                            ->columnSpan(2),
 
                         TextInput::make('api_version')
                             ->label(__('admin.whatsapp_account.fields.api_version'))
@@ -96,7 +122,9 @@ class WhatsAppAccountResource extends Resource
                     ]),
 
                     TextInput::make('access_token')
-                        ->label(__('admin.whatsapp_account.fields.access_token'))
+                        ->label(fn ($get) => $get('platform') === 'whatsapp'
+                            ? __('admin.whatsapp_account.fields.access_token')
+                            : 'Page Access Token')
                         ->helperText(__('admin.whatsapp_account.fields.access_token_help'))
                         ->password()
                         ->revealable()
@@ -115,10 +143,25 @@ class WhatsAppAccountResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                BadgeColumn::make('platform')
+                    ->label('Platform')
+                    ->colors([
+                        'success' => 'whatsapp',
+                        'info'    => 'messenger',
+                        'warning' => 'instagram',
+                    ]),
+
                 TextColumn::make('phone_number_id')
                     ->label(__('admin.whatsapp_account.fields.phone_number_id'))
                     ->searchable()
-                    ->copyable(),
+                    ->copyable()
+                    ->placeholder('—'),
+
+                TextColumn::make('external_id')
+                    ->label('External ID')
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('—'),
 
                 IconColumn::make('is_active')
                     ->label(__('admin.whatsapp_account.fields.is_active'))

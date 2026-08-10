@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ClaudeDailyUsage extends Model
 {
-    protected $fillable = ['whatsapp_account_id', 'phone', 'date', 'count'];
+    protected $fillable = ['whatsapp_account_id', 'phone', 'platform', 'date', 'count'];
 
     protected $casts = [
         'date'  => 'date',

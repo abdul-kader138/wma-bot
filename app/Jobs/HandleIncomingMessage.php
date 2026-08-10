@@ -14,6 +14,8 @@ use App\Notifications\ClaudeBudgetExhaustedNotification;
 use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
+use App\Services\InstagramClient;
+use App\Services\MessengerClient;
 use App\Services\WhatsAppClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -40,7 +42,10 @@ class HandleIncomingMessage implements ShouldQueue
     // Headroom for: lock wait (up to 10s) + Claude call (up to 40s) + WhatsApp send (up to 10s) + overhead.
     public int $timeout = 90;
 
-    public function __construct(public array $value, public int $whatsAppAccountId) {}
+    // Defaults to 'whatsapp' so every existing dispatch call site (just the WhatsApp
+    // webhook controller today) keeps working unchanged — Messenger/Instagram webhook
+    // controllers pass 'messenger'/'instagram' explicitly.
+    public function __construct(public array $value, public int $whatsAppAccountId, public string $platform = 'whatsapp') {}
 
     public function backoff(): array
     {
@@ -52,14 +57,15 @@ class HandleIncomingMessage implements ShouldQueue
         $account = WhatsAppAccount::findOrFail($this->whatsAppAccountId);
 
         if (! $account->is_active) {
-            Log::warning('Skipping message for deactivated WhatsApp account', [
-                'whatsapp_account_id' => $account->id,
+            Log::warning('Skipping message for deactivated channel account', [
+                'account_id' => $account->id,
+                'platform'   => $this->platform,
             ]);
 
             return;
         }
 
-        $wa = new WhatsAppClient($account);
+        $wa = $this->resolveChannel($account);
 
         $msg = $wa->parseIncoming($this->value);
         if (! $msg) {
@@ -101,6 +107,15 @@ class HandleIncomingMessage implements ShouldQueue
         }
     }
 
+    private function resolveChannel(WhatsAppAccount $account): MessagingChannel
+    {
+        return match ($this->platform) {
+            'messenger' => new MessengerClient($account),
+            'instagram' => new InstagramClient($account),
+            default     => new WhatsAppClient($account),
+        };
+    }
+
     private function processMessage(
         ClaudeAgent $agent,
         FaqMatcher $faqs,
@@ -111,7 +126,7 @@ class HandleIncomingMessage implements ShouldQueue
     ): void {
         $convo = Conversation::firstOrCreate(
             ['wa_phone' => $phone, 'whatsapp_account_id' => $account->id],
-            ['step' => 'NEW', 'history' => []]
+            ['step' => 'NEW', 'history' => [], 'platform' => $this->platform]
         );
 
         $input = $msg['reply_id'] ?? trim((string) ($msg['text'] ?? ''));
@@ -312,7 +327,7 @@ class HandleIncomingMessage implements ShouldQueue
     {
         $usage = ClaudeDailyUsage::firstOrCreate(
             ['whatsapp_account_id' => $account->id, 'phone' => $phone, 'date' => today()->toDateString()],
-            ['count' => 0]
+            ['count' => 0, 'platform' => $this->platform]
         );
 
         $max = (int) Setting::get('claude_max_messages_per_day', 100);
@@ -398,6 +413,7 @@ class HandleIncomingMessage implements ShouldQueue
             $serviceRequest = ServiceRequest::create([
                 'whatsapp_account_id' => $convo->whatsapp_account_id,
                 'wa_phone'            => $phone,
+                'platform'            => $this->platform,
                 'service'             => $convo->service,
                 'payload'             => $reply['input'],
                 'status'              => 'new',

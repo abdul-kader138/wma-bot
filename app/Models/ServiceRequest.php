@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ServiceRequest extends Model
 {
-    protected $fillable = ['whatsapp_account_id', 'wa_phone', 'service', 'payload', 'status', 'staff_notes'];
+    protected $fillable = ['whatsapp_account_id', 'wa_phone', 'platform', 'service', 'payload', 'status', 'staff_notes'];
 
     protected $casts = ['payload' => 'array'];
 

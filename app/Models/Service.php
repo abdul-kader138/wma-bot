@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 
 class Service extends Model
@@ -14,9 +15,9 @@ class Service extends Model
     ];
 
     protected $casts = [
-        'label'       => 'array',
+        'label' => 'array',
         'tool_fields' => 'array',
-        'is_active'   => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -30,27 +31,45 @@ class Service extends Model
         return $this->belongsTo(WhatsAppAccount::class);
     }
 
+    public function accounts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            WhatsAppAccount::class,
+            'service_whatsapp_account',
+            'service_id',
+            'whatsapp_account_id'
+        );
+    }
+
+    public function scopeForAccount($query, ?int $accountId)
+    {
+        return $query->where(function ($query) use ($accountId) {
+            $query->where('whatsapp_account_id', $accountId)
+                ->orWhereHas('accounts', fn ($accounts) => $accounts->whereKey($accountId));
+        });
+    }
+
     // Returns all active services for one WhatsApp account, keyed by slug,
     // same shape as config('services_bot.services')
     public static function toConfig(?int $whatsappAccountId): array
     {
         return Cache::rememberForever("services:all:{$whatsappAccountId}", function () use ($whatsappAccountId) {
             return static::where('is_active', true)
-                ->where('whatsapp_account_id', $whatsappAccountId)
+                ->forAccount($whatsappAccountId)
                 ->orderBy('sort_order')
                 ->get()
                 ->keyBy('slug')
                 ->map(fn (Service $s) => [
-                    'label'        => $s->label,
+                    'label' => $s->label,
                     'prompt_label' => $s->prompt_label ?? '',
                     'tool' => [
-                        'name'        => $s->tool_name ?? '',
+                        'name' => $s->tool_name ?? '',
                         'description' => $s->tool_description ?? '',
-                        'fields'      => collect($s->tool_fields ?? [])
+                        'fields' => collect($s->tool_fields ?? [])
                             ->keyBy('name')
                             ->map(fn ($f) => [
-                                'type'        => $f['type'] ?? 'string',
-                                'required'    => (bool) ($f['required'] ?? false),
+                                'type' => $f['type'] ?? 'string',
+                                'required' => (bool) ($f['required'] ?? false),
                                 'description' => $f['description'] ?? '',
                             ])
                             ->toArray(),
@@ -64,7 +83,7 @@ class Service extends Model
     public static function options(string $locale = 'en', ?int $whatsappAccountId = null): array
     {
         return static::where('is_active', true)
-            ->where('whatsapp_account_id', $whatsappAccountId)
+            ->forAccount($whatsappAccountId)
             ->orderBy('sort_order')
             ->get()
             ->mapWithKeys(fn (Service $s) => [

@@ -67,6 +67,20 @@ abstract class MetaMessagingClient implements MessagingChannel
             $replies[] = ['content_type' => 'text', 'title' => $title, 'payload' => $key];
         }
 
+        if ($replies === []) {
+            Log::warning(static::class.' has no active services to send', [
+                'account_id' => $this->accountId,
+            ]);
+
+            $this->sendText($to, match ($lang) {
+                'it' => 'Al momento non ci sono servizi disponibili. Riprova più tardi.',
+                'bn' => 'এই মুহূর্তে কোনো সেবা উপলব্ধ নেই। অনুগ্রহ করে পরে আবার চেষ্টা করুন।',
+                default => 'No services are available right now. Please try again later.',
+            });
+
+            return;
+        }
+
         $prompt = config("services_bot.replies.choose_service.{$lang}")
             ?? config('services_bot.replies.choose_service.en');
 

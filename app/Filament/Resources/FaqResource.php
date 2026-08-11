@@ -108,7 +108,7 @@ class FaqResource extends Resource
                 Tables\Columns\TextColumn::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
                     ->formatStateUsing(fn (?string $state, Faq $record) => $state
-                        ? (Service::where('slug', $state)->where('whatsapp_account_id', $record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
+                        ? (Service::where('slug', $state)->forAccount($record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
                         : __('admin.faq.fields.all_services'))
                     ->badge(),
 
@@ -145,7 +145,7 @@ class FaqResource extends Resource
                             ->get()
                             ->mapWithKeys(fn (Service $s) => [
                                 $s->slug => ($s->label[app()->getLocale()] ?? $s->label['en'] ?? $s->slug)
-                                    . ' (' . ($s->whatsAppAccount?->name ?? '—') . ')',
+                                    .' ('.($s->whatsAppAccount?->name ?? '—').')',
                             ])
                     ),
                 TernaryFilter::make('is_active')
@@ -165,9 +165,9 @@ class FaqResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListFaqs::route('/'),
+            'index' => Pages\ListFaqs::route('/'),
             'create' => Pages\CreateFaq::route('/create'),
-            'edit'   => Pages\EditFaq::route('/{record}/edit'),
+            'edit' => Pages\EditFaq::route('/{record}/edit'),
         ];
     }
 }

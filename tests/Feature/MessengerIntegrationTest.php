@@ -80,6 +80,38 @@ class MessengerIntegrationTest extends TestCase
         });
     }
 
+    public function test_service_can_be_shared_with_another_messaging_account(): void
+    {
+        $secondPage = WhatsAppAccount::create([
+            'name' => 'Second Page',
+            'platform' => 'messenger',
+            'external_id' => 'page-456',
+            'access_token' => 'second-page-token',
+            'api_version' => 'v22.0',
+            'is_active' => true,
+        ]);
+
+        $service = Service::where('slug', 'ticket')->firstOrFail();
+        $service->accounts()->attach([$this->messengerAccount->id, $secondPage->id]);
+
+        (new MessengerClient($secondPage))->sendServiceButtons('psid-2', 'en');
+
+        Http::assertSent(fn ($request) => collect($request['message']['quick_replies'] ?? [])
+            ->contains(fn ($reply) => $reply['payload'] === 'ticket'));
+    }
+
+    public function test_send_service_buttons_falls_back_to_text_when_account_has_no_services(): void
+    {
+        Service::query()->get()->each->delete();
+
+        (new MessengerClient($this->messengerAccount))->sendServiceButtons('psid-1', 'en');
+
+        Http::assertSent(function ($request) {
+            return $request['message']['text'] === 'No services are available right now. Please try again later.'
+                && ! isset($request['message']['quick_replies']);
+        });
+    }
+
     public function test_parse_incoming_plain_text(): void
     {
         $client = new MessengerClient($this->messengerAccount);

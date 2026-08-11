@@ -17,7 +17,6 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
@@ -66,23 +65,20 @@ class ServiceResource extends Resource
 
                     Section::make(__('admin.service.sections.identity'))->schema([
                         Grid::make(2)->schema([
-                            Select::make('whatsapp_account_id')
-                                ->label(__('admin.whatsapp_account.label'))
-                                ->options(WhatsAppAccount::pluck('name', 'id'))
-                                ->default(WhatsAppAccount::where('is_default', true)->value('id'))
+                            Select::make('accounts')
+                                ->label(__('admin.whatsapp_account.label_plural'))
+                                ->relationship('accounts', 'name')
+                                ->multiple()
+                                ->preload()
+                                ->default(fn () => array_filter([WhatsAppAccount::where('is_default', true)->value('id')]))
                                 ->required()
                                 ->live()
-                                ->helperText('Which account offers this service.'),
+                                ->helperText('Select every messaging account that offers this service.'),
 
                             TextInput::make('slug')
                                 ->label('Slug')
                                 ->required()
-                                ->unique(
-                                    Service::class,
-                                    'slug',
-                                    ignoreRecord: true,
-                                    modifyRuleUsing: fn ($rule, Get $get) => $rule->where('whatsapp_account_id', $get('whatsapp_account_id')),
-                                )
+                                ->unique(Service::class, 'slug', ignoreRecord: true)
                                 ->alphaNum()
                                 ->maxLength(100)
                                 ->helperText('Unique identifier used by the bot (lowercase, no spaces). Auto-filled from English label.')
@@ -96,9 +92,9 @@ class ServiceResource extends Resource
                                     'primary' => 'Primary (Blue)',
                                     'warning' => 'Warning (Amber)',
                                     'success' => 'Success (Green)',
-                                    'danger'  => 'Danger (Red)',
-                                    'info'    => 'Info (Cyan)',
-                                    'gray'    => 'Gray',
+                                    'danger' => 'Danger (Red)',
+                                    'info' => 'Info (Cyan)',
+                                    'gray' => 'Gray',
                                 ])
                                 ->required()
                                 ->default('primary'),
@@ -121,17 +117,16 @@ class ServiceResource extends Resource
                     Section::make(__('admin.service.sections.labels'))
                         ->description('The service name shown to users in each language.')
                         ->schema(
-                            collect($locales)->map(fn ($name, $code) =>
-                                TextInput::make("label.{$code}")
-                                    ->label($name)
-                                    ->required($code === 'en')
-                                    ->maxLength(100)
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(function (Set $set, ?string $state) use ($code, $form) {
-                                        if ($code === 'en' && filled($state)) {
-                                            $set('slug', Str::slug($state, '_'));
-                                        }
-                                    })
+                            collect($locales)->map(fn ($name, $code) => TextInput::make("label.{$code}")
+                                ->label($name)
+                                ->required($code === 'en')
+                                ->maxLength(100)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (Set $set, ?string $state) use ($code) {
+                                    if ($code === 'en' && filled($state)) {
+                                        $set('slug', Str::slug($state, '_'));
+                                    }
+                                })
                             )->values()->toArray()
                         )->columns(count($locales)),
                 ]),
@@ -184,7 +179,7 @@ class ServiceResource extends Resource
                                         Select::make('type')
                                             ->label('Type')
                                             ->options([
-                                                'string'  => 'String (text)',
+                                                'string' => 'String (text)',
                                                 'integer' => 'Integer (number)',
                                                 'boolean' => 'Boolean (yes/no)',
                                             ])
@@ -205,9 +200,8 @@ class ServiceResource extends Resource
                                 ])
                                 ->reorderable()
                                 ->collapsible()
-                                ->itemLabel(fn (array $state): ?string =>
-                                    filled($state['name'] ?? null)
-                                        ? ($state['name'] . ' (' . ($state['type'] ?? 'string') . ')' . (($state['required'] ?? false) ? ' *' : ''))
+                                ->itemLabel(fn (array $state): ?string => filled($state['name'] ?? null)
+                                        ? ($state['name'].' ('.($state['type'] ?? 'string').')'.(($state['required'] ?? false) ? ' *' : ''))
                                         : 'New field'
                                 )
                                 ->addActionLabel('Add field')
@@ -228,21 +222,19 @@ class ServiceResource extends Resource
                     ->sortable()
                     ->width(50),
 
-                TextColumn::make('whatsAppAccount.name')
-                    ->label(__('admin.whatsapp_account.label'))
+                TextColumn::make('accounts.name')
+                    ->label(__('admin.whatsapp_account.label_plural'))
                     ->badge()
                     ->color('gray'),
 
                 TextColumn::make('label')
                     ->label(__('admin.service.fields.label_en'))
                     ->formatStateUsing(fn ($state) => is_array($state) ? ($state['en'] ?? '—') : $state)
-                    ->searchable(query: fn ($query, $search) =>
-                        $query->whereRaw("JSON_EXTRACT(label, '$.en') LIKE ?", ["%{$search}%"])
+                    ->searchable(query: fn ($query, $search) => $query->whereRaw("JSON_EXTRACT(label, '$.en') LIKE ?", ["%{$search}%"])
                     )
-                    ->description(fn (Service $r) =>
-                        collect([$r->slug, $r->label['it'] ?? null, $r->label['bn'] ?? null])
-                            ->filter()
-                            ->join(' · ')
+                    ->description(fn (Service $r) => collect([$r->slug, $r->label['it'] ?? null, $r->label['bn'] ?? null])
+                        ->filter()
+                        ->join(' · ')
                     ),
 
                 ToggleColumn::make('is_active')
@@ -263,15 +255,15 @@ class ServiceResource extends Resource
                         'primary' => 'primary',
                         'warning' => 'warning',
                         'success' => 'success',
-                        'danger'  => 'danger',
-                        'info'    => 'info',
-                        'gray'    => 'gray',
+                        'danger' => 'danger',
+                        'info' => 'info',
+                        'gray' => 'gray',
                     ])
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('tool_fields')
                     ->label('Fields')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state) . ' fields' : '—')
+                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state).' fields' : '—')
                     ->badge()
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -286,9 +278,9 @@ class ServiceResource extends Resource
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)
             ->filters([
-                SelectFilter::make('whatsapp_account_id')
+                SelectFilter::make('accounts')
                     ->label(__('admin.whatsapp_account.label'))
-                    ->options(WhatsAppAccount::pluck('name', 'id')),
+                    ->relationship('accounts', 'name'),
             ])
             ->actions([
                 EditAction::make(),
@@ -304,9 +296,9 @@ class ServiceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => ListServices::route('/'),
+            'index' => ListServices::route('/'),
             'create' => CreateService::route('/create'),
-            'edit'   => EditService::route('/{record}/edit'),
+            'edit' => EditService::route('/{record}/edit'),
         ];
     }
 }

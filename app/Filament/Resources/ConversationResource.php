@@ -13,8 +13,8 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class ConversationResource extends Resource
 {
@@ -61,10 +61,10 @@ class ConversationResource extends Resource
                         ->label('Platform')
                         ->badge()
                         ->color(fn (string $state) => match ($state) {
-                            'whatsapp'  => 'success',
+                            'whatsapp' => 'success',
                             'messenger' => 'info',
                             'instagram' => 'warning',
-                            default     => 'gray',
+                            default => 'gray',
                         }),
 
                     TextEntry::make('step')
@@ -72,11 +72,11 @@ class ConversationResource extends Resource
                         ->badge()
                         ->formatStateUsing(fn (string $state) => __("admin.conversation.steps.{$state}"))
                         ->color(fn (string $state) => match ($state) {
-                            'NEW'        => 'gray',
+                            'NEW' => 'gray',
                             'AWAIT_LANG' => 'warning',
                             'IN_SERVICE' => 'primary',
-                            'DONE'       => 'success',
-                            default      => 'gray',
+                            'DONE' => 'success',
+                            default => 'gray',
                         }),
 
                     TextEntry::make('language')
@@ -85,7 +85,7 @@ class ConversationResource extends Resource
                     TextEntry::make('service')
                         ->label(__('admin.service_request.fields.service'))
                         ->formatStateUsing(fn (?string $state, Conversation $record) => $state
-                            ? (Service::where('slug', $state)->where('whatsapp_account_id', $record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
+                            ? (Service::where('slug', $state)->forAccount($record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
                             : '—'),
 
                     TextEntry::make('created_at')
@@ -137,7 +137,7 @@ class ConversationResource extends Resource
                     ->label('Platform')
                     ->colors([
                         'success' => 'whatsapp',
-                        'info'    => 'messenger',
+                        'info' => 'messenger',
                         'warning' => 'instagram',
                     ])
                     ->sortable(),
@@ -146,7 +146,7 @@ class ConversationResource extends Resource
                     ->label('Step')
                     ->formatStateUsing(fn (string $state) => __("admin.conversation.steps.{$state}"))
                     ->colors([
-                        'gray'    => 'NEW',
+                        'gray' => 'NEW',
                         'warning' => 'AWAIT_LANG',
                         'primary' => 'IN_SERVICE',
                         'success' => 'DONE',
@@ -174,11 +174,11 @@ class ConversationResource extends Resource
             ->filters([
                 SelectFilter::make('step')
                     ->options([
-                        'NEW'           => __('admin.conversation.steps.NEW'),
-                        'AWAIT_LANG'    => __('admin.conversation.steps.AWAIT_LANG'),
+                        'NEW' => __('admin.conversation.steps.NEW'),
+                        'AWAIT_LANG' => __('admin.conversation.steps.AWAIT_LANG'),
                         'AWAIT_SERVICE' => __('admin.conversation.steps.AWAIT_SERVICE'),
-                        'IN_SERVICE'    => __('admin.conversation.steps.IN_SERVICE'),
-                        'DONE'          => __('admin.conversation.steps.DONE'),
+                        'IN_SERVICE' => __('admin.conversation.steps.IN_SERVICE'),
+                        'DONE' => __('admin.conversation.steps.DONE'),
                     ]),
 
                 SelectFilter::make('whatsapp_account_id')
@@ -188,7 +188,7 @@ class ConversationResource extends Resource
                 SelectFilter::make('platform')
                     ->label('Platform')
                     ->options([
-                        'whatsapp'  => 'WhatsApp',
+                        'whatsapp' => 'WhatsApp',
                         'messenger' => 'Facebook Messenger',
                         'instagram' => 'Instagram',
                     ]),
@@ -214,7 +214,7 @@ class ConversationResource extends Resource
     {
         return [
             'index' => Pages\ListConversations::route('/'),
-            'view'  => Pages\ViewConversation::route('/{record}'),
+            'view' => Pages\ViewConversation::route('/{record}'),
         ];
     }
 

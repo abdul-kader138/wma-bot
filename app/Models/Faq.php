@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 
 class Faq extends Model
@@ -11,9 +12,9 @@ class Faq extends Model
     protected $fillable = ['whatsapp_account_id', 'service', 'question', 'keywords', 'answer', 'is_active'];
 
     protected $casts = [
-        'question'  => 'array',
-        'keywords'  => 'array',
-        'answer'    => 'array',
+        'question' => 'array',
+        'keywords' => 'array',
+        'answer' => 'array',
         'is_active' => 'boolean',
     ];
 
@@ -39,6 +40,24 @@ class Faq extends Model
     public function whatsAppAccount(): BelongsTo
     {
         return $this->belongsTo(WhatsAppAccount::class);
+    }
+
+    public function accounts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            WhatsAppAccount::class,
+            'faq_whatsapp_account',
+            'faq_id',
+            'whatsapp_account_id'
+        );
+    }
+
+    public function scopeForAccount($query, ?int $accountId)
+    {
+        return $query->where(function ($query) use ($accountId) {
+            $query->where('whatsapp_account_id', $accountId)
+                ->orWhereHas('accounts', fn ($accounts) => $accounts->whereKey($accountId));
+        });
     }
 
     /** All non-empty question translations, e.g. for matching across languages. */

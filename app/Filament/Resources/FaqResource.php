@@ -42,10 +42,12 @@ class FaqResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make(__('admin.faq.sections.faq'))->schema([
-                Forms\Components\Select::make('whatsapp_account_id')
-                    ->label(__('admin.whatsapp_account.label'))
-                    ->options(WhatsAppAccount::pluck('name', 'id'))
-                    ->default(WhatsAppAccount::where('is_default', true)->value('id'))
+                Forms\Components\Select::make('accounts')
+                    ->label(__('admin.whatsapp_account.label_plural'))
+                    ->relationship('accounts', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->default(fn () => array_filter([WhatsAppAccount::where('is_default', true)->value('id')]))
                     ->required()
                     ->live()
                     ->afterStateUpdated(fn (Forms\Set $set) => $set('service', null)),
@@ -54,7 +56,9 @@ class FaqResource extends Resource
                     ->label(__('admin.faq.fields.applies_to'))
                     ->placeholder(__('admin.faq.fields.all_services'))
                     ->options(
-                        fn (Get $get) => Service::options(app()->getLocale(), $get('whatsapp_account_id'))
+                        fn (Get $get) => collect($get('accounts') ?? [])
+                            ->flatMap(fn ($accountId) => Service::options(app()->getLocale(), (int) $accountId))
+                            ->all()
                     ),
 
                 Forms\Components\Toggle::make('is_active')
@@ -100,15 +104,15 @@ class FaqResource extends Resource
                     ->searchable()
                     ->limit(60),
 
-                Tables\Columns\TextColumn::make('whatsAppAccount.name')
-                    ->label(__('admin.whatsapp_account.label'))
+                Tables\Columns\TextColumn::make('accounts.name')
+                    ->label(__('admin.whatsapp_account.label_plural'))
                     ->badge()
                     ->color('gray'),
 
                 Tables\Columns\TextColumn::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
                     ->formatStateUsing(fn (?string $state, Faq $record) => $state
-                        ? (Service::where('slug', $state)->forAccount($record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
+                        ? (Service::where('slug', $state)->forAccount($record->accounts->first()?->id ?? $record->whatsapp_account_id)->first()?->label[app()->getLocale()] ?? $state)
                         : __('admin.faq.fields.all_services'))
                     ->badge(),
 
@@ -132,9 +136,9 @@ class FaqResource extends Resource
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)
             ->filters([
-                SelectFilter::make('whatsapp_account_id')
+                SelectFilter::make('accounts')
                     ->label(__('admin.whatsapp_account.label'))
-                    ->options(WhatsAppAccount::pluck('name', 'id')),
+                    ->relationship('accounts', 'name'),
                 SelectFilter::make('service')
                     ->label(__('admin.faq.fields.applies_to'))
                     ->options(

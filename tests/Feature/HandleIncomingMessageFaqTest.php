@@ -26,26 +26,26 @@ class HandleIncomingMessageFaqTest extends TestCase
         Http::fake();
 
         $this->account = WhatsAppAccount::create([
-            'name'            => 'Test',
+            'name' => 'Test',
             'phone_number_id' => 'test-phone-id',
-            'access_token'    => 'test-token',
-            'api_version'     => 'v22.0',
-            'is_active'       => true,
-            'is_default'      => true,
+            'access_token' => 'test-token',
+            'api_version' => 'v22.0',
+            'is_active' => true,
+            'is_default' => true,
         ]);
 
         foreach (['ticket', 'license'] as $slug) {
             Service::create([
                 'whatsapp_account_id' => $this->account->id,
-                'slug'                => $slug,
-                'label'               => ['en' => ucfirst($slug)],
-                'prompt_label'        => $slug,
-                'color'               => 'primary',
-                'is_active'           => true,
-                'sort_order'          => 0,
-                'tool_name'           => "submit_{$slug}_request",
-                'tool_description'    => "Save a completed {$slug} request.",
-                'tool_fields'         => [
+                'slug' => $slug,
+                'label' => ['en' => ucfirst($slug)],
+                'prompt_label' => $slug,
+                'color' => 'primary',
+                'is_active' => true,
+                'sort_order' => 0,
+                'tool_name' => "submit_{$slug}_request",
+                'tool_description' => "Save a completed {$slug} request.",
+                'tool_fields' => [
                     ['name' => 'full_name', 'type' => 'string', 'required' => true, 'description' => "Customer's full name"],
                 ],
             ]);
@@ -56,7 +56,7 @@ class HandleIncomingMessageFaqTest extends TestCase
     {
         return [
             'messages' => [[
-                'id'   => $messageId,
+                'id' => $messageId,
                 'from' => $from,
                 'type' => 'text',
                 'text' => ['body' => $text],
@@ -69,10 +69,10 @@ class HandleIncomingMessageFaqTest extends TestCase
         return Conversation::create([
             'whatsapp_account_id' => $this->account->id,
             'wa_phone' => $phone,
-            'step'     => 'IN_SERVICE',
+            'step' => 'IN_SERVICE',
             'language' => 'en',
-            'service'  => 'ticket',
-            'history'  => [
+            'service' => 'ticket',
+            'history' => [
                 ['role' => 'user',      'content' => 'I want to book a ticket'],
                 ['role' => 'assistant', 'content' => 'What is your full name?'],
             ],
@@ -86,10 +86,10 @@ class HandleIncomingMessageFaqTest extends TestCase
 
         Faq::create([
             'whatsapp_account_id' => $this->account->id,
-            'service'   => null,
-            'question'  => ['en' => 'What is the price?'],
-            'keywords'  => ['price', 'cost', 'how much'],
-            'answer'    => ['en' => 'Our standard fee is €50.'],
+            'service' => null,
+            'question' => ['en' => 'What is the price?'],
+            'keywords' => ['price', 'cost', 'how much'],
+            'answer' => ['en' => 'Our standard fee is €50.'],
             'is_active' => true,
         ]);
 
@@ -122,24 +122,49 @@ class HandleIncomingMessageFaqTest extends TestCase
         $job->handle($agent, app(FaqMatcher::class));
     }
 
+    public function test_faq_can_be_shared_with_another_messaging_account(): void
+    {
+        $secondAccount = WhatsAppAccount::create([
+            'name' => 'Second account',
+            'phone_number_id' => 'second-phone-id',
+            'access_token' => 'second-token',
+            'api_version' => 'v22.0',
+            'is_active' => true,
+        ]);
+
+        $faq = Faq::create([
+            'whatsapp_account_id' => $this->account->id,
+            'service' => null,
+            'question' => ['en' => 'Where is your office?'],
+            'keywords' => ['office location'],
+            'answer' => ['en' => 'Our office is in Rome.'],
+            'is_active' => true,
+        ]);
+        $faq->accounts()->attach([$this->account->id, $secondAccount->id]);
+
+        $matched = app(FaqMatcher::class)->match('office location', null, $secondAccount->id);
+
+        $this->assertSame($faq->id, $matched?->id);
+    }
+
     public function test_service_scoped_faq_not_matched_for_different_service(): void
     {
         $phone = '393001234569';
         Conversation::create([
             'whatsapp_account_id' => $this->account->id,
             'wa_phone' => $phone,
-            'step'     => 'IN_SERVICE',
+            'step' => 'IN_SERVICE',
             'language' => 'en',
-            'service'  => 'license',
-            'history'  => [],
+            'service' => 'license',
+            'history' => [],
         ]);
 
         Faq::create([
             'whatsapp_account_id' => $this->account->id,
-            'service'   => 'ticket',
-            'question'  => ['en' => 'Ticket price?'],
-            'keywords'  => ['price', 'cost'],
-            'answer'    => ['en' => 'Ticket costs €50.'],
+            'service' => 'ticket',
+            'question' => ['en' => 'Ticket price?'],
+            'keywords' => ['price', 'cost'],
+            'answer' => ['en' => 'Ticket costs €50.'],
             'is_active' => true,
         ]);
 

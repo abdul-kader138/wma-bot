@@ -75,15 +75,15 @@ class FaqMatcher
             }
         }
 
-        $words     = $this->words($normalized);
-        $best      = null;
+        $words = $this->words($normalized);
+        $best = null;
         $bestScore = 0.0;
 
         foreach ($candidates as $faq) {
             $score = $this->overlapScore($words, $faq);
             if ($score > $bestScore) {
                 $bestScore = $score;
-                $best      = $faq;
+                $best = $faq;
             }
         }
 
@@ -124,13 +124,13 @@ class FaqMatcher
     // cache hit as valid regardless of shape.
     private function activeFaqs(?int $whatsappAccountId): Collection
     {
-        $key  = "faqs:active:{$whatsappAccountId}";
+        $key = "faqs:active:{$whatsappAccountId}";
         $rows = Cache::get($key);
 
         if (! is_array($rows) || ! collect($rows)->every(fn ($row) => is_array($row))) {
             $rows = Faq::query()
                 ->where('is_active', true)
-                ->where('whatsapp_account_id', $whatsappAccountId)
+                ->forAccount($whatsappAccountId)
                 ->get()
                 ->map(fn (Faq $faq) => $faq->getAttributes())
                 ->all();
@@ -168,7 +168,7 @@ class FaqMatcher
 
     private function phoneticOverlapScore(array $words, array $targetWords): float
     {
-        $wordKeys   = array_values(array_unique(array_map(fn ($w) => $this->phoneticKey($w), $words)));
+        $wordKeys = array_values(array_unique(array_map(fn ($w) => $this->phoneticKey($w), $words)));
         $targetKeys = array_values(array_unique(array_map(fn ($w) => $this->phoneticKey($w), $targetWords)));
 
         if (empty($wordKeys) || empty($targetKeys)) {
@@ -176,7 +176,7 @@ class FaqMatcher
         }
 
         $matchedTargets = [];
-        $matches        = 0;
+        $matches = 0;
 
         foreach ($wordKeys as $wordKey) {
             if ($wordKey === '') {
@@ -223,7 +223,7 @@ class FaqMatcher
     {
         $chars = mb_str_split($word);
         $count = count($chars);
-        $out   = '';
+        $out = '';
 
         for ($i = 0; $i < $count; $i++) {
             $char = $chars[$i];

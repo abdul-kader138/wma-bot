@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\MessagingChannel;
+use App\Models\Service;
 use App\Models\WhatsAppAccount;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,22 +19,24 @@ use Illuminate\Support\Facades\Log;
 abstract class MetaMessagingClient implements MessagingChannel
 {
     private string $url;
+
     private string $token;
+
     protected int $accountId;
 
     public function __construct(WhatsAppAccount $account)
     {
-        $this->url       = "https://graph.facebook.com/{$account->api_version}/me/messages";
-        $this->token     = $account->access_token;
+        $this->url = "https://graph.facebook.com/{$account->api_version}/me/messages";
+        $this->token = $account->access_token;
         $this->accountId = $account->id;
     }
 
     public function sendText(string $to, string $body): void
     {
         $this->post([
-            'recipient'      => ['id' => $to],
+            'recipient' => ['id' => $to],
             'messaging_type' => 'RESPONSE',
-            'message'        => ['text' => $body],
+            'message' => ['text' => $body],
         ]);
     }
 
@@ -45,9 +48,9 @@ abstract class MetaMessagingClient implements MessagingChannel
         }
 
         $this->post([
-            'recipient'      => ['id' => $to],
+            'recipient' => ['id' => $to],
             'messaging_type' => 'RESPONSE',
-            'message'        => [
+            'message' => [
                 'text' => 'Please choose your language / Scegli la lingua / ভাষা নির্বাচন করুন',
                 // Meta caps quick replies at 13 per message — same reasoning as
                 // WhatsApp's 10-row list limit, just a different API ceiling.
@@ -60,7 +63,7 @@ abstract class MetaMessagingClient implements MessagingChannel
     {
         $replies = [];
         foreach (Service::toConfig($this->accountId) as $key => $svc) {
-            $title    = $svc['label'][$lang] ?? $svc['label']['en'];
+            $title = $svc['label'][$lang] ?? $svc['label']['en'];
             $replies[] = ['content_type' => 'text', 'title' => $title, 'payload' => $key];
         }
 
@@ -68,10 +71,10 @@ abstract class MetaMessagingClient implements MessagingChannel
             ?? config('services_bot.replies.choose_service.en');
 
         $this->post([
-            'recipient'      => ['id' => $to],
+            'recipient' => ['id' => $to],
             'messaging_type' => 'RESPONSE',
-            'message'        => [
-                'text'          => $prompt,
+            'message' => [
+                'text' => $prompt,
                 'quick_replies' => array_slice($replies, 0, 13),
             ],
         ]);
@@ -79,12 +82,15 @@ abstract class MetaMessagingClient implements MessagingChannel
 
     public function parseIncoming(array $value): ?array
     {
-        $event   = $value['messaging'][0] ?? null;
+        $event = $value['messaging'][0] ?? null;
         $message = $event['message'] ?? null;
+        $postback = $event['postback'] ?? null;
 
         // is_echo: Meta also delivers a copy of messages the page itself sent (e.g. sent
         // from the Meta inbox UI, not through this bot) — skip those, they're not customer input.
-        if (! $event || ! $message || ($message['is_echo'] ?? false)) {
+        // Postbacks (including Messenger's Get Started button) do not contain a message
+        // object, so accept either shape instead of silently dropping postback events.
+        if (! $event || (! $message && ! $postback) || ($message['is_echo'] ?? false)) {
             return null;
         }
 
@@ -93,10 +99,10 @@ abstract class MetaMessagingClient implements MessagingChannel
             // a Messenger PSID / Instagram IGSID here, not an actual phone number. Named
             // to match WhatsApp's shape since that's the contract MessagingChannel
             // callers already expect; see Conversation.wa_phone for the same tradeoff.
-            'message_id' => $message['mid'] ?? null,
-            'phone'      => $event['sender']['id'] ?? null,
-            'text'       => $message['text'] ?? null,
-            'reply_id'   => $message['quick_reply']['payload'] ?? $event['postback']['payload'] ?? null,
+            'message_id' => $message['mid'] ?? $postback['mid'] ?? null,
+            'phone' => $event['sender']['id'] ?? null,
+            'text' => $message['text'] ?? null,
+            'reply_id' => $message['quick_reply']['payload'] ?? $postback['payload'] ?? null,
         ];
     }
 

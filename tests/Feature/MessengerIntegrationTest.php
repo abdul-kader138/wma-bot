@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\HandleIncomingMessage;
 use App\Models\Conversation;
 use App\Models\Service;
 use App\Models\WhatsAppAccount;
@@ -24,25 +23,25 @@ class MessengerIntegrationTest extends TestCase
         Http::fake();
 
         $this->messengerAccount = WhatsAppAccount::create([
-            'name'         => 'Test Page',
-            'platform'     => 'messenger',
-            'external_id'  => 'page-123',
+            'name' => 'Test Page',
+            'platform' => 'messenger',
+            'external_id' => 'page-123',
             'access_token' => 'test-page-token',
-            'api_version'  => 'v22.0',
-            'is_active'    => true,
+            'api_version' => 'v22.0',
+            'is_active' => true,
         ]);
 
         Service::create([
             'whatsapp_account_id' => $this->messengerAccount->id,
-            'slug'             => 'ticket',
-            'label'            => ['en' => 'Ticket booking', 'it' => 'Biglietti', 'bn' => 'টিকিট বুকিং'],
-            'prompt_label'     => 'booking a travel ticket',
-            'color'            => 'primary',
-            'is_active'        => true,
-            'sort_order'       => 0,
-            'tool_name'        => 'submit_ticket_request',
+            'slug' => 'ticket',
+            'label' => ['en' => 'Ticket booking', 'it' => 'Biglietti', 'bn' => 'টিকিট বুকিং'],
+            'prompt_label' => 'booking a travel ticket',
+            'color' => 'primary',
+            'is_active' => true,
+            'sort_order' => 0,
+            'tool_name' => 'submit_ticket_request',
             'tool_description' => 'Save a completed ticket booking request.',
-            'tool_fields'      => [],
+            'tool_fields' => [],
         ]);
     }
 
@@ -70,22 +69,33 @@ class MessengerIntegrationTest extends TestCase
         });
     }
 
+    public function test_send_service_buttons_uses_account_services(): void
+    {
+        (new MessengerClient($this->messengerAccount))->sendServiceButtons('psid-1', 'en');
+
+        Http::assertSent(function ($request) {
+            return collect($request['message']['quick_replies'])
+                ->contains(fn ($reply) => $reply['payload'] === 'ticket'
+                    && $reply['title'] === 'Ticket booking');
+        });
+    }
+
     public function test_parse_incoming_plain_text(): void
     {
         $client = new MessengerClient($this->messengerAccount);
 
         $result = $client->parseIncoming([
             'messaging' => [[
-                'sender'  => ['id' => 'psid-1'],
+                'sender' => ['id' => 'psid-1'],
                 'message' => ['mid' => 'mid-1', 'text' => 'hello'],
             ]],
         ]);
 
         $this->assertSame([
             'message_id' => 'mid-1',
-            'phone'      => 'psid-1',
-            'text'       => 'hello',
-            'reply_id'   => null,
+            'phone' => 'psid-1',
+            'text' => 'hello',
+            'reply_id' => null,
         ], $result);
     }
 
@@ -95,12 +105,31 @@ class MessengerIntegrationTest extends TestCase
 
         $result = $client->parseIncoming([
             'messaging' => [[
-                'sender'  => ['id' => 'psid-1'],
+                'sender' => ['id' => 'psid-1'],
                 'message' => ['mid' => 'mid-2', 'text' => 'English', 'quick_reply' => ['payload' => 'en']],
             ]],
         ]);
 
         $this->assertSame('en', $result['reply_id']);
+    }
+
+    public function test_parse_incoming_postback_without_message_object(): void
+    {
+        $client = new MessengerClient($this->messengerAccount);
+
+        $result = $client->parseIncoming([
+            'messaging' => [[
+                'sender' => ['id' => 'psid-1'],
+                'postback' => ['mid' => 'mid-postback', 'payload' => 'GET_STARTED'],
+            ]],
+        ]);
+
+        $this->assertSame([
+            'message_id' => 'mid-postback',
+            'phone' => 'psid-1',
+            'text' => null,
+            'reply_id' => 'GET_STARTED',
+        ], $result);
     }
 
     public function test_parse_incoming_skips_echo_of_own_sent_message(): void
@@ -109,7 +138,7 @@ class MessengerIntegrationTest extends TestCase
 
         $result = $client->parseIncoming([
             'messaging' => [[
-                'sender'  => ['id' => 'psid-1'],
+                'sender' => ['id' => 'psid-1'],
                 'message' => ['mid' => 'mid-3', 'text' => 'sent by the page itself', 'is_echo' => true],
             ]],
         ]);
@@ -121,10 +150,10 @@ class MessengerIntegrationTest extends TestCase
     {
         $payload = [
             'object' => 'page',
-            'entry'  => [[
-                'id'        => 'page-123',
+            'entry' => [[
+                'id' => 'page-123',
                 'messaging' => [[
-                    'sender'  => ['id' => 'psid-42'],
+                    'sender' => ['id' => 'psid-42'],
                     'message' => ['mid' => 'mid-e2e', 'text' => 'hi'],
                 ]],
             ]],
@@ -154,8 +183,8 @@ class MessengerIntegrationTest extends TestCase
     {
         $payload = [
             'object' => 'page',
-            'entry'  => [[
-                'id'        => 'unknown-page',
+            'entry' => [[
+                'id' => 'unknown-page',
                 'messaging' => [['sender' => ['id' => 'psid-9'], 'message' => ['mid' => 'm1', 'text' => 'hi']]],
             ]],
         ];
@@ -169,33 +198,33 @@ class MessengerIntegrationTest extends TestCase
     public function test_instagram_webhook_end_to_end_creates_conversation_with_platform(): void
     {
         $igAccount = WhatsAppAccount::create([
-            'name'         => 'Test IG',
-            'platform'     => 'instagram',
-            'external_id'  => 'ig-account-9',
+            'name' => 'Test IG',
+            'platform' => 'instagram',
+            'external_id' => 'ig-account-9',
             'access_token' => 'test-ig-token',
-            'api_version'  => 'v22.0',
-            'is_active'    => true,
+            'api_version' => 'v22.0',
+            'is_active' => true,
         ]);
 
         Service::create([
             'whatsapp_account_id' => $igAccount->id,
-            'slug'             => 'ticket',
-            'label'            => ['en' => 'Ticket booking'],
-            'prompt_label'     => 'booking a travel ticket',
-            'color'            => 'primary',
-            'is_active'        => true,
-            'sort_order'       => 0,
-            'tool_name'        => 'submit_ticket_request',
+            'slug' => 'ticket',
+            'label' => ['en' => 'Ticket booking'],
+            'prompt_label' => 'booking a travel ticket',
+            'color' => 'primary',
+            'is_active' => true,
+            'sort_order' => 0,
+            'tool_name' => 'submit_ticket_request',
             'tool_description' => 'Save a completed ticket booking request.',
-            'tool_fields'      => [],
+            'tool_fields' => [],
         ]);
 
         $payload = [
             'object' => 'instagram',
-            'entry'  => [[
-                'id'        => 'ig-account-9',
+            'entry' => [[
+                'id' => 'ig-account-9',
                 'messaging' => [[
-                    'sender'  => ['id' => 'igsid-7'],
+                    'sender' => ['id' => 'igsid-7'],
                     'message' => ['mid' => 'mid-ig', 'text' => 'hi'],
                 ]],
             ]],
@@ -214,12 +243,12 @@ class MessengerIntegrationTest extends TestCase
     public function test_whatsapp_and_messenger_default_accounts_do_not_clobber_each_other(): void
     {
         $whatsapp = WhatsAppAccount::create([
-            'name'            => 'WA Default',
+            'name' => 'WA Default',
             'phone_number_id' => 'wa-phone-1',
-            'access_token'    => 'x',
-            'api_version'     => 'v22.0',
-            'is_active'       => true,
-            'is_default'      => true,
+            'access_token' => 'x',
+            'api_version' => 'v22.0',
+            'is_active' => true,
+            'is_default' => true,
         ]);
 
         $this->messengerAccount->update(['is_default' => true]);

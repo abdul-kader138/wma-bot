@@ -17,6 +17,15 @@ class Conversation extends Model
         return $this->belongsTo(WhatsAppAccount::class, 'whatsapp_account_id');
     }
 
+    public function contactIdentifierType(): string
+    {
+        return match ($this->platform) {
+            'messenger' => 'Messenger user ID (PSID)',
+            'instagram' => 'Instagram user ID (IGSID)',
+            default => 'WhatsApp phone number',
+        };
+    }
+
     /**
      * Not an Eloquent relation: ServiceRequest is scoped by (wa_phone, whatsapp_account_id),
      * a composite key hasMany() can't express safely for eager loading (with() would reuse

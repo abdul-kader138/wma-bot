@@ -50,7 +50,9 @@ class ConversationResource extends Resource
             InfolistSection::make(__('admin.conversation.sections.details'))
                 ->schema([
                     TextEntry::make('wa_phone')
-                        ->label(__('admin.conversation.fields.phone')),
+                        ->label('Contact identifier')
+                        ->hint(fn (Conversation $record) => $record->contactIdentifierType())
+                        ->copyable(),
 
                     TextEntry::make('whatsAppAccount.name')
                         ->label(__('admin.whatsapp_account.label'))
@@ -123,7 +125,9 @@ class ConversationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('wa_phone')
-                    ->label(__('admin.conversation.fields.phone'))
+                    ->label('Contact identifier')
+                    ->description(fn (Conversation $record) => $record->contactIdentifierType())
+                    ->copyable()
                     ->searchable()
                     ->sortable(),
 

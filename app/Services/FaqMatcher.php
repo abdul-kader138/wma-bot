@@ -127,7 +127,7 @@ class FaqMatcher
         $key  = "faqs:active:{$whatsappAccountId}";
         $rows = Cache::get($key);
 
-        if (! is_array($rows)) {
+        if (! is_array($rows) || ! collect($rows)->every(fn ($row) => is_array($row))) {
             $rows = Faq::query()
                 ->where('is_active', true)
                 ->where('whatsapp_account_id', $whatsappAccountId)

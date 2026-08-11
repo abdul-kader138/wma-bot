@@ -17,6 +17,7 @@ return [
         'service_requests' => 'Richieste di Servizio',
         'conversations'    => 'Conversazioni',
         'faqs'             => 'Domande Frequenti',
+        'documents'        => 'Documenti',
         'users'            => 'Utenti',
         'roles'            => 'Ruoli',
         'system_settings'  => 'Impostazioni di Sistema',

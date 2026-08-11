@@ -17,6 +17,7 @@ return [
         'service_requests' => 'Service Requests',
         'conversations'    => 'Conversations',
         'faqs'             => 'FAQs',
+        'documents'        => 'Documents',
         'users'            => 'Users',
         'roles'            => 'Roles',
         'system_settings'  => 'System Settings',

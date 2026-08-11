@@ -17,6 +17,7 @@ return [
         'service_requests' => 'সেবা অনুরোধ',
         'conversations'    => 'কথোপকথন',
         'faqs'             => 'সাধারণ প্রশ্ন',
+        'documents'        => 'ডকুমেন্টস',
         'users'            => 'ব্যবহারকারী',
         'roles'            => 'ভূমিকা',
         'system_settings'  => 'সিস্টেম সেটিংস',

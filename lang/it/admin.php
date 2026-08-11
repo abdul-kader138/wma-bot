@@ -18,6 +18,7 @@ return [
         'conversations'    => 'Conversazioni',
         'faqs'             => 'Domande Frequenti',
         'documents'        => 'Documenti',
+        'audit_logs'       => 'Registro Attività',
         'users'            => 'Utenti',
         'roles'            => 'Ruoli',
         'system_settings'  => 'Impostazioni di Sistema',
@@ -25,6 +26,11 @@ return [
         'groups' => [
             'administration' => 'Amministrazione',
         ],
+    ],
+
+    'audit_log' => [
+        'label' => 'Attività', 'label_plural' => 'Registro Attività',
+        'fields' => ['time' => 'Data e ora', 'actor' => 'Autore', 'owner' => 'Proprietario documenti', 'path' => 'Percorso', 'details' => 'Dettagli'],
     ],
 
     'stats' => [

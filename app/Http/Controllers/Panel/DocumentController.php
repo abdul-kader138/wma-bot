@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,15 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 class DocumentController extends Controller
 {
-    public function __construct(private readonly DocumentService $documents) {}
+    public function __construct(
+        private readonly DocumentService $documents,
+        private readonly AuditLogger $audit,
+    ) {}
+
+    private function audit(Request $request, string $action, int $ownerId, ?string $path = null, array $metadata = []): void
+    {
+        $this->audit->record($request, 'documents', $action, $ownerId, $path, $metadata);
+    }
 
     private function resolveOwner(Request $request, int $owner): User
     {
@@ -55,22 +64,29 @@ class DocumentController extends Controller
     public function index(Request $request, int $owner): JsonResponse
     {
         $ownerUser = $this->resolveOwner($request, $owner);
+        $result = $this->documents->listChildren($ownerUser->id, Document::ROOT);
+        $this->audit($request, 'list', $ownerUser->id, Document::ROOT, ['count' => count($result)]);
 
-        return response()->json($this->documents->listChildren($ownerUser->id, Document::ROOT));
+        return response()->json($result);
     }
 
     public function children(Request $request, int $owner, string $path): JsonResponse
     {
         $ownerUser = $this->resolveOwner($request, $owner);
+        $subject = '/'.$path;
+        $result = $this->documents->listChildren($ownerUser->id, $subject);
+        $this->audit($request, 'list', $ownerUser->id, $subject, ['count' => count($result)]);
 
-        return response()->json($this->documents->listChildren($ownerUser->id, '/'.$path));
+        return response()->json($result);
     }
 
     public function info(Request $request, int $owner): JsonResponse
     {
         $ownerUser = $this->resolveOwner($request, $owner);
+        $result = $this->documents->info($ownerUser->id);
+        $this->audit($request, 'quota_view', $ownerUser->id, null, $result);
 
-        return response()->json($this->documents->info($ownerUser->id));
+        return response()->json($result);
     }
 
     public function create(Request $request, int $owner, string $parent): JsonResponse
@@ -89,6 +105,8 @@ class DocumentController extends Controller
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+
+        $this->audit($request, 'create_'.$data['type'], $ownerUser->id, $doc->path);
 
         return response()->json(['result' => ['id' => $doc->path]]);
     }
@@ -116,16 +134,21 @@ class DocumentController extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
+        $this->audit($request, 'upload', $ownerUser->id, $doc->path, [
+            'size' => $doc->size, 'mime_type' => $doc->mime_type,
+        ]);
+
         return response()->json(['result' => ['id' => $doc->path]]);
     }
 
     public function rename(Request $request, int $owner, string $id): JsonResponse
     {
         $ownerUser = $this->resolveOwner($request, $owner);
+        $oldPath = '/'.$id;
 
         $data = $request->validate([
             'operation' => ['required', 'in:rename'],
-            'name'      => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
         ]);
 
         try {
@@ -133,6 +156,8 @@ class DocumentController extends Controller
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+
+        $this->audit($request, 'rename', $ownerUser->id, $doc->path, ['from' => $oldPath]);
 
         return response()->json(['result' => ['id' => $doc->path]]);
     }
@@ -144,9 +169,9 @@ class DocumentController extends Controller
 
         $data = $request->validate([
             'operation' => ['required', 'in:move,copy'],
-            'ids'       => ['required', 'array', 'min:1'],
-            'ids.*'     => ['string'],
-            'target'    => ['required', 'string'],
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['string'],
+            'target' => ['required', 'string'],
         ]);
 
         try {
@@ -156,6 +181,10 @@ class DocumentController extends Controller
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+
+        $this->audit($request, $data['operation'], $ownerUser->id, $data['target'], [
+            'paths' => $data['ids'], 'changes' => $map,
+        ]);
 
         // Response must line up positionally with the requested ids (top level only) —
         // the client remaps descendants itself from its already-loaded local tree.
@@ -169,11 +198,12 @@ class DocumentController extends Controller
         $ownerUser = $this->resolveOwner($request, $owner);
 
         $data = $request->validate([
-            'ids'   => ['required', 'array', 'min:1'],
+            'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['string'],
         ]);
 
         $this->documents->delete($ownerUser->id, $data['ids']);
+        $this->audit($request, 'delete', $ownerUser->id, null, ['paths' => $data['ids']]);
 
         return response()->json(['result' => true]);
     }
@@ -181,13 +211,17 @@ class DocumentController extends Controller
     public function download(Request $request, int $owner): StreamedResponse
     {
         $ownerUser = $this->resolveOwner($request, $owner);
-        $path      = '/'.ltrim((string) $request->query('id', ''), '/');
+        $path = '/'.ltrim((string) $request->query('id', ''), '/');
 
         $doc = $this->documents->findOrFail($ownerUser->id, $path);
 
         if ($doc->type !== 'file' || ! $doc->storage_path) {
             throw new HttpException(404, 'Not a downloadable file.');
         }
+
+        $this->audit($request, 'download', $ownerUser->id, $doc->path, [
+            'size' => $doc->size, 'mime_type' => $doc->mime_type,
+        ]);
 
         return $this->documents->disk()->download($doc->storage_path, $doc->name);
     }

@@ -18,6 +18,7 @@ return [
         'conversations'    => 'কথোপকথন',
         'faqs'             => 'সাধারণ প্রশ্ন',
         'documents'        => 'ডকুমেন্টস',
+        'audit_logs'       => 'অডিট লগ',
         'users'            => 'ব্যবহারকারী',
         'roles'            => 'ভূমিকা',
         'system_settings'  => 'সিস্টেম সেটিংস',
@@ -25,6 +26,11 @@ return [
         'groups' => [
             'administration' => 'প্রশাসন',
         ],
+    ],
+
+    'audit_log' => [
+        'label' => 'অডিট লগ', 'label_plural' => 'অডিট লগসমূহ',
+        'fields' => ['time' => 'সময়', 'actor' => 'ব্যবহারকারী', 'owner' => 'ডকুমেন্ট মালিক', 'path' => 'পথ', 'details' => 'বিস্তারিত'],
     ],
 
     'stats' => [

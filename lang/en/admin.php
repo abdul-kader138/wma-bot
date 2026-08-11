@@ -18,6 +18,7 @@ return [
         'conversations'    => 'Conversations',
         'faqs'             => 'FAQs',
         'documents'        => 'Documents',
+        'audit_logs'       => 'Audit Logs',
         'users'            => 'Users',
         'roles'            => 'Roles',
         'system_settings'  => 'System Settings',
@@ -25,6 +26,11 @@ return [
         'groups' => [
             'administration' => 'Administration',
         ],
+    ],
+
+    'audit_log' => [
+        'label' => 'Audit Log', 'label_plural' => 'Audit Logs',
+        'fields' => ['time' => 'Time', 'actor' => 'Actor', 'owner' => 'Document Owner', 'path' => 'Path', 'details' => 'Details'],
     ],
 
     'stats' => [

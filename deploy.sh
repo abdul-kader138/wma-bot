@@ -33,6 +33,12 @@ git pull origin main
 echo "==> Installing composer dependencies"
 composer install --no-dev --optimize-autoloader
 
+echo "==> Installing frontend dependencies"
+npm ci
+
+echo "==> Building frontend assets"
+npm run build
+
 echo "==> Running migrations"
 php artisan migrate --force
 

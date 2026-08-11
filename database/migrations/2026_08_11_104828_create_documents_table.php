@@ -19,9 +19,12 @@ return new class extends Migration
             // Virtual path, e.g. "/Reports/Q1.pdf". This is the literal "id" the SVAR
             // File Manager uses on the frontend — it derives parent/name by splitting
             // on "/", so the path IS the identity, not a display convenience.
-            $t->string('path', 2048);
+            // Keep indexed paths below MySQL/InnoDB's 3072-byte key limit.
+            // With utf8mb4, 700 chars plus the 8-byte owner_id uses at most
+            // 2808 bytes for each composite index.
+            $t->string('path', 700);
             $t->string('name');
-            $t->string('parent_path', 2048);
+            $t->string('parent_path', 700);
             $t->enum('type', ['file', 'folder']);
 
             // Physical storage is decoupled from the virtual path/name so renaming or

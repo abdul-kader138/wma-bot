@@ -11,6 +11,8 @@ set -euo pipefail
 APP_DIR="/var/www/tmmtravels"
 PHP_FPM_SERVICE="php8.5-fpm"
 HORIZON_SUPERVISOR_PROGRAM="wma-bot-horizon"
+SCHEDULER_CRON_FILE="/etc/cron.d/wma-bot-scheduler"
+SCHEDULER_LOG="${APP_DIR}/storage/logs/scheduler.log"
 
 cd "$APP_DIR"
 
@@ -53,6 +55,44 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+echo "==> Installing Laravel scheduler cron"
+# /etc/cron.d is used instead of a mutable user crontab so deployment remains
+# repeatable and there can only be one scheduler entry for this application.
+# flock also prevents two schedule:run processes overlapping if one invocation
+# takes longer than expected.
+SCHEDULER_CRON_TEMP=$(mktemp)
+cleanup_scheduler_temp() {
+    rm -f "$SCHEDULER_CRON_TEMP"
+}
+trap 'cleanup_scheduler_temp; cleanup' EXIT
+
+{
+    echo 'SHELL=/bin/bash'
+    echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+    echo "* * * * * www-data cd ${APP_DIR} && /usr/bin/flock -n /tmp/wma-bot-scheduler.lock /usr/bin/php artisan schedule:run >> ${SCHEDULER_LOG} 2>&1"
+} > "$SCHEDULER_CRON_TEMP"
+
+sudo install -o root -g root -m 0644 "$SCHEDULER_CRON_TEMP" "$SCHEDULER_CRON_FILE"
+cleanup_scheduler_temp
+sudo touch "$SCHEDULER_LOG"
+sudo chown www-data:www-data "$SCHEDULER_LOG"
+
+if systemctl list-unit-files cron.service >/dev/null 2>&1; then
+    sudo systemctl enable --now cron
+elif systemctl list-unit-files crond.service >/dev/null 2>&1; then
+    sudo systemctl enable --now crond
+else
+    echo "!! Neither cron.service nor crond.service is installed. Install cron and rerun deployment."
+    exit 1
+fi
+
+echo "==> Verifying Laravel schedules"
+php artisan schedule:list
+if ! sudo grep -Fq "artisan schedule:run" "$SCHEDULER_CRON_FILE"; then
+    echo "!! Laravel scheduler cron was not installed correctly"
+    exit 1
+fi
+
 echo "==> Reloading nginx and PHP-FPM"
 sudo nginx -t
 sudo systemctl reload nginx
@@ -78,5 +118,14 @@ if ! echo "$HORIZON_STATUS" | grep -qi "running"; then
     echo "!! horizon:status did not report running"
     exit 1
 fi
+
+echo "==> Verifying scheduler service"
+if systemctl list-unit-files cron.service >/dev/null 2>&1; then
+    sudo systemctl is-active --quiet cron
+else
+    sudo systemctl is-active --quiet crond
+fi
+echo "Scheduler cron: $SCHEDULER_CRON_FILE"
+echo "Scheduler log:  $SCHEDULER_LOG"
 
 echo "==> Deploy complete."

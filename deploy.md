@@ -55,7 +55,15 @@ php artisan up
 # 10. Verify everything actually came back up
 sudo supervisorctl status wma-bot-horizon:*   # expect: RUNNING
 php artisan horizon:status                     # expect: "Horizon is running."
+php artisan schedule:list
+sudo systemctl is-active cron                   # expect: active
+sudo cat /etc/cron.d/wma-bot-scheduler
 ```
+
+`deploy.sh` idempotently installs the single Laravel scheduler entry at
+`/etc/cron.d/wma-bot-scheduler`. Do not add separate cron entries for individual
+Maria workflows. Scheduler output is written to
+`/var/www/tmmtravels/storage/logs/scheduler.log`.
 
 If `shield:generate` needs re-running (only when you've added a new Filament
 resource/policy):

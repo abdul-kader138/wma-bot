@@ -77,6 +77,22 @@
         </x-filament::section>
     @endif
 
+    @if ($latestAgverseReview)
+        <x-filament::section heading="Agverse Opportunity Review">
+            <div class="grid gap-4 md:grid-cols-3">
+                @foreach ($latestAgverseReview->content['top_three_next_steps'] ?? [] as $step)
+                    <div class="rounded-lg bg-gray-50 p-4 dark:bg-white/5">
+                        <div class="font-semibold text-gray-950 dark:text-white">{{ $step['name'] }}</div>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $step['next_step'] ?: 'Next step not assigned' }}</p>
+                        <p class="mt-2 text-xs {{ !empty($step['approval_required']) ? 'text-warning-600' : 'text-gray-500' }}">
+                            {{ $step['owner'] ?: 'Owner not set' }} · {{ $step['date'] ?: 'Date not set' }}{{ !empty($step['approval_required']) ? ' · Approval required' : '' }}
+                        </p>
+                    </div>
+                @endforeach
+            </div>
+        </x-filament::section>
+    @endif
+
     @if ($latestEveningReview)
         <x-filament::section heading="Latest Evening Review">
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

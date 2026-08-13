@@ -50,6 +50,7 @@ class AssistantProfileResource extends Resource
                 'deadline_monitor' => 'Deadline Monitor',
                 'daily_five' => 'Daily Five Relationships',
                 'book_portfolio_review' => 'Weekly Book Portfolio Review',
+                'agverse_opportunity_review' => 'Thursday Agverse Opportunity Review',
             ])->columnSpanFull(),
             Forms\Components\Textarea::make('voice_preferences')->columnSpanFull(),
             Forms\Components\Toggle::make('is_active')->required(),

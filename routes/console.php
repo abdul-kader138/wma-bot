@@ -6,6 +6,7 @@ use App\Jobs\Maria\GenerateEveningReview;
 use App\Jobs\Maria\GenerateMorningBrief;
 use App\Jobs\Maria\MonitorDeadlines;
 use App\Jobs\Maria\PrepareUpcomingMeetings;
+use App\Jobs\Maria\ReviewAgverseOpportunities;
 use App\Jobs\Maria\TriageGoogleInbox;
 use App\Models\AssistantProfile;
 use App\Models\ConnectorAccount;
@@ -86,3 +87,14 @@ Schedule::call(function () {
         }
     });
 })->everyMinute()->name('maria-book-portfolio-review')->withoutOverlapping();
+
+Schedule::call(function () {
+    AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
+        $local = now($profile->timezone);
+        $briefAt = $profile->morning_brief_at ? substr((string) $profile->morning_brief_at, 0, 5) : '07:30';
+        $reviewAt = Carbon::createFromFormat('H:i', $briefAt, $profile->timezone)->addMinutes(90)->format('H:i');
+        if ($local->isThursday() && $local->format('H:i') === $reviewAt && in_array('agverse_opportunity_review', $profile->enabled_workflows ?? [], true)) {
+            ReviewAgverseOpportunities::dispatch($profile->id, $local->toDateString());
+        }
+    });
+})->everyMinute()->name('maria-agverse-opportunity-review')->withoutOverlapping();

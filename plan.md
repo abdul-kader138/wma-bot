@@ -41,10 +41,11 @@ Completed foundation work:
 - Draft-only multi-channel content packages with brand separation, normalized duplicate prevention, attribution fields, and a hard Claims Registry gate.
 - Separately consented Gmail and Calendar writes with exact-content approvals, scope checks, idempotent action ledgers, and provider confirmations.
 - Structured Book Portfolio records and an idempotent weekly review with exact identifiers, milestone risks, source gaps, and three highest-value actions.
+- Auditable Thursday Agverse opportunity ranking with verified facts separated from hypotheses and risk-aware next steps.
 
 Next implementation target:
 
-- Agverse opportunity review and Thursday ranking.
+- All Catholic Media weekly production planning.
 
 ## 1. Objective
 

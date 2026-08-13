@@ -45,10 +45,11 @@ Completed foundation work:
 - Configurable All Catholic Media weekly production plans with Claims Registry gating, owners, assets, approval deadlines, and draft publication schedules.
 - Weekly Maria Quality Reports with explicit estimate/verification labels, recurring correction tracking, safety incidents, and recommended improvements.
 - Global and per-profile external-action stops, provider reconciliation, audited control changes, and production/recovery runbooks.
+- Evidence-based 30-day Acceptance Dashboard, auditable snapshots, explicit unmeasured states, and final handover checklist.
 
 Next implementation target:
 
-- Acceptance dashboards, 30-day operational measurement, and final handover verification.
+- Production shadow period, client acceptance data collection, and operational tuning.
 
 ## 1. Objective
 

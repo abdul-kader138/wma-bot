@@ -34,7 +34,7 @@ class MariaQualityEventResource extends Resource
     {
         return $form->schema([
             Forms\Components\Select::make('event_type')->options(['correction' => 'Human correction', 'safety_incident' => 'Safety incident', 'feedback' => 'Feedback'])->required(),
-            Forms\Components\Select::make('category')->options(['identity' => 'Identity', 'confidentiality' => 'Confidentiality', 'deadline' => 'Deadline', 'classification' => 'Classification', 'recipient' => 'Recipient', 'claim' => 'Claim', 'voice' => 'Voice', 'priority' => 'Priority', 'duplicate_action' => 'Duplicate action', 'other' => 'Other'])->required(),
+            Forms\Components\Select::make('category')->options(['identity' => 'Identity', 'confidentiality' => 'Confidentiality', 'deadline' => 'Deadline', 'classification' => 'Classification', 'recipient' => 'Recipient', 'attachment' => 'Attachment', 'unauthorized_action' => 'Unauthorized action', 'claim' => 'Claim', 'voice' => 'Voice', 'priority' => 'Priority', 'duplicate_action' => 'Duplicate action', 'other' => 'Other'])->required(),
             Forms\Components\Select::make('severity')->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High', 'critical' => 'Critical'])->required(),
             Forms\Components\Select::make('workflow_run_id')->relationship('workflowRun', 'run_id', fn (Builder $query) => auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id()))->searchable()->preload(),
             Forms\Components\Textarea::make('description')->required()->columnSpanFull(), Forms\Components\Textarea::make('expected_result')->columnSpanFull(),

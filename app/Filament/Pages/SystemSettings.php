@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Setting;
 use App\Providers\Filament\AdminPanelProvider;
+use App\Services\Maria\MariaPermissionVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -694,6 +695,7 @@ class SystemSettings extends Page implements HasForms
         if ($googleSecret !== '') {
             Setting::setSecret('google_client_secret', $googleSecret, 'google');
         }
+        MariaPermissionVisibility::apply();
 
         // Apply new default locale immediately for this session (only if user hasn't overridden it)
         if (! session()->has('admin_locale') && isset($data['admin_locale'])) {

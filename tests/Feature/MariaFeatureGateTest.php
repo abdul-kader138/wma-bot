@@ -7,6 +7,7 @@ use App\Filament\Resources\MariaProjectResource;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\Maria\MariaAccess;
+use App\Services\Maria\MariaPermissionVisibility;
 use Database\Seeders\ShieldSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
@@ -54,8 +55,31 @@ class MariaFeatureGateTest extends TestCase
 
     public function test_custom_permission_is_enabled_for_the_role_permission_screen(): void
     {
+        Setting::set('maria_assistant_enabled', true, 'maria');
+        MariaPermissionVisibility::apply();
         $this->assertTrue(config('filament-shield.entities.custom_permissions'));
         $this->seed(ShieldSeeder::class);
         $this->assertDatabaseHas('permissions', ['name' => MariaAccess::PERMISSION, 'guard_name' => 'web']);
+    }
+
+    public function test_role_permission_entities_follow_global_maria_setting_without_deleting_assignments(): void
+    {
+        $permission = Permission::create(['name' => MariaAccess::PERMISSION, 'guard_name' => 'web']);
+        $role = Role::create(['name' => 'maria_role', 'guard_name' => 'web']);
+        $role->givePermissionTo($permission);
+
+        Setting::set('maria_assistant_enabled', false, 'maria');
+        MariaPermissionVisibility::apply();
+        $this->assertFalse(config('filament-shield.entities.custom_permissions'));
+        $this->assertContains('MariaProjectResource', config('filament-shield.exclude.resources'));
+        $this->assertContains('MariaDashboard', config('filament-shield.exclude.pages'));
+        $this->assertTrue($role->fresh()->hasPermissionTo(MariaAccess::PERMISSION));
+
+        Setting::set('maria_assistant_enabled', true, 'maria');
+        MariaPermissionVisibility::apply();
+        $this->assertTrue(config('filament-shield.entities.custom_permissions'));
+        $this->assertNotContains('MariaProjectResource', config('filament-shield.exclude.resources'));
+        $this->assertNotContains('MariaDashboard', config('filament-shield.exclude.pages'));
+        $this->assertTrue($role->fresh()->hasPermissionTo(MariaAccess::PERMISSION));
     }
 }

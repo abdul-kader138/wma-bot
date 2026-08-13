@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Setting;
 use App\Policies\RolePolicy;
+use App\Services\Maria\MariaPermissionVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Role::class, RolePolicy::class);
         $this->applyRegionalSettings();
+        MariaPermissionVisibility::apply();
         $this->configureRegionalFormComponents();
         $this->applyMailSettings();
         $this->configureRateLimiting();

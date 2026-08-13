@@ -49,6 +49,7 @@ Completed foundation work:
 - Encrypted Google OAuth administration with environment fallback, consistent `dd/mm/yyyy` display formatting, and reduced Claims Registry/admin query load.
 - Configurable global timezone and application-wide date/date-time display formats, with safe timezone validation and Maria profile schedule overrides.
 - Global Maria feature switch plus role-based Access Maria Assistant permission controlling menus, routes, private identity routing, connectors, and schedules.
+- Role permission editor dynamically hides Maria resource/page permissions while disabled and restores retained assignments when re-enabled.
 
 Next implementation target:
 

@@ -11,7 +11,11 @@ class MariaAccess
 
     public static function enabled(): bool
     {
-        return filter_var(Setting::get('maria_assistant_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        try {
+            return filter_var(Setting::get('maria_assistant_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function allowed(?User $user): bool

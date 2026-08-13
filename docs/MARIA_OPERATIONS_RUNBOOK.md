@@ -38,6 +38,8 @@ Global timezone and date/date-time display formats are managed under **System Se
 
 Maria has two access gates: **System Settings → General → Enable Maria Assistant** must be enabled, and non-super-admin users need **Access Maria Assistant** in the role permission screen. Disabling the global switch hides and denies Maria pages, connector routes, private identity routing, and scheduled dispatches.
 
+The role editor follows the global switch. When Maria is disabled, Maria resource/page permissions and the custom access permission are hidden. Existing role assignments are retained and become visible again when Maria is re-enabled.
+
 ## Queue and scheduler recovery
 
 1. Confirm the scheduler invokes `php artisan schedule:run` every minute.

@@ -2,6 +2,7 @@
 
 use App\Jobs\Maria\GenerateEveningReview;
 use App\Jobs\Maria\GenerateMorningBrief;
+use App\Jobs\Maria\MonitorDeadlines;
 use App\Jobs\Maria\PrepareUpcomingMeetings;
 use App\Jobs\Maria\TriageGoogleInbox;
 use App\Models\AssistantProfile;
@@ -54,3 +55,9 @@ Schedule::call(function () {
             PrepareUpcomingMeetings::dispatch($connector->id, $profile->id, now($profile->timezone)->format('Y-m-d-H'));
         });
 })->hourly()->name('maria-meeting-preparation')->withoutOverlapping();
+
+Schedule::call(function () {
+    AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
+        MonitorDeadlines::dispatch($profile->id, now($profile->timezone)->format('Y-m-d-H'));
+    });
+})->hourly()->name('maria-deadline-monitor')->withoutOverlapping();

@@ -32,12 +32,17 @@ Completed foundation work:
 - Meeting closeout from supplied notes, internal task creation, and unsent thank-you drafts.
 - Auditable, idempotent Evening Review generation and scheduled local-time execution.
 - Focused and full regression tests.
+- Deadline and waiting-item monitoring with state-based duplicate suppression and automatic resolution.
+- Owner-scoped deadline alert inbox with acknowledgement.
+- Assistant profile management and admin-only verified channel identity management.
+- Read-only workflow run history and admin-only versioned prompt management.
+- Claims Registry with brand, freshness, and verification gating.
 
 Next implementation target:
 
-- Deadline and waiting monitor with alert suppression.
-- Assistant profile, identity, prompt-version, and workflow-run management pages.
-- Claims Registry and claims verification gate.
+- Relationship recommendations and Daily Five workflow.
+- Content package drafting with the Claims Registry gate.
+- Approved Gmail sending and Calendar write actions behind exact-content approvals.
 
 ## 1. Objective
 

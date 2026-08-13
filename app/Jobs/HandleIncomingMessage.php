@@ -6,8 +6,8 @@ use App\Contracts\MessagingChannel;
 use App\Models\ClaudeDailyUsage;
 use App\Models\Conversation;
 use App\Models\Service;
-use App\Models\Setting;
 use App\Models\ServiceRequest;
+use App\Models\Setting;
 use App\Models\WhatsAppAccount;
 use App\Notifications\BotJobFailedNotification;
 use App\Notifications\ClaudeBudgetExhaustedNotification;
@@ -15,6 +15,8 @@ use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
 use App\Services\InstagramClient;
+use App\Services\Maria\AssistantIdentityResolver;
+use App\Services\Maria\MariaConversationService;
 use App\Services\MessengerClient;
 use App\Services\WhatsAppClient;
 use Illuminate\Bus\Queueable;
@@ -37,7 +39,7 @@ class HandleIncomingMessage implements ShouldQueue
     // it has to be shared too, not per-conversation.
     private const CLAUDE_RATE_LIMIT_KEY = 'claude-api-calls';
 
-    public int $tries   = 3;
+    public int $tries = 3;
 
     // Headroom for: lock wait (up to 10s) + Claude call (up to 40s) + WhatsApp send (up to 10s) + overhead.
     public int $timeout = 90;
@@ -52,14 +54,21 @@ class HandleIncomingMessage implements ShouldQueue
         return [5, 15, 30];
     }
 
-    public function handle(ClaudeAgent $agent, FaqMatcher $faqs): void
-    {
+    public function handle(
+        ClaudeAgent $agent,
+        FaqMatcher $faqs,
+        ?AssistantIdentityResolver $assistantIdentities = null,
+        ?MariaConversationService $maria = null,
+    ): void {
+        $assistantIdentities ??= app(AssistantIdentityResolver::class);
+        $maria ??= app(MariaConversationService::class);
+
         $account = WhatsAppAccount::findOrFail($this->whatsAppAccountId);
 
         if (! $account->is_active) {
             Log::warning('Skipping message for deactivated channel account', [
                 'account_id' => $account->id,
-                'platform'   => $this->platform,
+                'platform' => $this->platform,
             ]);
 
             return;
@@ -97,8 +106,8 @@ class HandleIncomingMessage implements ShouldQueue
         $lock = Cache::lock("conversation-lock:{$account->id}:{$phone}", 90);
 
         try {
-            $lock->block(10, function () use ($agent, $faqs, $account, $phone, $msg, $wa) {
-                $this->processMessage($agent, $faqs, $account, $phone, $msg, $wa);
+            $lock->block(10, function () use ($agent, $faqs, $assistantIdentities, $maria, $account, $phone, $msg, $wa) {
+                $this->processMessage($agent, $faqs, $assistantIdentities, $maria, $account, $phone, $msg, $wa);
             });
         } catch (LockTimeoutException) {
             // Another message from this same customer is still being processed right
@@ -112,24 +121,36 @@ class HandleIncomingMessage implements ShouldQueue
         return match ($this->platform) {
             'messenger' => new MessengerClient($account),
             'instagram' => new InstagramClient($account),
-            default     => new WhatsAppClient($account),
+            default => new WhatsAppClient($account),
         };
     }
 
     private function processMessage(
         ClaudeAgent $agent,
         FaqMatcher $faqs,
+        AssistantIdentityResolver $assistantIdentities,
+        MariaConversationService $maria,
         WhatsAppAccount $account,
         string $phone,
         array $msg,
         MessagingChannel $wa,
     ): void {
+        $input = $msg['reply_id'] ?? trim((string) ($msg['text'] ?? ''));
+
+        // Maria is structurally private: only an active, verified identity tied to
+        // this exact channel account can enter the assistant path. Everyone else
+        // continues through the existing public intake state machine unchanged.
+        $identity = $assistantIdentities->resolveIdentity($this->platform, $phone, $account->id);
+        if ($identity) {
+            $wa->sendText($phone, $maria->handle($identity, $input));
+
+            return;
+        }
+
         $convo = Conversation::firstOrCreate(
             ['wa_phone' => $phone, 'whatsapp_account_id' => $account->id],
             ['step' => 'NEW', 'history' => [], 'platform' => $this->platform]
         );
-
-        $input = $msg['reply_id'] ?? trim((string) ($msg['text'] ?? ''));
 
         // Reset keywords, covering all supported languages (en/it/bn) so any customer
         // can restart the conversation in their own language.
@@ -390,7 +411,7 @@ class HandleIncomingMessage implements ShouldQueue
         if (! array_key_exists($convo->service, Service::toConfig($convo->whatsapp_account_id))) {
             Log::warning('Conversation service is no longer available; returning customer to service selection', [
                 'conversation_id' => $convo->id,
-                'service'         => $convo->service,
+                'service' => $convo->service,
             ]);
 
             $lang = $convo->language ?? 'en';
@@ -412,16 +433,16 @@ class HandleIncomingMessage implements ShouldQueue
         if ($reply['type'] === 'tool') {
             $serviceRequest = ServiceRequest::create([
                 'whatsapp_account_id' => $convo->whatsapp_account_id,
-                'wa_phone'            => $phone,
-                'platform'            => $this->platform,
-                'service'             => $convo->service,
-                'payload'             => $reply['input'],
-                'status'              => 'new',
+                'wa_phone' => $phone,
+                'platform' => $this->platform,
+                'service' => $convo->service,
+                'payload' => $reply['input'],
+                'status' => 'new',
             ]);
 
             $this->notifyStaff($serviceRequest);
 
-            $lang         = $convo->language ?? 'en';
+            $lang = $convo->language ?? 'en';
             $confirmation = config("services_bot.replies.confirmation.{$lang}")
                 ?? config('services_bot.replies.confirmation.en');
 
@@ -445,7 +466,7 @@ class HandleIncomingMessage implements ShouldQueue
 
     private function appendHistory(Conversation $convo, string $role, string $content): void
     {
-        $history   = $convo->history ?? [];
+        $history = $convo->history ?? [];
         $history[] = ['role' => $role, 'content' => $content];
         $convo->history = array_slice($history, -20);
         $convo->save();

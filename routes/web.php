@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Panel\DocumentController;
+use App\Http\Controllers\Panel\GoogleConnectorController;
 use App\Http\Middleware\RequirePanelUser;
 use Illuminate\Support\Facades\Route;
 
@@ -29,4 +30,13 @@ Route::middleware([RequirePanelUser::class])
             Route::get('/info', [DocumentController::class, 'info'])->name('info');
             Route::get('/download', [DocumentController::class, 'download'])->name('download');
         })->whereNumber('owner');
+    });
+
+Route::middleware([RequirePanelUser::class])
+    ->prefix('panel-api/connectors/google')
+    ->name('panel-api.connectors.google.')
+    ->group(function () {
+        Route::get('/redirect', [GoogleConnectorController::class, 'redirect'])->name('redirect');
+        Route::get('/callback', [GoogleConnectorController::class, 'callback'])->name('callback');
+        Route::delete('/{connector}', [GoogleConnectorController::class, 'disconnect'])->name('disconnect');
     });

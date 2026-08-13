@@ -7,15 +7,17 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -34,11 +36,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected function casts(): array
     {
         return [
-            'email_verified_at'         => 'datetime',
-            'password'                  => 'hashed',
-            'two_factor_secret'         => 'encrypted',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
-            'two_factor_confirmed_at'   => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 
@@ -61,11 +63,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function getAvatarUrl(): string
     {
         if (filled($this->avatar)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+            return Storage::disk('public')->url($this->avatar);
         }
 
         $initial = strtoupper(mb_substr(trim((string) $this->name), 0, 1));
-        $initial  = blank($initial) ? 'U' : $initial;
+        $initial = blank($initial) ? 'U' : $initial;
 
         $svg = sprintf(
             '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="64" fill="#1f2937"/><text x="64" y="82" text-anchor="middle" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#9ca3af">%s</text></svg>',
@@ -78,5 +80,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function isAdmin(): bool
     {
         return $this->hasRole('super_admin');
+    }
+
+    public function assistantProfile(): HasOne
+    {
+        return $this->hasOne(AssistantProfile::class);
+    }
+
+    public function mariaProjects(): HasMany
+    {
+        return $this->hasMany(MariaProject::class);
+    }
+
+    public function mariaTasks(): HasMany
+    {
+        return $this->hasMany(MariaTask::class);
     }
 }

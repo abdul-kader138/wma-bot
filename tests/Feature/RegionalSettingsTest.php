@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Setting;
 use App\Providers\AppServiceProvider;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,6 +25,14 @@ class RegionalSettingsTest extends TestCase
         $this->assertSame('Europe/Berlin', date_default_timezone_get());
         $this->assertSame('d.m.Y', config('app.display_date_format'));
         $this->assertSame('d.m.Y H:i', config('app.display_datetime_format'));
+
+        $date = DatePicker::make('date');
+        $dateTime = DateTimePicker::make('date_time');
+        $this->assertFalse($date->isNative());
+        $this->assertFalse($dateTime->isNative());
+        $this->assertSame('d.m.Y', $date->getDisplayFormat());
+        $this->assertSame('d.m.Y H:i', $dateTime->getDisplayFormat());
+        $this->assertSame('Europe/Berlin', $dateTime->getTimezone());
     }
 
     public function test_invalid_saved_timezone_falls_back_safely(): void

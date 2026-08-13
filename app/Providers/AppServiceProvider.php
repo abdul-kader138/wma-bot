@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Setting;
 use App\Policies\RolePolicy;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -23,8 +25,25 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Role::class, RolePolicy::class);
         $this->applyRegionalSettings();
+        $this->configureRegionalFormComponents();
         $this->applyMailSettings();
         $this->configureRateLimiting();
+    }
+
+    private function configureRegionalFormComponents(): void
+    {
+        DateTimePicker::configureUsing(function (DateTimePicker $component): void {
+            $component
+                ->native(false)
+                ->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))
+                ->timezone(config('app.timezone', 'UTC'));
+        });
+
+        DatePicker::configureUsing(function (DatePicker $component): void {
+            $component
+                ->native(false)
+                ->displayFormat(config('app.display_date_format', 'd/m/Y'));
+        });
     }
 
     private function applyRegionalSettings(): void

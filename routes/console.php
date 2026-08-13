@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\Maria\GenerateDailyFive;
 use App\Jobs\Maria\GenerateEveningReview;
 use App\Jobs\Maria\GenerateMorningBrief;
 use App\Jobs\Maria\MonitorDeadlines;
@@ -7,6 +8,7 @@ use App\Jobs\Maria\PrepareUpcomingMeetings;
 use App\Jobs\Maria\TriageGoogleInbox;
 use App\Models\AssistantProfile;
 use App\Models\ConnectorAccount;
+use Carbon\Carbon;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -61,3 +63,14 @@ Schedule::call(function () {
         MonitorDeadlines::dispatch($profile->id, now($profile->timezone)->format('Y-m-d-H'));
     });
 })->hourly()->name('maria-deadline-monitor')->withoutOverlapping();
+
+Schedule::call(function () {
+    AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
+        $local = now($profile->timezone);
+        $briefAt = $profile->morning_brief_at ? substr((string) $profile->morning_brief_at, 0, 5) : '07:30';
+        $dailyFiveAt = Carbon::createFromFormat('H:i', $briefAt, $profile->timezone)->addMinutes(30)->format('H:i');
+        if ($local->isWeekday() && $local->format('H:i') === $dailyFiveAt && in_array('daily_five', $profile->enabled_workflows ?? [], true)) {
+            GenerateDailyFive::dispatch($profile->id, $local->toDateString());
+        }
+    });
+})->everyMinute()->name('maria-daily-five')->withoutOverlapping();

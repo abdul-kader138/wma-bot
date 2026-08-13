@@ -37,10 +37,10 @@ Completed foundation work:
 - Assistant profile management and admin-only verified channel identity management.
 - Read-only workflow run history and admin-only versioned prompt management.
 - Claims Registry with brand, freshness, and verification gating.
+- Draft-only Daily Five relationship recommendations with verified-source filtering, scoring, review decisions, and weekday scheduling.
 
 Next implementation target:
 
-- Relationship recommendations and Daily Five workflow.
 - Content package drafting with the Claims Registry gate.
 - Approved Gmail sending and Calendar write actions behind exact-content approvals.
 

@@ -48,6 +48,7 @@ class AssistantProfileResource extends Resource
                 'morning_brief' => 'Morning Brief', 'evening_review' => 'Evening Review',
                 'email_triage' => 'Email Triage', 'meeting_preparation' => 'Meeting Preparation',
                 'deadline_monitor' => 'Deadline Monitor',
+                'daily_five' => 'Daily Five Relationships',
             ])->columnSpanFull(),
             Forms\Components\Textarea::make('voice_preferences')->columnSpanFull(),
             Forms\Components\Toggle::make('is_active')->required(),

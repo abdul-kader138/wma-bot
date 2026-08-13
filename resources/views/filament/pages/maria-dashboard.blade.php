@@ -78,6 +78,21 @@
         </x-filament::section>
     @endif
 
+    <x-filament::section heading="Daily Five Relationships">
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            @forelse ($dailyFive as $recommendation)
+                <a href="{{ \App\Filament\Resources\RelationshipRecommendationResource::getUrl('view', ['record' => $recommendation]) }}"
+                   class="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                    <div class="font-medium text-gray-950 dark:text-white">{{ $recommendation->contact->full_name }}</div>
+                    <div class="mt-1 text-sm text-gray-500">{{ $recommendation->contact->organization ?: 'Independent' }} · {{ ucfirst($recommendation->recommended_stage) }}</div>
+                    <div class="mt-2 text-xs font-medium text-primary-600">{{ ucfirst($recommendation->status) }}</div>
+                </a>
+            @empty
+                <p class="text-sm text-gray-500">No relationship recommendations for today.</p>
+            @endforelse
+        </div>
+    </x-filament::section>
+
     <x-filament::section heading="Recent workflow runs">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             @forelse ($recentWorkflows as $run)

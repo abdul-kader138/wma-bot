@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ApprovalResource\Pages;
 use App\Models\Approval;
 use App\Services\Maria\ApprovalService;
+use App\Services\Maria\ApprovedGoogleActionService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -63,6 +64,13 @@ class ApprovalResource extends Resource
             Tables\Actions\Action::make('reject')->color('danger')->icon('heroicon-o-x-mark')->requiresConfirmation()
                 ->visible(fn (Approval $record) => $record->isPendingAndCurrent())
                 ->action(fn (Approval $record) => app(ApprovalService::class)->decide($record, auth()->user(), 'rejected')),
+            Tables\Actions\Action::make('execute_google_action')->label('Execute approved action')->color('warning')->icon('heroicon-o-paper-airplane')
+                ->visible(fn (Approval $record) => $record->decision === 'approved' && in_array($record->action_type, ['google_email_send', 'google_calendar_create'], true) && ! $record->actions()->where('status', 'completed')->exists())
+                ->requiresConfirmation()->modalDescription('This performs the exact approved external action. It cannot be automatically undone.')
+                ->action(function (Approval $record): void {
+                    app(ApprovedGoogleActionService::class)->execute($record, auth()->user());
+                    Notification::make()->title('Approved Google action completed')->success()->send();
+                }),
         ]);
     }
 

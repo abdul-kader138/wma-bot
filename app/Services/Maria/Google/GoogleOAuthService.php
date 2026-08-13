@@ -11,17 +11,23 @@ use RuntimeException;
 
 class GoogleOAuthService
 {
-    public function authorizationRedirect(): RedirectResponse
+    public function authorizationRedirect(bool $includeWriteScopes = false): RedirectResponse
     {
         $this->assertConfigured();
         $state = Str::random(64);
         session()->put('google_oauth_state', $state);
+        session()->put('google_oauth_write_consent', $includeWriteScopes);
+
+        $scopes = config('services.google.scopes', []);
+        if ($includeWriteScopes) {
+            $scopes = array_values(array_unique([...$scopes, ...config('services.google.write_scopes', [])]));
+        }
 
         return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query([
             'client_id' => config('services.google.client_id'),
             'redirect_uri' => $this->redirectUri(),
             'response_type' => 'code',
-            'scope' => implode(' ', config('services.google.scopes', [])),
+            'scope' => implode(' ', $scopes),
             'access_type' => 'offline',
             'include_granted_scopes' => 'true',
             'prompt' => 'consent',
@@ -29,11 +35,17 @@ class GoogleOAuthService
         ]));
     }
 
+    public function writeAuthorizationRedirect(): RedirectResponse
+    {
+        return $this->authorizationRedirect(true);
+    }
+
     public function connect(User $user, string $code, string $state): ConnectorAccount
     {
         if (! hash_equals((string) session()->pull('google_oauth_state'), $state)) {
             throw new RuntimeException('Invalid Google OAuth state.');
         }
+        $writeConsent = (bool) session()->pull('google_oauth_write_consent', false);
 
         $token = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'code' => $code,
@@ -54,7 +66,9 @@ class GoogleOAuthService
                 'email' => $identity['email'] ?? null,
                 'access_token' => $token['access_token'],
                 'refresh_token' => $token['refresh_token'] ?? $existing?->refresh_token,
-                'scopes' => explode(' ', $token['scope'] ?? implode(' ', config('services.google.scopes', []))),
+                'scopes' => explode(' ', $token['scope'] ?? implode(' ', $writeConsent
+                    ? [...config('services.google.scopes', []), ...config('services.google.write_scopes', [])]
+                    : config('services.google.scopes', []))),
                 'token_expires_at' => now()->addSeconds((int) ($token['expires_in'] ?? 3600)),
                 'status' => 'active', 'last_error' => null,
             ],

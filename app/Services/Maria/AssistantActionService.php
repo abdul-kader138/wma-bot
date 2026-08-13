@@ -28,7 +28,7 @@ class AssistantActionService
         }
 
         $idempotencyKey = hash('sha256', implode('|', [
-            $workflowRun?->run_id ?? 'manual',
+            $workflowRun?->run_id ?? ($approval ? "approval:{$approval->id}" : 'manual'),
             $owner->id,
             $toolName,
             $contentHash,

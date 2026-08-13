@@ -23,6 +23,19 @@ class GoogleWorkspaceClient
         }
     }
 
+    public function post(ConnectorAccount $connector, string $url, array $payload): array
+    {
+        try {
+            $response = Http::withToken($this->accessToken($connector))->post($url, $payload)->throw()->json();
+            $connector->update(['last_synced_at' => now(), 'last_error' => null, 'status' => 'active']);
+
+            return $response;
+        } catch (Throwable $error) {
+            $connector->update(['last_error' => mb_substr($error->getMessage(), 0, 2000), 'status' => 'error']);
+            throw $error;
+        }
+    }
+
     private function accessToken(ConnectorAccount $connector): string
     {
         if ($connector->token_expires_at?->isAfter(now()->addMinute()) && $connector->access_token) {

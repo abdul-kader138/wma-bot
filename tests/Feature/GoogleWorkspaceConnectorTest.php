@@ -60,6 +60,16 @@ class GoogleWorkspaceConnectorTest extends TestCase
         $this->assertNotSame('access-1', \DB::table('connector_accounts')->value('access_token'));
     }
 
+    public function test_write_authorization_is_a_separate_explicit_consent(): void
+    {
+        $response = app(GoogleOAuthService::class)->writeAuthorizationRedirect();
+        parse_str(parse_url($response->getTargetUrl(), PHP_URL_QUERY), $query);
+
+        $this->assertStringContainsString('gmail.send', $query['scope']);
+        $this->assertStringContainsString('/auth/calendar.events', $query['scope']);
+        $this->assertStringContainsString('gmail.readonly', $query['scope']);
+    }
+
     public function test_expired_token_is_refreshed_before_read_request(): void
     {
         $user = User::factory()->create();

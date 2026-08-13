@@ -15,6 +15,11 @@ class GoogleConnectorController extends Controller
         return $oauth->authorizationRedirect();
     }
 
+    public function writeRedirect(GoogleOAuthService $oauth): RedirectResponse
+    {
+        return $oauth->writeAuthorizationRedirect();
+    }
+
     public function callback(Request $request, GoogleOAuthService $oauth): RedirectResponse
     {
         $data = $request->validate(['code' => ['required', 'string'], 'state' => ['required', 'string']]);

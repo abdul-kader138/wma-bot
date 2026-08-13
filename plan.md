@@ -39,10 +39,11 @@ Completed foundation work:
 - Claims Registry with brand, freshness, and verification gating.
 - Draft-only Daily Five relationship recommendations with verified-source filtering, scoring, review decisions, and weekday scheduling.
 - Draft-only multi-channel content packages with brand separation, normalized duplicate prevention, attribution fields, and a hard Claims Registry gate.
+- Separately consented Gmail and Calendar writes with exact-content approvals, scope checks, idempotent action ledgers, and provider confirmations.
 
 Next implementation target:
 
-- Approved Gmail sending and Calendar write actions behind exact-content approvals.
+- Book portfolio review and weekly reporting.
 
 ## 1. Objective
 

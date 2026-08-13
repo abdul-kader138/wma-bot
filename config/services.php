@@ -13,6 +13,10 @@ return [
             'https://www.googleapis.com/auth/calendar.events.readonly',
             'https://www.googleapis.com/auth/drive.metadata.readonly',
         ],
+        'write_scopes' => [
+            'https://www.googleapis.com/auth/gmail.send',
+            'https://www.googleapis.com/auth/calendar.events',
+        ],
     ],
 
     /*

@@ -37,6 +37,7 @@ Route::middleware([RequirePanelUser::class])
     ->name('panel-api.connectors.google.')
     ->group(function () {
         Route::get('/redirect', [GoogleConnectorController::class, 'redirect'])->name('redirect');
+        Route::get('/write-redirect', [GoogleConnectorController::class, 'writeRedirect'])->name('write-redirect');
         Route::get('/callback', [GoogleConnectorController::class, 'callback'])->name('callback');
         Route::delete('/{connector}', [GoogleConnectorController::class, 'disconnect'])->name('disconnect');
     });

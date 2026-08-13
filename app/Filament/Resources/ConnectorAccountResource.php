@@ -40,7 +40,7 @@ class ConnectorAccountResource extends Resource
             Tables\Columns\TextColumn::make('provider')->badge(),
             Tables\Columns\TextColumn::make('email'),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('scopes')->formatStateUsing(fn ($state) => count((array) $state).' read permissions'),
+            Tables\Columns\TextColumn::make('scopes')->formatStateUsing(fn ($state) => count((array) $state).' permissions'),
             Tables\Columns\TextColumn::make('last_synced_at')->dateTime()->placeholder('Never'),
             Tables\Columns\TextColumn::make('last_error')->limit(50)->toggleable(),
         ])->actions([]);

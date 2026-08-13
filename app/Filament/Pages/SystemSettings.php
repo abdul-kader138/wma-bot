@@ -79,6 +79,9 @@ class SystemSettings extends Page implements HasForms
             'support_email' => Setting::get('support_email', ''),
             'maintenance_mode' => Setting::get('maintenance_mode', false),
             'admin_locale' => Setting::get('admin_locale', config('locales.default', 'en')),
+            'app_timezone' => Setting::get('app_timezone', config('app.timezone', 'UTC')),
+            'app_date_format' => Setting::get('app_date_format', 'd/m/Y'),
+            'app_datetime_format' => Setting::get('app_datetime_format', 'd/m/Y H:i'),
 
             // Security
             'two_factor_enabled' => Setting::get('two_factor_enabled', true),
@@ -188,6 +191,32 @@ class SystemSettings extends Page implements HasForms
                                     ->default(config('locales.default', 'en'))
                                     ->required()
                                     ->native(false),
+
+                                Grid::make(3)->schema([
+                                    Select::make('app_timezone')
+                                        ->label('Application Timezone')
+                                        ->options(array_combine(timezone_identifiers_list(), timezone_identifiers_list()))
+                                        ->searchable()
+                                        ->required()
+                                        ->helperText('Global timezone for the application. Maria profiles may override it for personal schedules.'),
+                                    Select::make('app_date_format')
+                                        ->label('Date Format')
+                                        ->options([
+                                            'd/m/Y' => 'DD/MM/YYYY (31/12/2026)',
+                                            'm/d/Y' => 'MM/DD/YYYY (12/31/2026)',
+                                            'Y-m-d' => 'YYYY-MM-DD (2026-12-31)',
+                                            'd.m.Y' => 'DD.MM.YYYY (31.12.2026)',
+                                        ])->required()->native(false),
+                                    Select::make('app_datetime_format')
+                                        ->label('Date & Time Format')
+                                        ->options([
+                                            'd/m/Y H:i' => 'DD/MM/YYYY 24-hour',
+                                            'd/m/Y h:i A' => 'DD/MM/YYYY 12-hour',
+                                            'm/d/Y h:i A' => 'MM/DD/YYYY 12-hour',
+                                            'Y-m-d H:i' => 'YYYY-MM-DD 24-hour',
+                                            'd.m.Y H:i' => 'DD.MM.YYYY 24-hour',
+                                        ])->required()->native(false),
+                                ]),
                             ]),
                         ]),
 
@@ -609,6 +638,9 @@ class SystemSettings extends Page implements HasForms
             'support_email' => 'general',
             'maintenance_mode' => 'general',
             'admin_locale' => 'general',
+            'app_timezone' => 'regional',
+            'app_date_format' => 'regional',
+            'app_datetime_format' => 'regional',
             'two_factor_enabled' => 'security',
             'admin_theme' => 'appearance',
             'admin_panel_theme_mode' => 'appearance',
@@ -661,6 +693,15 @@ class SystemSettings extends Page implements HasForms
         if (! session()->has('admin_locale') && isset($data['admin_locale'])) {
             app()->setLocale($data['admin_locale']);
         }
+
+        if (isset($data['app_timezone']) && in_array($data['app_timezone'], timezone_identifiers_list(), true)) {
+            config(['app.timezone' => $data['app_timezone']]);
+            date_default_timezone_set($data['app_timezone']);
+        }
+        config([
+            'app.display_date_format' => $data['app_date_format'] ?? 'd/m/Y',
+            'app.display_datetime_format' => $data['app_datetime_format'] ?? 'd/m/Y H:i',
+        ]);
 
         // Flash session values so the branding panel updates immediately on redirect
         $authBackground = $data['auth_background'] ?? 'inherit';

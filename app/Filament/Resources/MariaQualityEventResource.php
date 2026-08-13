@@ -40,7 +40,7 @@ class MariaQualityEventResource extends Resource
             Forms\Components\Textarea::make('description')->required()->columnSpanFull(), Forms\Components\Textarea::make('expected_result')->columnSpanFull(),
             Forms\Components\Textarea::make('actual_result')->columnSpanFull(), Forms\Components\Textarea::make('resolution')->columnSpanFull(),
             Forms\Components\Select::make('status')->options(['open' => 'Open', 'investigating' => 'Investigating', 'resolved' => 'Resolved'])->required(),
-            Forms\Components\DateTimePicker::make('occurred_at')->displayFormat('d/m/Y H:i')->required(), Forms\Components\DateTimePicker::make('resolved_at')->displayFormat('d/m/Y H:i'),
+            Forms\Components\DateTimePicker::make('occurred_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->required(), Forms\Components\DateTimePicker::make('resolved_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
         ])->columns(2);
     }
 
@@ -49,7 +49,7 @@ class MariaQualityEventResource extends Resource
         return $table->columns([
             Tables\Columns\TextColumn::make('event_type')->badge(), Tables\Columns\TextColumn::make('category')->badge(),
             Tables\Columns\TextColumn::make('severity')->badge(), Tables\Columns\TextColumn::make('description')->limit(70)->searchable(),
-            Tables\Columns\TextColumn::make('status')->badge(), Tables\Columns\TextColumn::make('occurred_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('status')->badge(), Tables\Columns\TextColumn::make('occurred_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
         ])->defaultSort('occurred_at', 'desc')->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 

@@ -19,7 +19,7 @@
                             <div class="text-sm text-gray-500">Owner: {{ $task->owner_name }}</div>
                         </div>
                         <div class="whitespace-nowrap text-sm {{ $task->due_at->isPast() ? 'text-danger-600' : 'text-gray-500' }}">
-                            {{ $task->due_at->timezone(auth()->user()->assistantProfile?->timezone ?? config('app.timezone'))->format('d/m/Y H:i') }}
+                            {{ $task->due_at->timezone(auth()->user()->assistantProfile?->timezone ?? config('app.timezone'))->format(config('app.display_datetime_format', 'd/m/Y H:i')) }}
                         </div>
                     </div>
                 @empty

@@ -115,12 +115,12 @@ class ServiceRequestResource extends Resource
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('admin.service_request.fields.received'))
-                    ->dateTime('d/m/Y H:i')
+                    ->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('admin.service_request.fields.last_updated'))
-                    ->dateTime('d/m/Y H:i')
+                    ->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

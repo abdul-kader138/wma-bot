@@ -49,7 +49,7 @@ class RelationshipRecommendationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('recommendation_date')->date('d/m/Y')->sortable(),
+            Tables\Columns\TextColumn::make('recommendation_date')->date(config('app.display_date_format', 'd/m/Y'))->sortable(),
             Tables\Columns\TextColumn::make('contact.full_name')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('contact.organization')->searchable(),
             Tables\Columns\TextColumn::make('contact.tier')->label('Tier')->badge(),

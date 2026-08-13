@@ -269,7 +269,7 @@ class ServiceResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
-                    ->dateTime('d M Y')
+                    ->dateTime(config('app.display_date_format', 'd/m/Y'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

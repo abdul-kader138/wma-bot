@@ -41,7 +41,7 @@ class ApprovalResource extends Resource
             Forms\Components\Textarea::make('preview')->disabled()->rows(10)->columnSpanFull(),
             Forms\Components\KeyValue::make('attachments')->disabled()->columnSpanFull(),
             Forms\Components\TextInput::make('decision')->disabled(),
-            Forms\Components\DateTimePicker::make('expires_at')->displayFormat('d/m/Y H:i')->disabled(),
+            Forms\Components\DateTimePicker::make('expires_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->disabled(),
         ])->columns(2);
     }
 
@@ -52,7 +52,7 @@ class ApprovalResource extends Resource
             Tables\Columns\TextColumn::make('recipient_channel')->placeholder('Internal'),
             Tables\Columns\TextColumn::make('risk_level')->badge(),
             Tables\Columns\TextColumn::make('decision')->badge(),
-            Tables\Columns\TextColumn::make('expires_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('expires_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
         ])->defaultSort('created_at', 'desc')->actions([
             Tables\Actions\ViewAction::make(),
             Tables\Actions\Action::make('approve')->color('success')->icon('heroicon-o-check')->requiresConfirmation()

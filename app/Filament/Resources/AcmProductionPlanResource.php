@@ -35,10 +35,10 @@ class AcmProductionPlanResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\DatePicker::make('week_start')->displayFormat('d/m/Y')->required(), Forms\Components\TextInput::make('theme')->required(),
+            Forms\Components\DatePicker::make('week_start')->displayFormat(config('app.display_date_format', 'd/m/Y'))->required(), Forms\Components\TextInput::make('theme')->required(),
             Forms\Components\Textarea::make('source_notes')->columnSpanFull(),
             Forms\Components\TagsInput::make('core_claims')->helperText('Claims must be current and permitted for All Catholic Media.')->columnSpanFull(),
-            Forms\Components\TextInput::make('owner_name')->required(), Forms\Components\DateTimePicker::make('approval_deadline')->displayFormat('d/m/Y H:i')->required(),
+            Forms\Components\TextInput::make('owner_name')->required(), Forms\Components\DateTimePicker::make('approval_deadline')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->required(),
             Forms\Components\Textarea::make('production_package')->disabled()->formatStateUsing(fn ($state) => $state ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : null)->rows(24)->columnSpanFull(),
             Forms\Components\Textarea::make('review_notes')->columnSpanFull(), Forms\Components\TextInput::make('status')->disabled(),
         ])->columns(2);
@@ -47,9 +47,9 @@ class AcmProductionPlanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('week_start')->date('d/m/Y')->sortable(), Tables\Columns\TextColumn::make('theme')->searchable()->limit(60),
-            Tables\Columns\TextColumn::make('owner_name'), Tables\Columns\TextColumn::make('approval_deadline')->dateTime('d/m/Y H:i')->sortable(),
-            Tables\Columns\TextColumn::make('status')->badge(), Tables\Columns\TextColumn::make('generated_at')->dateTime('d/m/Y H:i')->placeholder('Not generated'),
+            Tables\Columns\TextColumn::make('week_start')->date(config('app.display_date_format', 'd/m/Y'))->sortable(), Tables\Columns\TextColumn::make('theme')->searchable()->limit(60),
+            Tables\Columns\TextColumn::make('owner_name'), Tables\Columns\TextColumn::make('approval_deadline')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
+            Tables\Columns\TextColumn::make('status')->badge(), Tables\Columns\TextColumn::make('generated_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->placeholder('Not generated'),
         ])->defaultSort('week_start', 'desc')->actions([
             Tables\Actions\Action::make('generate')->label('Generate plan')->icon('heroicon-o-sparkles')->visible(fn ($record) => in_array($record->status, ['planned', 'blocked_claims'], true))->requiresConfirmation()->action(function ($record) {
                 app(AcmProductionService::class)->generate($record);

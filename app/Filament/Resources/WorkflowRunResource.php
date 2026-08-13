@@ -47,8 +47,8 @@ class WorkflowRunResource extends Resource
             Tables\Columns\TextColumn::make('run_id')->searchable()->copyable(),
             Tables\Columns\TextColumn::make('workflow_type')->badge()->searchable(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('started_at')->dateTime('d/m/Y H:i')->sortable(),
-            Tables\Columns\TextColumn::make('finished_at')->dateTime('d/m/Y H:i'),
+            Tables\Columns\TextColumn::make('started_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
+            Tables\Columns\TextColumn::make('finished_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i')),
             Tables\Columns\TextColumn::make('estimated_cost')->money('USD'),
         ])->defaultSort('started_at', 'desc')->actions([
             Tables\Actions\Action::make('verify_time_saving')->label('Verify time saved')->icon('heroicon-o-clock')->form([

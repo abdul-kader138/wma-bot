@@ -47,6 +47,7 @@ Completed foundation work:
 - Global and per-profile external-action stops, provider reconciliation, audited control changes, and production/recovery runbooks.
 - Evidence-based 30-day Acceptance Dashboard, auditable snapshots, explicit unmeasured states, and final handover checklist.
 - Encrypted Google OAuth administration with environment fallback, consistent `dd/mm/yyyy` display formatting, and reduced Claims Registry/admin query load.
+- Configurable global timezone and application-wide date/date-time display formats, with safe timezone validation and Maria profile schedule overrides.
 
 Next implementation target:
 

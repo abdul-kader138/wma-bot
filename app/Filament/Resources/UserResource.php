@@ -122,12 +122,12 @@ class UserResource extends Resource
 
                 TextColumn::make('email_verified_at')
                     ->label(__('admin.user.fields.verified'))
-                    ->dateTime('d M Y')
+                    ->dateTime(config('app.display_date_format', 'd/m/Y'))
                     ->sortable()
                     ->placeholder(__('admin.user.fields.not_verified')),
 
                 TextColumn::make('created_at')
-                    ->dateTime('d M Y')
+                    ->dateTime(config('app.display_date_format', 'd/m/Y'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

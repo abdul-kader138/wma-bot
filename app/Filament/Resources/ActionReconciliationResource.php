@@ -44,7 +44,7 @@ class ActionReconciliationResource extends Resource
 
         return $table->columns([
             Tables\Columns\TextColumn::make('action.tool_name')->searchable(), Tables\Columns\TextColumn::make('provider')->badge(),
-            Tables\Columns\TextColumn::make('reason')->limit(80), Tables\Columns\TextColumn::make('status')->badge(), Tables\Columns\TextColumn::make('created_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('reason')->limit(80), Tables\Columns\TextColumn::make('status')->badge(), Tables\Columns\TextColumn::make('created_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
         ])->defaultSort('created_at', 'desc')->actions([
             Tables\Actions\Action::make('confirm_completed')->color('success')->visible(fn ($record) => $record->status === 'pending')->form($form)->requiresConfirmation()->action(fn ($record, $data) => $resolve($record, $data, 'confirmed_completed')),
             Tables\Actions\Action::make('confirm_not_executed')->color('warning')->visible(fn ($record) => $record->status === 'pending')->form($form)->requiresConfirmation()->action(fn ($record, $data) => $resolve($record, $data, 'confirmed_not_executed')),

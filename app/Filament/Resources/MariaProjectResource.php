@@ -42,8 +42,8 @@ class MariaProjectResource extends Resource
                 Forms\Components\Select::make('confidentiality')->options(['public' => 'Public', 'internal' => 'Internal', 'confidential' => 'Confidential', 'restricted' => 'Restricted'])->required(),
                 Forms\Components\TextInput::make('owner_name')->required(),
                 Forms\Components\Textarea::make('next_action')->required()->columnSpanFull(),
-                Forms\Components\DateTimePicker::make('next_action_at')->displayFormat('d/m/Y H:i')->required(),
-                Forms\Components\DateTimePicker::make('deadline_at')->displayFormat('d/m/Y H:i'),
+                Forms\Components\DateTimePicker::make('next_action_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->required(),
+                Forms\Components\DateTimePicker::make('deadline_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
                 Forms\Components\Select::make('status')->options(['completed' => 'Completed', 'awaiting_approval' => 'Awaiting Approval', 'waiting' => 'Waiting on Another Person', 'scheduled' => 'Scheduled', 'blocked' => 'Blocked'])->required(),
                 Forms\Components\Textarea::make('blocker')->columnSpanFull(),
             ])->columns(2),
@@ -57,8 +57,8 @@ class MariaProjectResource extends Resource
             Tables\Columns\TextColumn::make('domain')->badge(),
             Tables\Columns\TextColumn::make('priority')->badge(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('next_action_at')->dateTime('d/m/Y H:i')->sortable(),
-            Tables\Columns\TextColumn::make('deadline_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('next_action_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
+            Tables\Columns\TextColumn::make('deadline_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
         ])->defaultSort('next_action_at')->actions([
             Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make(),
         ]);

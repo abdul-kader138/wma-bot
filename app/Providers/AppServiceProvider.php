@@ -22,8 +22,32 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Role::class, RolePolicy::class);
+        $this->applyRegionalSettings();
         $this->applyMailSettings();
         $this->configureRateLimiting();
+    }
+
+    private function applyRegionalSettings(): void
+    {
+        try {
+            if (! Schema::hasTable('settings')) {
+                return;
+            }
+        } catch (\Throwable) {
+            return;
+        }
+
+        $timezone = (string) Setting::get('app_timezone', config('app.timezone', 'UTC'));
+        if (! in_array($timezone, timezone_identifiers_list(), true)) {
+            $timezone = (string) config('app.timezone', 'UTC');
+        }
+
+        config([
+            'app.timezone' => $timezone,
+            'app.display_date_format' => Setting::get('app_date_format', 'd/m/Y'),
+            'app.display_datetime_format' => Setting::get('app_datetime_format', 'd/m/Y H:i'),
+        ]);
+        date_default_timezone_set($timezone);
     }
 
     /**
@@ -56,18 +80,18 @@ class AppServiceProvider extends ServiceProvider
         }
 
         config([
-            'mail.from.name'    => Setting::get('mail_from_name', config('mail.from.name')),
+            'mail.from.name' => Setting::get('mail_from_name', config('mail.from.name')),
             'mail.from.address' => Setting::get('mail_from_address', config('mail.from.address')),
         ]);
 
         if ($host = Setting::get('mail_host')) {
             config([
-                'mail.default'                 => 'smtp',
-                'mail.mailers.smtp.host'       => $host,
-                'mail.mailers.smtp.port'       => Setting::get('mail_port', 587),
-                'mail.mailers.smtp.username'   => Setting::get('mail_username'),
-                'mail.mailers.smtp.password'   => Setting::get('mail_password'),
-                'mail.mailers.smtp.scheme'     => Setting::get('mail_encryption') ?: null,
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.host' => $host,
+                'mail.mailers.smtp.port' => Setting::get('mail_port', 587),
+                'mail.mailers.smtp.username' => Setting::get('mail_username'),
+                'mail.mailers.smtp.password' => Setting::get('mail_password'),
+                'mail.mailers.smtp.scheme' => Setting::get('mail_encryption') ?: null,
             ]);
         }
     }

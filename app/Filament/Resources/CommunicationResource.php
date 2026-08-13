@@ -38,7 +38,7 @@ class CommunicationResource extends Resource
             Forms\Components\Textarea::make('summary')->disabled()->columnSpanFull(),
             Forms\Components\KeyValue::make('commitments')->disabled()->columnSpanFull(),
             Forms\Components\Textarea::make('draft_response')->label('Draft reply (not sent)')->rows(10)->columnSpanFull(),
-            Forms\Components\DateTimePicker::make('follow_up_at')->displayFormat('d/m/Y H:i'),
+            Forms\Components\DateTimePicker::make('follow_up_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
             Forms\Components\TextInput::make('source_url')->disabled()->columnSpanFull(),
         ])->columns(2);
     }
@@ -51,7 +51,7 @@ class CommunicationResource extends Resource
             Tables\Columns\TextColumn::make('classification')->badge(),
             Tables\Columns\TextColumn::make('sensitivity')->badge(),
             Tables\Columns\IconColumn::make('draft_response')->label('Draft')->boolean(),
-            Tables\Columns\TextColumn::make('follow_up_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('follow_up_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
         ])->defaultSort('created_at', 'desc')->actions([Tables\Actions\EditAction::make()]);
     }
 

@@ -42,7 +42,7 @@ class MariaContactResource extends Resource
             Forms\Components\Textarea::make('verification_source')->columnSpanFull(),
             Forms\Components\Textarea::make('warm_path')->columnSpanFull(),
             Forms\Components\Textarea::make('next_action')->columnSpanFull(),
-            Forms\Components\DateTimePicker::make('follow_up_at')->displayFormat('d/m/Y H:i'),
+            Forms\Components\DateTimePicker::make('follow_up_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
             Forms\Components\Textarea::make('consent_preferences')->columnSpanFull(),
             Forms\Components\Textarea::make('private_contact_data')->columnSpanFull(),
             Forms\Components\Textarea::make('notes')->columnSpanFull(),
@@ -55,7 +55,7 @@ class MariaContactResource extends Resource
             Tables\Columns\TextColumn::make('full_name')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('email')->searchable(), Tables\Columns\TextColumn::make('organization')->searchable(),
             Tables\Columns\TextColumn::make('tier')->badge(), Tables\Columns\TextColumn::make('stage')->badge(),
-            Tables\Columns\TextColumn::make('follow_up_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('follow_up_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
         ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 

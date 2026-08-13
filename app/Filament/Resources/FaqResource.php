@@ -128,7 +128,7 @@ class FaqResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime('d/m/Y H:i')
+                    ->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

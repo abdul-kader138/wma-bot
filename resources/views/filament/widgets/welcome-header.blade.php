@@ -60,7 +60,7 @@
                 border:1px solid rgba(245,158,11,.25);padding:.2rem .65rem;border-radius:9999px;
             ">{{ $roles }}</span>
             <span style="font-size:.78rem;color:rgba(255,255,255,.35);">·</span>
-            <span style="font-size:.78rem;color:rgba(255,255,255,.45);">{{ now()->format('d/m/Y') }}</span>
+            <span style="font-size:.78rem;color:rgba(255,255,255,.45);">{{ now()->format(config('app.display_date_format', 'd/m/Y')) }}</span>
         </div>
     </div>
 

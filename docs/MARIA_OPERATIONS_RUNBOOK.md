@@ -34,6 +34,8 @@
 
 Google Client ID, encrypted Client Secret, and Redirect URI can be managed under **System Settings → Google Workspace**. Environment variables remain fallback values for recovery. Saving an empty client-secret field preserves the stored secret.
 
+Global timezone and date/date-time display formats are managed under **System Settings → General**. Database timestamps remain normal Laravel timestamps; Maria profile timezones continue to control that owner's scheduled workflow times.
+
 ## Queue and scheduler recovery
 
 1. Confirm the scheduler invokes `php artisan schedule:run` every minute.

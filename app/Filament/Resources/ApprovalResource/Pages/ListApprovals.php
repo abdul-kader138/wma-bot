@@ -35,7 +35,7 @@ class ListApprovals extends ListRecords
                 Forms\Components\TextInput::make('title')->required()->columnSpanFull(),
                 Forms\Components\Textarea::make('description')->columnSpanFull(),
                 Forms\Components\TextInput::make('location')->columnSpanFull(),
-                Forms\Components\DateTimePicker::make('starts_at')->displayFormat('d/m/Y H:i')->required(), Forms\Components\DateTimePicker::make('ends_at')->displayFormat('d/m/Y H:i')->required()->after('starts_at'),
+                Forms\Components\DateTimePicker::make('starts_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->required(), Forms\Components\DateTimePicker::make('ends_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->required()->after('starts_at'),
                 Forms\Components\Select::make('timezone')->options(array_combine(timezone_identifiers_list(), timezone_identifiers_list()))->searchable()->default(auth()->user()->assistantProfile?->timezone ?? config('app.timezone'))->required(),
                 Forms\Components\TagsInput::make('attendees')->placeholder('person@example.com')->columnSpanFull(),
             ])->action(function (array $data): void {

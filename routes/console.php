@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\Maria\GenerateAcmProductionPlan;
 use App\Jobs\Maria\GenerateBookPortfolioReview;
 use App\Jobs\Maria\GenerateDailyFive;
 use App\Jobs\Maria\GenerateEveningReview;
@@ -8,6 +9,7 @@ use App\Jobs\Maria\MonitorDeadlines;
 use App\Jobs\Maria\PrepareUpcomingMeetings;
 use App\Jobs\Maria\ReviewAgverseOpportunities;
 use App\Jobs\Maria\TriageGoogleInbox;
+use App\Models\AcmProductionPlan;
 use App\Models\AssistantProfile;
 use App\Models\ConnectorAccount;
 use Carbon\Carbon;
@@ -98,3 +100,12 @@ Schedule::call(function () {
         }
     });
 })->everyMinute()->name('maria-agverse-opportunity-review')->withoutOverlapping();
+
+Schedule::call(function () {
+    AssistantProfile::where('is_active', true)->whereNotNull('weekly_production_day')->whereNotNull('weekly_production_at')->each(function (AssistantProfile $profile) {
+        $local = now($profile->timezone);
+        if ($local->dayOfWeekIso === $profile->weekly_production_day && $local->format('H:i') === substr((string) $profile->weekly_production_at, 0, 5) && in_array('acm_weekly_production', $profile->enabled_workflows ?? [], true)) {
+            AcmProductionPlan::where('user_id', $profile->user_id)->whereDate('week_start', $local->startOfWeek()->toDateString())->whereIn('status', ['planned', 'blocked_claims'])->each(fn (AcmProductionPlan $plan) => GenerateAcmProductionPlan::dispatch($plan->id));
+        }
+    });
+})->everyMinute()->name('maria-acm-weekly-production')->withoutOverlapping();

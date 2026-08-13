@@ -42,10 +42,11 @@ Completed foundation work:
 - Separately consented Gmail and Calendar writes with exact-content approvals, scope checks, idempotent action ledgers, and provider confirmations.
 - Structured Book Portfolio records and an idempotent weekly review with exact identifiers, milestone risks, source gaps, and three highest-value actions.
 - Auditable Thursday Agverse opportunity ranking with verified facts separated from hypotheses and risk-aware next steps.
+- Configurable All Catholic Media weekly production plans with Claims Registry gating, owners, assets, approval deadlines, and draft publication schedules.
 
 Next implementation target:
 
-- All Catholic Media weekly production planning.
+- Weekly Maria quality report and correction tracking.
 
 ## 1. Objective
 

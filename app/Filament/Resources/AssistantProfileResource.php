@@ -44,6 +44,8 @@ class AssistantProfileResource extends Resource
             Forms\Components\Select::make('language')->options(['en' => 'English', 'it' => 'Italiano', 'bn' => 'বাংলা'])->required(),
             Forms\Components\TimePicker::make('working_hours_start'), Forms\Components\TimePicker::make('working_hours_end'),
             Forms\Components\TimePicker::make('morning_brief_at'), Forms\Components\TimePicker::make('evening_review_at'),
+            Forms\Components\Select::make('weekly_production_day')->options([1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday']),
+            Forms\Components\TimePicker::make('weekly_production_at'),
             Forms\Components\CheckboxList::make('enabled_workflows')->options([
                 'morning_brief' => 'Morning Brief', 'evening_review' => 'Evening Review',
                 'email_triage' => 'Email Triage', 'meeting_preparation' => 'Meeting Preparation',
@@ -51,6 +53,7 @@ class AssistantProfileResource extends Resource
                 'daily_five' => 'Daily Five Relationships',
                 'book_portfolio_review' => 'Weekly Book Portfolio Review',
                 'agverse_opportunity_review' => 'Thursday Agverse Opportunity Review',
+                'acm_weekly_production' => 'All Catholic Media Weekly Production',
             ])->columnSpanFull(),
             Forms\Components\Textarea::make('voice_preferences')->columnSpanFull(),
             Forms\Components\Toggle::make('is_active')->required(),

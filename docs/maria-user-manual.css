@@ -61,9 +61,17 @@ h1 + p {
   padding-left: 0;
 }
 
+#TOC > ul > li > a {
+  display: none;
+}
+
 #maria-assistant-user-manual,
 #maria-assistant-user-manual + p {
-  display: none;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
 }
 
 h2 {

@@ -58,6 +58,7 @@ class AssistantProfileResource extends Resource
             ])->columnSpanFull(),
             Forms\Components\Textarea::make('voice_preferences')->columnSpanFull(),
             Forms\Components\Toggle::make('is_active')->required(),
+            Forms\Components\Toggle::make('external_actions_enabled')->label('Allow approved external actions')->helperText('Emergency per-profile switch. Exact approvals are still required.'),
         ])->columns(2);
     }
 

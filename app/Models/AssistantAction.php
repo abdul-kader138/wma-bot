@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AssistantAction extends Model
 {
@@ -36,5 +37,10 @@ class AssistantAction extends Model
     public function approval(): BelongsTo
     {
         return $this->belongsTo(Approval::class);
+    }
+
+    public function reconciliation(): HasOne
+    {
+        return $this->hasOne(ActionReconciliation::class);
     }
 }

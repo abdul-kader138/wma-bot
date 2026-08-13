@@ -2,6 +2,7 @@
 
 namespace App\Services\Maria;
 
+use App\Models\ActionReconciliation;
 use App\Models\Approval;
 use App\Models\AssistantAction;
 use App\Models\ConnectorAccount;
@@ -19,10 +20,12 @@ class ApprovedGoogleActionService
         private readonly AssistantActionService $actions,
         private readonly GmailWriteClient $gmail,
         private readonly GoogleCalendarWriteClient $calendar,
+        private readonly ExternalActionGuard $guard,
     ) {}
 
     public function requestEmail(User $owner, array $input): Approval
     {
+        $this->guard->assertEnabled($owner);
         $data = Validator::make($input, [
             'connector_account_id' => ['required', 'integer'], 'to' => ['required', 'email:rfc', 'not_regex:/[\r\n]/'],
             'cc' => ['nullable', 'string', 'max:1000', 'not_regex:/[\r\n]/'], 'bcc' => ['nullable', 'string', 'max:1000', 'not_regex:/[\r\n]/'],
@@ -41,6 +44,7 @@ class ApprovedGoogleActionService
 
     public function requestCalendarEvent(User $owner, array $input): Approval
     {
+        $this->guard->assertEnabled($owner);
         $data = Validator::make($input, [
             'connector_account_id' => ['required', 'integer'], 'title' => ['required', 'string', 'max:500'],
             'description' => ['nullable', 'string', 'max:10000'], 'location' => ['nullable', 'string', 'max:1000'],
@@ -69,11 +73,15 @@ class ApprovedGoogleActionService
 
         $input = $approval->proposed_content;
         $owner = $approval->user;
-        $connector = $this->ownedConnector($owner, (int) $input['connector_account_id']);
+        $this->guard->assertEnabled($owner);
         $action = $this->actions->reserve($owner, $approval->action_type, $input, $approval->workflowRun, $approval);
         if ($action->status === 'completed') {
             return $action;
         }
+        if ($action->reconciliation()->where('status', 'pending')->exists()) {
+            throw ValidationException::withMessages(['action' => 'This action has an unresolved provider reconciliation and cannot be retried.']);
+        }
+        $connector = $this->ownedConnector($owner, (int) $input['connector_account_id']);
         $action = $this->actions->markExecuting($action);
 
         try {
@@ -88,6 +96,10 @@ class ApprovedGoogleActionService
             return $this->actions->markCompleted($action, (string) $result['id'], ['event_id' => $result['id'], 'html_link' => $result['htmlLink'] ?? null]);
         } catch (Throwable $error) {
             $this->actions->markFailed($action, mb_substr($error->getMessage(), 0, 5000));
+            ActionReconciliation::firstOrCreate(['assistant_action_id' => $action->id], [
+                'user_id' => $owner->id, 'provider' => 'google', 'status' => 'pending',
+                'reason' => 'Provider execution failed or returned an ambiguous result: '.mb_substr($error->getMessage(), 0, 2000),
+            ]);
             throw $error;
         }
     }

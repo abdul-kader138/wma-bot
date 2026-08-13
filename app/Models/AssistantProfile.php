@@ -13,6 +13,7 @@ class AssistantProfile extends Model
         'morning_brief_at', 'evening_review_at', 'enabled_workflows',
         'weekly_production_day', 'weekly_production_at',
         'notification_preferences', 'voice_preferences', 'is_active',
+        'external_actions_enabled',
     ];
 
     protected function casts(): array
@@ -21,6 +22,7 @@ class AssistantProfile extends Model
             'enabled_workflows' => 'array',
             'notification_preferences' => 'array',
             'is_active' => 'boolean',
+            'external_actions_enabled' => 'boolean',
         ];
     }
 

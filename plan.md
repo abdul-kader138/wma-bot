@@ -44,10 +44,11 @@ Completed foundation work:
 - Auditable Thursday Agverse opportunity ranking with verified facts separated from hypotheses and risk-aware next steps.
 - Configurable All Catholic Media weekly production plans with Claims Registry gating, owners, assets, approval deadlines, and draft publication schedules.
 - Weekly Maria Quality Reports with explicit estimate/verification labels, recurring correction tracking, safety incidents, and recommended improvements.
+- Global and per-profile external-action stops, provider reconciliation, audited control changes, and production/recovery runbooks.
 
 Next implementation target:
 
-- External-action emergency stop, reconciliation workflow, and operational runbooks.
+- Acceptance dashboards, 30-day operational measurement, and final handover verification.
 
 ## 1. Objective
 

@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActionReconciliation;
+use App\Models\AssistantProfile;
 use App\Models\ConnectorAccount;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\Maria\ApprovalService;
 use App\Services\Maria\ApprovedGoogleActionService;
@@ -92,6 +95,43 @@ class ApprovedGoogleActionsTest extends TestCase
         $this->assertNotSame($first->idempotency_key, $second->idempotency_key);
         $this->assertDatabaseCount('assistant_actions', 2);
         Http::assertSentCount(2);
+    }
+
+    public function test_global_and_profile_emergency_switches_block_new_actions(): void
+    {
+        $user = User::factory()->create();
+        $connector = $this->connector($user, [GmailWriteClient::SCOPE]);
+        $input = ['connector_account_id' => $connector->id, 'to' => 'recipient@example.com', 'subject' => 'Subject', 'body' => 'Body'];
+        Setting::set('maria_external_actions_enabled', false, 'maria_safety');
+        try {
+            app(ApprovedGoogleActionService::class)->requestEmail($user, $input);
+            $this->fail('Global emergency stop should block the request.');
+        } catch (ValidationException) {
+            $this->assertDatabaseCount('approvals', 0);
+        }
+
+        Setting::set('maria_external_actions_enabled', true, 'maria_safety');
+        AssistantProfile::create(['user_id' => $user->id, 'timezone' => 'Europe/Berlin', 'is_active' => true, 'external_actions_enabled' => false]);
+        $this->expectException(ValidationException::class);
+        app(ApprovedGoogleActionService::class)->requestEmail($user, $input);
+    }
+
+    public function test_ambiguous_provider_failure_creates_reconciliation_and_blocks_retry(): void
+    {
+        $user = User::factory()->create();
+        $connector = $this->connector($user, [GmailWriteClient::SCOPE]);
+        $service = app(ApprovedGoogleActionService::class);
+        $approval = $service->requestEmail($user, ['connector_account_id' => $connector->id, 'to' => 'recipient@example.com', 'subject' => 'Subject', 'body' => 'Body']);
+        app(ApprovalService::class)->approve($approval, $user, $approval->proposed_content);
+        Http::fake(['https://gmail.googleapis.com/*' => Http::response(['error' => 'timeout'], 500)]);
+
+        try {
+            $service->execute($approval->refresh(), $user);
+        } catch (\Throwable) {
+        }
+        $this->assertSame('pending', ActionReconciliation::first()->status);
+        $this->expectException(ValidationException::class);
+        $service->execute($approval->refresh(), $user);
     }
 
     private function connector(User $user, array $scopes): ConnectorAccount

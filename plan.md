@@ -38,10 +38,10 @@ Completed foundation work:
 - Read-only workflow run history and admin-only versioned prompt management.
 - Claims Registry with brand, freshness, and verification gating.
 - Draft-only Daily Five relationship recommendations with verified-source filtering, scoring, review decisions, and weekday scheduling.
+- Draft-only multi-channel content packages with brand separation, normalized duplicate prevention, attribution fields, and a hard Claims Registry gate.
 
 Next implementation target:
 
-- Content package drafting with the Claims Registry gate.
 - Approved Gmail sending and Calendar write actions behind exact-content approvals.
 
 ## 1. Objective

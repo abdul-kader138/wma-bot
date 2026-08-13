@@ -1,0 +1,9 @@
+@import url("maria-user-manual.css");
+
+@page {
+  @bottom-center {
+    color: #64748b;
+    content: "Maria Google Workspace Setup Guide  •  Page " counter(page) " of " counter(pages);
+    font-size: 9px;
+  }
+}

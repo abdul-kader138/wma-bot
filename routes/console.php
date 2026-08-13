@@ -5,6 +5,7 @@ use App\Jobs\Maria\GenerateBookPortfolioReview;
 use App\Jobs\Maria\GenerateDailyFive;
 use App\Jobs\Maria\GenerateEveningReview;
 use App\Jobs\Maria\GenerateMorningBrief;
+use App\Jobs\Maria\GenerateQualityReport;
 use App\Jobs\Maria\MonitorDeadlines;
 use App\Jobs\Maria\PrepareUpcomingMeetings;
 use App\Jobs\Maria\ReviewAgverseOpportunities;
@@ -109,3 +110,14 @@ Schedule::call(function () {
         }
     });
 })->everyMinute()->name('maria-acm-weekly-production')->withoutOverlapping();
+
+Schedule::call(function () {
+    AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
+        $local = now($profile->timezone);
+        $briefAt = $profile->morning_brief_at ? substr((string) $profile->morning_brief_at, 0, 5) : '07:30';
+        $reportAt = Carbon::createFromFormat('H:i', $briefAt, $profile->timezone)->addHours(2)->format('H:i');
+        if ($local->isMonday() && $local->format('H:i') === $reportAt && in_array('quality_report', $profile->enabled_workflows ?? [], true)) {
+            GenerateQualityReport::dispatch($profile->id, $local->startOfWeek()->toDateString());
+        }
+    });
+})->everyMinute()->name('maria-quality-report')->withoutOverlapping();

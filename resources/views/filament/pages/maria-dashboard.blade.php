@@ -93,6 +93,18 @@
         </x-filament::section>
     @endif
 
+    @if ($latestQualityReport)
+        <x-filament::section heading="Weekly Maria Quality Report">
+            <div class="grid gap-4 md:grid-cols-4">
+                <div class="rounded-lg bg-gray-50 p-4 dark:bg-white/5"><div class="text-sm text-gray-500">Completed workflows</div><div class="mt-2 text-2xl font-semibold">{{ $latestQualityReport->content['workflow_metrics']['completed'] ?? 0 }}</div></div>
+                <div class="rounded-lg bg-gray-50 p-4 dark:bg-white/5"><div class="text-sm text-gray-500">Failed workflows</div><div class="mt-2 text-2xl font-semibold">{{ $latestQualityReport->content['workflow_metrics']['failed'] ?? 0 }}</div></div>
+                <div class="rounded-lg bg-gray-50 p-4 dark:bg-white/5"><div class="text-sm text-gray-500">Recurring corrections</div><div class="mt-2 text-2xl font-semibold">{{ count($latestQualityReport->content['recurring_corrections'] ?? []) }}</div></div>
+                <div class="rounded-lg bg-gray-50 p-4 dark:bg-white/5"><div class="text-sm text-gray-500">Safety incidents</div><div class="mt-2 text-2xl font-semibold">{{ count($latestQualityReport->content['safety_incidents'] ?? []) }}</div></div>
+            </div>
+            <p class="mt-4 text-sm text-gray-600 dark:text-gray-300"><strong>Recommended improvement:</strong> {{ $latestQualityReport->content['recommended_improvement']['reason'] ?? 'Continue monitoring.' }}</p>
+        </x-filament::section>
+    @endif
+
     @if ($latestEveningReview)
         <x-filament::section heading="Latest Evening Review">
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

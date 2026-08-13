@@ -43,10 +43,11 @@ Completed foundation work:
 - Structured Book Portfolio records and an idempotent weekly review with exact identifiers, milestone risks, source gaps, and three highest-value actions.
 - Auditable Thursday Agverse opportunity ranking with verified facts separated from hypotheses and risk-aware next steps.
 - Configurable All Catholic Media weekly production plans with Claims Registry gating, owners, assets, approval deadlines, and draft publication schedules.
+- Weekly Maria Quality Reports with explicit estimate/verification labels, recurring correction tracking, safety incidents, and recommended improvements.
 
 Next implementation target:
 
-- Weekly Maria quality report and correction tracking.
+- External-action emergency stop, reconciliation workflow, and operational runbooks.
 
 ## 1. Objective
 

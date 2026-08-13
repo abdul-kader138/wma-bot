@@ -57,6 +57,7 @@ class MariaDashboard extends Page
             'latestEveningReview' => $this->owned(AssistantBrief::query())->where('type', 'evening')->latest('brief_date')->first(),
             'latestBookReview' => $this->owned(AssistantBrief::query())->where('type', 'book_portfolio')->latest('brief_date')->first(),
             'latestAgverseReview' => $this->owned(AssistantBrief::query())->where('type', 'agverse_opportunities')->latest('brief_date')->first(),
+            'latestQualityReport' => $this->owned(AssistantBrief::query())->where('type', 'quality_report')->latest('brief_date')->first(),
             'dailyFive' => (clone $relationships)->with('contact')->whereDate('recommendation_date', now()->toDateString())->orderByDesc('score')->limit(5)->get(),
         ];
     }

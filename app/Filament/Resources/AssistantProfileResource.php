@@ -54,6 +54,7 @@ class AssistantProfileResource extends Resource
                 'book_portfolio_review' => 'Weekly Book Portfolio Review',
                 'agverse_opportunity_review' => 'Thursday Agverse Opportunity Review',
                 'acm_weekly_production' => 'All Catholic Media Weekly Production',
+                'quality_report' => 'Weekly Maria Quality Report',
             ])->columnSpanFull(),
             Forms\Components\Textarea::make('voice_preferences')->columnSpanFull(),
             Forms\Components\Toggle::make('is_active')->required(),

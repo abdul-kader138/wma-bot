@@ -13,6 +13,7 @@ class WorkflowRun extends Model
         'source_gaps', 'structured_output', 'prompt_version', 'input_tokens',
         'output_tokens', 'estimated_cost', 'estimated_manual_minutes',
         'human_minutes', 'error', 'started_at', 'finished_at',
+        'verified_time_saved_minutes', 'time_saving_verified_at', 'time_saving_verified_by',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class WorkflowRun extends Model
             'estimated_cost' => 'decimal:6',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
+            'time_saving_verified_at' => 'datetime',
         ];
     }
 

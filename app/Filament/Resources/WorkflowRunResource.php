@@ -48,7 +48,15 @@ class WorkflowRunResource extends Resource
             Tables\Columns\TextColumn::make('started_at')->dateTime()->sortable(),
             Tables\Columns\TextColumn::make('finished_at')->dateTime(),
             Tables\Columns\TextColumn::make('estimated_cost')->money('USD'),
-        ])->defaultSort('started_at', 'desc')->actions([Tables\Actions\ViewAction::make()]);
+        ])->defaultSort('started_at', 'desc')->actions([
+            Tables\Actions\Action::make('verify_time_saving')->label('Verify time saved')->icon('heroicon-o-clock')->form([
+                Forms\Components\TextInput::make('human_minutes')->label('Actual human minutes spent')->numeric()->minValue(0)->required(),
+            ])->action(function (WorkflowRun $record, array $data): void {
+                $human = (int) $data['human_minutes'];
+                $record->update(['human_minutes' => $human, 'verified_time_saved_minutes' => max(0, $record->estimated_manual_minutes - $human), 'time_saving_verified_at' => now(), 'time_saving_verified_by' => auth()->id()]);
+            }),
+            Tables\Actions\ViewAction::make(),
+        ]);
     }
 
     public static function getPages(): array

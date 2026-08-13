@@ -9,7 +9,6 @@ use App\Filament\Widgets\ServiceRequestsChartWidget;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\WelcomeHeaderWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
-use Filament\Widgets\AccountWidget;
 
 class Dashboard extends BaseDashboard
 {

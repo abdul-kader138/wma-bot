@@ -35,8 +35,8 @@ class AssistantAlertResource extends Resource
             Tables\Columns\TextColumn::make('type')->badge(),
             Tables\Columns\TextColumn::make('message')->wrap()->searchable(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('first_seen_at')->dateTime()->sortable(),
-            Tables\Columns\TextColumn::make('last_seen_at')->dateTime()->sortable(),
+            Tables\Columns\TextColumn::make('first_seen_at')->dateTime('d/m/Y H:i')->sortable(),
+            Tables\Columns\TextColumn::make('last_seen_at')->dateTime('d/m/Y H:i')->sortable(),
         ])->defaultSort('last_seen_at', 'desc')->filters([
             Tables\Filters\SelectFilter::make('status')->options(['active' => 'Active', 'acknowledged' => 'Acknowledged', 'resolved' => 'Resolved'])->default('active'),
         ])->actions([

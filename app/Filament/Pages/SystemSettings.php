@@ -28,7 +28,8 @@ class SystemSettings extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?int    $navigationSort = 99;
+
+    protected static ?int $navigationSort = 99;
 
     public ?array $data = [];
 
@@ -73,48 +74,53 @@ class SystemSettings extends Page implements HasForms
     {
         $this->form->fill([
             // General
-            'app_name'         => Setting::get('app_name',         config('app.name', 'WMA Bot')),
-            'app_tagline'      => Setting::get('app_tagline',      ''),
-            'support_email'    => Setting::get('support_email',    ''),
+            'app_name' => Setting::get('app_name', config('app.name', 'WMA Bot')),
+            'app_tagline' => Setting::get('app_tagline', ''),
+            'support_email' => Setting::get('support_email', ''),
             'maintenance_mode' => Setting::get('maintenance_mode', false),
-            'admin_locale'     => Setting::get('admin_locale',     config('locales.default', 'en')),
+            'admin_locale' => Setting::get('admin_locale', config('locales.default', 'en')),
 
             // Security
             'two_factor_enabled' => Setting::get('two_factor_enabled', true),
 
             // Appearance
-            'admin_theme'            => Setting::get('admin_theme',            'amber'),
+            'admin_theme' => Setting::get('admin_theme', 'amber'),
             'admin_panel_theme_mode' => Setting::get('admin_panel_theme_mode', 'dark'),
-            'auth_theme_mode'        => Setting::get('auth_theme_mode',        'dark'),
-            'auth_background'        => Setting::get('auth_background',        'inherit'),
-            'app_logo'               => Setting::get('app_logo'),
-            'app_icon'               => Setting::get('app_icon'),
-            'login_image'            => Setting::get('login_image'),
-            'favicon'                => Setting::get('favicon'),
+            'auth_theme_mode' => Setting::get('auth_theme_mode', 'dark'),
+            'auth_background' => Setting::get('auth_background', 'inherit'),
+            'app_logo' => Setting::get('app_logo'),
+            'app_icon' => Setting::get('app_icon'),
+            'login_image' => Setting::get('login_image'),
+            'favicon' => Setting::get('favicon'),
 
             // WhatsApp / Messenger / Instagram
-            'whatsapp_verify_token'    => Setting::get('whatsapp_verify_token',    env('WHATSAPP_VERIFY_TOKEN', '')),
-            'messenger_verify_token'   => Setting::get('messenger_verify_token',   env('MESSENGER_VERIFY_TOKEN', '')),
-            'instagram_verify_token'   => Setting::get('instagram_verify_token',   env('INSTAGRAM_VERIFY_TOKEN', '')),
+            'whatsapp_verify_token' => Setting::get('whatsapp_verify_token', env('WHATSAPP_VERIFY_TOKEN', '')),
+            'messenger_verify_token' => Setting::get('messenger_verify_token', env('MESSENGER_VERIFY_TOKEN', '')),
+            'instagram_verify_token' => Setting::get('instagram_verify_token', env('INSTAGRAM_VERIFY_TOKEN', '')),
 
             // Claude AI
-            'claude_api_key'     => Setting::get('claude_api_key',     ''),
-            'claude_model'       => Setting::get('claude_model',        env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001')),
-            'claude_max_tokens'  => Setting::get('claude_max_tokens',   1024),
-            'claude_temperature' => Setting::get('claude_temperature',  0.7),
+            'claude_api_key' => Setting::get('claude_api_key', ''),
+            'claude_model' => Setting::get('claude_model', env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001')),
+            'claude_max_tokens' => Setting::get('claude_max_tokens', 1024),
+            'claude_temperature' => Setting::get('claude_temperature', 0.7),
             'claude_rate_limit_per_minute' => Setting::get('claude_rate_limit_per_minute', 50),
             'claude_max_messages_per_session' => Setting::get('claude_max_messages_per_session', 20),
             'claude_max_messages_per_day' => Setting::get('claude_max_messages_per_day', 100),
-            'claude_daily_global_cap'  => Setting::get('claude_daily_global_cap', 0),
+            'claude_daily_global_cap' => Setting::get('claude_daily_global_cap', 0),
+
+            // Google Workspace (secret intentionally never hydrated into the form)
+            'google_client_id' => Setting::get('google_client_id', config('services.google.client_id', '')),
+            'google_client_secret' => '',
+            'google_redirect_uri' => Setting::get('google_redirect_uri', config('services.google.redirect_uri', '')),
 
             // Bot Behaviour
             'faq_confidence_threshold' => Setting::get('faq_confidence_threshold', 0.7),
-            'bot_welcome_message'      => Setting::get('bot_welcome_message', [
+            'bot_welcome_message' => Setting::get('bot_welcome_message', [
                 'en' => 'Hello! How can I help you today?',
                 'it' => 'Ciao! Come posso aiutarti oggi?',
                 'bn' => 'হ্যালো! আজ আমি আপনাকে কীভাবে সাহায্য করতে পারি?',
             ]),
-            'bot_fallback_message'     => Setting::get('bot_fallback_message', [
+            'bot_fallback_message' => Setting::get('bot_fallback_message', [
                 'en' => "I'm sorry, I don't understand. Please contact our support team.",
                 'it' => 'Mi dispiace, non ho capito. Contatta il nostro team di supporto.',
                 'bn' => 'দুঃখিত, আমি বুঝতে পারিনি। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।',
@@ -126,18 +132,18 @@ class SystemSettings extends Page implements HasForms
             ]),
             'claude_daily_limit_message' => Setting::get('claude_daily_limit_message', [
                 'en' => "You've reached today's message limit. Please contact our support team, or try again tomorrow.",
-                'it' => "Hai raggiunto il limite di messaggi di oggi. Contatta il nostro supporto o riprova domani.",
+                'it' => 'Hai raggiunto il limite di messaggi di oggi. Contatta il nostro supporto o riprova domani.',
                 'bn' => 'আপনি আজকের মেসেজ সীমায় পৌঁছেছেন। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন, অথবা আগামীকাল আবার চেষ্টা করুন।',
             ]),
 
             // Email
-            'mail_from_name'    => Setting::get('mail_from_name',    config('mail.from.name', '')),
+            'mail_from_name' => Setting::get('mail_from_name', config('mail.from.name', '')),
             'mail_from_address' => Setting::get('mail_from_address', config('mail.from.address', '')),
-            'mail_host'         => Setting::get('mail_host',         ''),
-            'mail_port'         => Setting::get('mail_port',         587),
-            'mail_username'     => Setting::get('mail_username',     ''),
-            'mail_password'     => Setting::get('mail_password',     ''),
-            'mail_encryption'   => Setting::get('mail_encryption',   'tls'),
+            'mail_host' => Setting::get('mail_host', ''),
+            'mail_port' => Setting::get('mail_port', 587),
+            'mail_username' => Setting::get('mail_username', ''),
+            'mail_password' => Setting::get('mail_password', ''),
+            'mail_encryption' => Setting::get('mail_encryption', 'tls'),
             'staff_notification_email' => Setting::get('staff_notification_email', ''),
         ]);
     }
@@ -212,20 +218,20 @@ class SystemSettings extends Page implements HasForms
                                         ->label('Admin Panel Mode')
                                         ->helperText('Changes take effect after saving and refreshing.')
                                         ->options([
-                                            'light'         => 'Light',
-                                            'dark'          => 'Dark',
-                                            'system'        => 'System',
+                                            'light' => 'Light',
+                                            'dark' => 'Dark',
+                                            'system' => 'System',
                                             'high_contrast' => 'High Contrast',
-                                            'sepia'         => 'Sepia',
-                                            'midnight'      => 'Midnight',
+                                            'sepia' => 'Sepia',
+                                            'midnight' => 'Midnight',
                                         ])
                                         ->descriptions([
-                                            'light'         => 'Always show the admin panel in light mode.',
-                                            'dark'          => 'Always show the admin panel in dark mode.',
-                                            'system'        => "Follow the user's OS dark/light preference.",
+                                            'light' => 'Always show the admin panel in light mode.',
+                                            'dark' => 'Always show the admin panel in dark mode.',
+                                            'system' => "Follow the user's OS dark/light preference.",
                                             'high_contrast' => 'Stronger contrast dark mode for better accessibility.',
-                                            'sepia'         => 'Warm light theme with a soft paper-like tone.',
-                                            'midnight'      => 'Deeper blue-dark shell for a premium look.',
+                                            'sepia' => 'Warm light theme with a soft paper-like tone.',
+                                            'midnight' => 'Deeper blue-dark shell for a premium look.',
                                         ])
                                         ->inline()
                                         ->required(),
@@ -260,21 +266,21 @@ class SystemSettings extends Page implements HasForms
                                                 ->toArray()
                                         )
                                         ->descriptions([
-                                            'inherit'  => 'Use the selected admin theme as the auth background.',
+                                            'inherit' => 'Use the selected admin theme as the auth background.',
                                             'midnight' => 'Deep charcoal with subtle blue accents.',
-                                            'amber'    => 'Warm auction-house gold and black.',
-                                            'indigo'   => 'Premium blue-violet with a cool finish.',
-                                            'emerald'  => 'Dark green with a refined, modern feel.',
-                                            'violet'   => 'Rich purple tones with a luxury look.',
-                                            'sky'      => 'Cool blue gradient with a bright accent.',
-                                            'rose'     => 'Bold, energetic, and a little dramatic.',
-                                            'teal'     => 'Calm teal with a polished enterprise feel.',
-                                            'sunset'   => 'Amber-to-rose warmth with high contrast.',
+                                            'amber' => 'Warm auction-house gold and black.',
+                                            'indigo' => 'Premium blue-violet with a cool finish.',
+                                            'emerald' => 'Dark green with a refined, modern feel.',
+                                            'violet' => 'Rich purple tones with a luxury look.',
+                                            'sky' => 'Cool blue gradient with a bright accent.',
+                                            'rose' => 'Bold, energetic, and a little dramatic.',
+                                            'teal' => 'Calm teal with a polished enterprise feel.',
+                                            'sunset' => 'Amber-to-rose warmth with high contrast.',
                                             'graphite' => 'Neutral dark gray with a disciplined feel.',
-                                            'forest'   => 'Deep green with a premium organic feel.',
-                                            'ocean'    => 'Blue-teal blend with a clean modern finish.',
+                                            'forest' => 'Deep green with a premium organic feel.',
+                                            'ocean' => 'Blue-teal blend with a clean modern finish.',
                                             'lavender' => 'Soft purple with a premium, calm atmosphere.',
-                                            'gold'     => 'Bright gold with a classic, bold vibe.',
+                                            'gold' => 'Bright gold with a classic, bold vibe.',
                                         ])
                                         ->columns(3)
                                         ->required(),
@@ -392,8 +398,8 @@ class SystemSettings extends Page implements HasForms
                                             ->label('Model')
                                             ->options([
                                                 'claude-haiku-4-5-20251001' => 'Haiku 4.5 (Fast & Cheap)',
-                                                'claude-sonnet-4-6'         => 'Sonnet 4.6 (Balanced)',
-                                                'claude-opus-4-8'           => 'Opus 4.8 (Most Capable)',
+                                                'claude-sonnet-4-6' => 'Sonnet 4.6 (Balanced)',
+                                                'claude-opus-4-8' => 'Opus 4.8 (Most Capable)',
                                             ])
                                             ->required(),
 
@@ -447,6 +453,18 @@ class SystemSettings extends Page implements HasForms
                                 ]),
                         ]),
 
+                    Tab::make('Google Workspace')
+                        ->icon('heroicon-o-cloud')
+                        ->schema([
+                            Section::make('Google OAuth')
+                                ->description('Configure Google Workspace OAuth here. Environment variables remain fallback values. The saved client secret is encrypted and is never displayed again.')
+                                ->schema([
+                                    TextInput::make('google_client_id')->label('Client ID')->maxLength(500)->autocomplete(false),
+                                    TextInput::make('google_client_secret')->label('Client Secret')->password()->revealable()->autocomplete('new-password')->helperText(Setting::get('google_client_secret') ? 'A client secret is stored. Leave blank to keep it unchanged.' : 'No client secret is stored in Settings; the environment fallback will be used.'),
+                                    TextInput::make('google_redirect_uri')->label('Redirect URI')->url()->maxLength(1000)->helperText('Copy this exact URI into the Google Cloud OAuth client.'),
+                                ]),
+                        ]),
+
                     // ── Bot Behaviour ─────────────────────────────────────────
                     Tab::make(__('admin.settings.tabs.bot'))
                         ->icon('heroicon-o-cpu-chip')
@@ -464,12 +482,11 @@ class SystemSettings extends Page implements HasForms
                                     ->description('Sent right after the customer picks a service, in their chosen language.')
                                     ->schema(
                                         collect(config('services_bot.languages', ['en' => 'English']))
-                                            ->map(fn ($name, $code) =>
-                                                Textarea::make("bot_welcome_message.{$code}")
-                                                    ->label($name)
-                                                    ->rows(2)
-                                                    ->maxLength(1000)
-                                                    ->required($code === 'en')
+                                            ->map(fn ($name, $code) => Textarea::make("bot_welcome_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
                                             )->values()->toArray()
                                     )
                                     ->columns(count(config('services_bot.languages', ['en' => 'English']))),
@@ -478,12 +495,11 @@ class SystemSettings extends Page implements HasForms
                                     ->description('Sent when Claude cannot produce a reply, in the customer\'s chosen language.')
                                     ->schema(
                                         collect(config('services_bot.languages', ['en' => 'English']))
-                                            ->map(fn ($name, $code) =>
-                                                Textarea::make("bot_fallback_message.{$code}")
-                                                    ->label($name)
-                                                    ->rows(2)
-                                                    ->maxLength(1000)
-                                                    ->required($code === 'en')
+                                            ->map(fn ($name, $code) => Textarea::make("bot_fallback_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
                                             )->values()->toArray()
                                     )
                                     ->columns(count(config('services_bot.languages', ['en' => 'English']))),
@@ -492,12 +508,11 @@ class SystemSettings extends Page implements HasForms
                                     ->description('Sent when a customer hits the "Max AI Replies per Session" cap set in the Claude AI tab, in the customer\'s chosen language.')
                                     ->schema(
                                         collect(config('services_bot.languages', ['en' => 'English']))
-                                            ->map(fn ($name, $code) =>
-                                                Textarea::make("claude_session_limit_message.{$code}")
-                                                    ->label($name)
-                                                    ->rows(2)
-                                                    ->maxLength(1000)
-                                                    ->required($code === 'en')
+                                            ->map(fn ($name, $code) => Textarea::make("claude_session_limit_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
                                             )->values()->toArray()
                                     )
                                     ->columns(count(config('services_bot.languages', ['en' => 'English']))),
@@ -506,12 +521,11 @@ class SystemSettings extends Page implements HasForms
                                     ->description('Sent when a customer hits the "Max AI Replies per Phone/Day" cap set in the Claude AI tab, in the customer\'s chosen language.')
                                     ->schema(
                                         collect(config('services_bot.languages', ['en' => 'English']))
-                                            ->map(fn ($name, $code) =>
-                                                Textarea::make("claude_daily_limit_message.{$code}")
-                                                    ->label($name)
-                                                    ->rows(2)
-                                                    ->maxLength(1000)
-                                                    ->required($code === 'en')
+                                            ->map(fn ($name, $code) => Textarea::make("claude_daily_limit_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
                                             )->values()->toArray()
                                     )
                                     ->columns(count(config('services_bot.languages', ['en' => 'English']))),
@@ -590,48 +604,57 @@ class SystemSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         $groups = [
-            'app_name'                 => 'general',
-            'app_tagline'              => 'general',
-            'support_email'            => 'general',
-            'maintenance_mode'         => 'general',
-            'admin_locale'             => 'general',
-            'two_factor_enabled'       => 'security',
-            'admin_theme'              => 'appearance',
-            'admin_panel_theme_mode'   => 'appearance',
-            'auth_theme_mode'          => 'appearance',
-            'auth_background'          => 'appearance',
-            'app_logo'                 => 'appearance',
-            'app_icon'                 => 'appearance',
-            'login_image'              => 'appearance',
-            'favicon'                  => 'appearance',
-            'whatsapp_verify_token'    => 'whatsapp',
-            'messenger_verify_token'   => 'whatsapp',
-            'instagram_verify_token'   => 'whatsapp',
-            'claude_api_key'           => 'claude',
-            'claude_model'             => 'claude',
-            'claude_max_tokens'        => 'claude',
-            'claude_temperature'       => 'claude',
+            'app_name' => 'general',
+            'app_tagline' => 'general',
+            'support_email' => 'general',
+            'maintenance_mode' => 'general',
+            'admin_locale' => 'general',
+            'two_factor_enabled' => 'security',
+            'admin_theme' => 'appearance',
+            'admin_panel_theme_mode' => 'appearance',
+            'auth_theme_mode' => 'appearance',
+            'auth_background' => 'appearance',
+            'app_logo' => 'appearance',
+            'app_icon' => 'appearance',
+            'login_image' => 'appearance',
+            'favicon' => 'appearance',
+            'whatsapp_verify_token' => 'whatsapp',
+            'messenger_verify_token' => 'whatsapp',
+            'instagram_verify_token' => 'whatsapp',
+            'claude_api_key' => 'claude',
+            'claude_model' => 'claude',
+            'claude_max_tokens' => 'claude',
+            'claude_temperature' => 'claude',
             'claude_rate_limit_per_minute' => 'claude',
             'claude_max_messages_per_session' => 'claude',
             'claude_max_messages_per_day' => 'claude',
-            'claude_daily_global_cap'  => 'claude',
+            'claude_daily_global_cap' => 'claude',
+            'google_client_id' => 'google',
+            'google_redirect_uri' => 'google',
             'faq_confidence_threshold' => 'bot',
-            'bot_welcome_message'      => 'bot',
-            'bot_fallback_message'     => 'bot',
+            'bot_welcome_message' => 'bot',
+            'bot_fallback_message' => 'bot',
             'claude_session_limit_message' => 'bot',
             'claude_daily_limit_message' => 'bot',
-            'mail_from_name'           => 'email',
-            'mail_from_address'        => 'email',
-            'mail_host'                => 'email',
-            'mail_port'                => 'email',
-            'mail_username'            => 'email',
-            'mail_password'            => 'email',
-            'mail_encryption'          => 'email',
+            'mail_from_name' => 'email',
+            'mail_from_address' => 'email',
+            'mail_host' => 'email',
+            'mail_port' => 'email',
+            'mail_username' => 'email',
+            'mail_password' => 'email',
+            'mail_encryption' => 'email',
             'staff_notification_email' => 'email',
         ];
 
+        $googleSecret = trim((string) ($data['google_client_secret'] ?? ''));
+        unset($data['google_client_secret']);
+
         foreach ($data as $key => $value) {
             Setting::set($key, $value ?? '', $groups[$key] ?? 'general');
+        }
+
+        if ($googleSecret !== '') {
+            Setting::setSecret('google_client_secret', $googleSecret, 'google');
         }
 
         // Apply new default locale immediately for this session (only if user hasn't overridden it)

@@ -34,8 +34,8 @@ class MeetingResource extends Resource
     {
         return $form->schema([
             Forms\Components\TextInput::make('title')->disabled(),
-            Forms\Components\DateTimePicker::make('starts_at')->disabled(),
-            Forms\Components\DateTimePicker::make('ends_at')->disabled(),
+            Forms\Components\DateTimePicker::make('starts_at')->displayFormat('d/m/Y H:i')->disabled(),
+            Forms\Components\DateTimePicker::make('ends_at')->displayFormat('d/m/Y H:i')->disabled(),
             Forms\Components\TextInput::make('preparation_status')->disabled(),
             Forms\Components\KeyValue::make('brief')->disabled()->columnSpanFull(),
             Forms\Components\Textarea::make('objective')->columnSpanFull(),
@@ -48,7 +48,7 @@ class MeetingResource extends Resource
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('title')->searchable(),
-            Tables\Columns\TextColumn::make('starts_at')->dateTime()->sortable(),
+            Tables\Columns\TextColumn::make('starts_at')->dateTime('d/m/Y H:i')->sortable(),
             Tables\Columns\TextColumn::make('tier')->badge()->placeholder('—'),
             Tables\Columns\TextColumn::make('preparation_status')->badge(),
             Tables\Columns\IconColumn::make('brief')->boolean(),

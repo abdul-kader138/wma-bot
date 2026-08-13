@@ -10,6 +10,8 @@ use Throwable;
 
 class GoogleWorkspaceClient
 {
+    public function __construct(private readonly GoogleConfiguration $configuration) {}
+
     public function get(ConnectorAccount $connector, string $url, array $query = []): array
     {
         try {
@@ -51,8 +53,8 @@ class GoogleWorkspaceClient
                 throw new RuntimeException('Google connection must be re-authorized.');
             }
             $token = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-                'client_id' => config('services.google.client_id'),
-                'client_secret' => config('services.google.client_secret'),
+                'client_id' => $this->configuration->clientId(),
+                'client_secret' => $this->configuration->clientSecret(),
                 'refresh_token' => $connector->refresh_token,
                 'grant_type' => 'refresh_token',
             ])->throw()->json();

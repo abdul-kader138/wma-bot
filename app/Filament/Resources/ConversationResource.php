@@ -92,11 +92,11 @@ class ConversationResource extends Resource
 
                     TextEntry::make('created_at')
                         ->label(__('admin.conversation.fields.started_at'))
-                        ->dateTime(),
+                        ->dateTime('d/m/Y H:i'),
 
                     TextEntry::make('updated_at')
                         ->label(__('admin.conversation.fields.last_activity'))
-                        ->dateTime(),
+                        ->dateTime('d/m/Y H:i'),
                 ])
                 ->columns(3),
 
@@ -166,7 +166,7 @@ class ConversationResource extends Resource
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('admin.conversation.fields.last_activity'))
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->recordUrl(fn (Conversation $record) => static::getUrl('view', ['record' => $record]))

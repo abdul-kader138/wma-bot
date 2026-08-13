@@ -46,6 +46,7 @@ Completed foundation work:
 - Weekly Maria Quality Reports with explicit estimate/verification labels, recurring correction tracking, safety incidents, and recommended improvements.
 - Global and per-profile external-action stops, provider reconciliation, audited control changes, and production/recovery runbooks.
 - Evidence-based 30-day Acceptance Dashboard, auditable snapshots, explicit unmeasured states, and final handover checklist.
+- Encrypted Google OAuth administration with environment fallback, consistent `dd/mm/yyyy` display formatting, and reduced Claims Registry/admin query load.
 
 Next implementation target:
 

@@ -11,6 +11,8 @@ use RuntimeException;
 
 class GoogleOAuthService
 {
+    public function __construct(private readonly GoogleConfiguration $configuration) {}
+
     public function authorizationRedirect(bool $includeWriteScopes = false): RedirectResponse
     {
         $this->assertConfigured();
@@ -24,7 +26,7 @@ class GoogleOAuthService
         }
 
         return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query([
-            'client_id' => config('services.google.client_id'),
+            'client_id' => $this->configuration->clientId(),
             'redirect_uri' => $this->redirectUri(),
             'response_type' => 'code',
             'scope' => implode(' ', $scopes),
@@ -49,8 +51,8 @@ class GoogleOAuthService
 
         $token = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'code' => $code,
-            'client_id' => config('services.google.client_id'),
-            'client_secret' => config('services.google.client_secret'),
+            'client_id' => $this->configuration->clientId(),
+            'client_secret' => $this->configuration->clientSecret(),
             'redirect_uri' => $this->redirectUri(),
             'grant_type' => 'authorization_code',
         ])->throw()->json();
@@ -85,12 +87,12 @@ class GoogleOAuthService
 
     private function redirectUri(): string
     {
-        return config('services.google.redirect_uri') ?: route('panel-api.connectors.google.callback');
+        return $this->configuration->redirectUri() ?: route('panel-api.connectors.google.callback');
     }
 
     private function assertConfigured(): void
     {
-        if (! config('services.google.client_id') || ! config('services.google.client_secret')) {
+        if (! $this->configuration->clientId() || ! $this->configuration->clientSecret()) {
             throw new RuntimeException('Google OAuth credentials are not configured.');
         }
     }

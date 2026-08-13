@@ -12,17 +12,20 @@ class ClaimsVerificationService
     {
         $matches = [];
         $blocked = [];
+        $candidates = Claim::where('user_id', $owner->id)
+            ->where('status', 'verified')
+            ->where(fn ($query) => $query->whereNull('recheck_at')->orWhere('recheck_at', '>', now()))
+            ->get()
+            ->filter(function (Claim $claim) use ($brand) {
+                $brands = $claim->permitted_brands ?? [];
+
+                return $brands === [] || in_array($brand, $brands, true);
+            })
+            ->keyBy(fn (Claim $claim) => $this->normalize($claim->claim_text));
 
         foreach ($claimTexts as $text) {
             $normalized = $this->normalize($text);
-            $claim = Claim::where('user_id', $owner->id)->get()->first(function (Claim $candidate) use ($normalized, $brand) {
-                $brands = $candidate->permitted_brands ?? [];
-
-                return $this->normalize($candidate->claim_text) === $normalized
-                    && $candidate->status === 'verified'
-                    && ($candidate->recheck_at === null || $candidate->recheck_at->isFuture())
-                    && ($brands === [] || in_array($brand, $brands, true));
-            });
+            $claim = $candidates->get($normalized);
 
             if ($claim) {
                 $matches[] = ['text' => $text, 'claim_id' => $claim->id, 'source_url' => $claim->source_url];

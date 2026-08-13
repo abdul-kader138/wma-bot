@@ -37,8 +37,8 @@ class ClaimResource extends Resource
             Forms\Components\TextInput::make('subject')->required(),
             Forms\Components\TextInput::make('category')->required(),
             Forms\Components\TextInput::make('source_url')->url()->columnSpanFull(),
-            Forms\Components\DateTimePicker::make('verified_at'),
-            Forms\Components\DateTimePicker::make('recheck_at'),
+            Forms\Components\DateTimePicker::make('verified_at')->displayFormat('d/m/Y H:i'),
+            Forms\Components\DateTimePicker::make('recheck_at')->displayFormat('d/m/Y H:i'),
             Forms\Components\TagsInput::make('permitted_brands')->suggestions(['Fr. Morson', 'All Catholic Media', 'Agverse AI UAE', 'Books'])->columnSpanFull(),
             Forms\Components\Select::make('status')->options(['unverified' => 'Unverified', 'verified' => 'Verified', 'expired' => 'Expired', 'rejected' => 'Rejected'])->required(),
             Forms\Components\Textarea::make('notes')->columnSpanFull(),
@@ -52,7 +52,7 @@ class ClaimResource extends Resource
             Tables\Columns\TextColumn::make('subject')->searchable(),
             Tables\Columns\TextColumn::make('category')->badge(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('recheck_at')->dateTime()->sortable()->placeholder('No expiry'),
+            Tables\Columns\TextColumn::make('recheck_at')->dateTime('d/m/Y H:i')->sortable()->placeholder('No expiry'),
         ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 

@@ -27,6 +27,8 @@ class RelationshipRecommendationResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
+        $query->with(['contact:id,full_name,organization,tier', 'reviewer:id,name']);
+
         return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
     }
 
@@ -47,7 +49,7 @@ class RelationshipRecommendationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('recommendation_date')->date()->sortable(),
+            Tables\Columns\TextColumn::make('recommendation_date')->date('d/m/Y')->sortable(),
             Tables\Columns\TextColumn::make('contact.full_name')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('contact.organization')->searchable(),
             Tables\Columns\TextColumn::make('contact.tier')->label('Tier')->badge(),

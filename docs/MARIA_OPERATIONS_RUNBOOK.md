@@ -32,6 +32,8 @@
 3. Rotate the Google OAuth client secret if client credentials may be compromised and update production secrets without committing them.
 4. Reconnect first with read scopes; grant approved-write scopes only when operationally required.
 
+Google Client ID, encrypted Client Secret, and Redirect URI can be managed under **System Settings → Google Workspace**. Environment variables remain fallback values for recovery. Saving an empty client-secret field preserves the stored secret.
+
 ## Queue and scheduler recovery
 
 1. Confirm the scheduler invokes `php artisan schedule:run` every minute.

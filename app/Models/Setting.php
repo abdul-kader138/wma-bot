@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 
 class Setting extends Model
 {
@@ -21,10 +22,10 @@ class Setting extends Model
     {
         return match ($this->type) {
             'integer' => (int) $this->value,
-            'float'   => (float) $this->value,
+            'float' => (float) $this->value,
             'boolean' => filter_var($this->value, FILTER_VALIDATE_BOOLEAN),
-            'json'    => json_decode($this->value, true),
-            default   => $this->value,
+            'json' => json_decode($this->value, true),
+            default => $this->value,
         };
     }
 
@@ -50,6 +51,25 @@ class Setting extends Model
 
         static::updateOrCreate(['key' => $key], $attributes);
         Cache::forget("setting:{$key}");
+    }
+
+    public static function getSecret(string $key, mixed $default = null): mixed
+    {
+        $encrypted = static::get($key);
+        if (blank($encrypted)) {
+            return $default;
+        }
+
+        try {
+            return Crypt::decryptString((string) $encrypted);
+        } catch (\Throwable) {
+            return $default;
+        }
+    }
+
+    public static function setSecret(string $key, string $value, string $group = 'security'): void
+    {
+        static::set($key, Crypt::encryptString($value), $group);
     }
 
     public static function flushAll(): void

@@ -58,7 +58,7 @@ class ContentItemResource extends Resource
             Tables\Columns\TextColumn::make('source_idea')->limit(70)->searchable(),
             Tables\Columns\TextColumn::make('content_pillar')->searchable(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('generated_at')->dateTime()->sortable()->placeholder('Not generated'),
+            Tables\Columns\TextColumn::make('generated_at')->dateTime('d/m/Y H:i')->sortable()->placeholder('Not generated'),
         ])->defaultSort('created_at', 'desc')->actions([
             Tables\Actions\Action::make('generate')
                 ->label('Generate package')->icon('heroicon-o-sparkles')

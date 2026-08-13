@@ -41,7 +41,7 @@ class PromptVersionResource extends Resource
             Tables\Columns\TextColumn::make('version')->searchable(),
             Tables\Columns\IconColumn::make('is_active')->boolean(),
             Tables\Columns\TextColumn::make('creator.name')->label('Author'),
-            Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
+            Tables\Columns\TextColumn::make('updated_at')->dateTime('d/m/Y H:i')->sortable(),
         ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 

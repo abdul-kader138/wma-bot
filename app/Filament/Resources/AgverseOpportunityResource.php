@@ -44,7 +44,7 @@ class AgverseOpportunityResource extends Resource
             Forms\Components\TagsInput::make('hypotheses')->helperText('Unverified assumptions must remain here.')->columnSpanFull(),
             Forms\Components\KeyValue::make('evidence_links')->keyLabel('Evidence')->valueLabel('URL')->columnSpanFull(),
             Forms\Components\Textarea::make('next_step')->columnSpanFull(), Forms\Components\TextInput::make('next_step_owner'),
-            Forms\Components\DateTimePicker::make('next_step_at'), Forms\Components\Toggle::make('approval_required'),
+            Forms\Components\DateTimePicker::make('next_step_at')->displayFormat('d/m/Y H:i'), Forms\Components\Toggle::make('approval_required'),
             Forms\Components\Select::make('stage')->options(array_combine($stages = ['research', 'qualifying', 'proposal', 'negotiation', 'won', 'lost'], $stages))->required(),
             Forms\Components\Select::make('status')->options(['active' => 'Active', 'on_hold' => 'On hold', 'completed' => 'Completed', 'archived' => 'Archived'])->required(),
         ])->columns(2);
@@ -55,7 +55,7 @@ class AgverseOpportunityResource extends Resource
         return $table->columns([
             Tables\Columns\TextColumn::make('name')->searchable()->sortable(), Tables\Columns\TextColumn::make('organization')->searchable(),
             Tables\Columns\TextColumn::make('expected_value')->money(fn ($record) => $record->currency)->sortable(), Tables\Columns\TextColumn::make('priority_score')->sortable()->badge(),
-            Tables\Columns\TextColumn::make('stage')->badge(), Tables\Columns\TextColumn::make('next_step_at')->dateTime()->sortable(), Tables\Columns\IconColumn::make('approval_required')->boolean(),
+            Tables\Columns\TextColumn::make('stage')->badge(), Tables\Columns\TextColumn::make('next_step_at')->dateTime('d/m/Y H:i')->sortable(), Tables\Columns\IconColumn::make('approval_required')->boolean(),
         ])->defaultSort('priority_score', 'desc')->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 

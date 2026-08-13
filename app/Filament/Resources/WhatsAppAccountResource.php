@@ -64,7 +64,7 @@ class WhatsAppAccountResource extends Resource
                     Select::make('platform')
                         ->label('Platform')
                         ->options([
-                            'whatsapp'  => 'WhatsApp',
+                            'whatsapp' => 'WhatsApp',
                             'messenger' => 'Facebook Messenger',
                             'instagram' => 'Instagram',
                         ])
@@ -155,7 +155,7 @@ class WhatsAppAccountResource extends Resource
                     ->label('Platform')
                     ->colors([
                         'success' => 'whatsapp',
-                        'info'    => 'messenger',
+                        'info' => 'messenger',
                         'warning' => 'instagram',
                     ]),
 
@@ -199,9 +199,9 @@ class WhatsAppAccountResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => ListWhatsAppAccounts::route('/'),
+            'index' => ListWhatsAppAccounts::route('/'),
             'create' => CreateWhatsAppAccount::route('/create'),
-            'edit'   => EditWhatsAppAccount::route('/{record}/edit'),
+            'edit' => EditWhatsAppAccount::route('/{record}/edit'),
         ];
     }
 }

@@ -10,8 +10,8 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class ServiceRequestResource extends Resource
 {
@@ -51,9 +51,9 @@ class ServiceRequestResource extends Resource
                 Forms\Components\Select::make('status')
                     ->label(__('admin.service_request.fields.status'))
                     ->options([
-                        'new'         => __('admin.service_request.status.new'),
+                        'new' => __('admin.service_request.status.new'),
                         'in_progress' => __('admin.service_request.status.in_progress'),
-                        'done'        => __('admin.service_request.status.done'),
+                        'done' => __('admin.service_request.status.done'),
                     ])
                     ->required(),
 
@@ -89,7 +89,7 @@ class ServiceRequestResource extends Resource
                     ->label('Platform')
                     ->colors([
                         'success' => 'whatsapp',
-                        'info'    => 'messenger',
+                        'info' => 'messenger',
                         'warning' => 'instagram',
                     ])
                     ->sortable(),
@@ -107,7 +107,7 @@ class ServiceRequestResource extends Resource
                     ->label(__('admin.service_request.fields.status'))
                     ->formatStateUsing(fn (string $state) => __("admin.service_request.status.{$state}"))
                     ->colors([
-                        'danger'  => 'new',
+                        'danger' => 'new',
                         'warning' => 'in_progress',
                         'success' => 'done',
                     ])
@@ -115,12 +115,12 @@ class ServiceRequestResource extends Resource
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('admin.service_request.fields.received'))
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('admin.service_request.fields.last_updated'))
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -132,9 +132,9 @@ class ServiceRequestResource extends Resource
                 SelectFilter::make('status')
                     ->label(__('admin.service_request.fields.status'))
                     ->options([
-                        'new'         => __('admin.service_request.status.new'),
+                        'new' => __('admin.service_request.status.new'),
                         'in_progress' => __('admin.service_request.status.in_progress'),
-                        'done'        => __('admin.service_request.status.done'),
+                        'done' => __('admin.service_request.status.done'),
                     ]),
                 SelectFilter::make('service')
                     ->label(__('admin.service_request.fields.service'))
@@ -145,7 +145,7 @@ class ServiceRequestResource extends Resource
                             // Slugs are only unique per account, so label each option with
                             // its account name to disambiguate before the account filter is applied.
                             $s->slug => ($s->label[app()->getLocale()] ?? $s->label['en'] ?? $s->slug)
-                                . ' (' . ($s->whatsAppAccount?->name ?? '—') . ')',
+                                .' ('.($s->whatsAppAccount?->name ?? '—').')',
                         ])),
                 SelectFilter::make('whatsapp_account_id')
                     ->label(__('admin.whatsapp_account.label'))
@@ -154,7 +154,7 @@ class ServiceRequestResource extends Resource
                 SelectFilter::make('platform')
                     ->label('Platform')
                     ->options([
-                        'whatsapp'  => 'WhatsApp',
+                        'whatsapp' => 'WhatsApp',
                         'messenger' => 'Facebook Messenger',
                         'instagram' => 'Instagram',
                     ]),
@@ -194,7 +194,7 @@ class ServiceRequestResource extends Resource
     {
         return [
             'index' => Pages\ListServiceRequests::route('/'),
-            'edit'  => Pages\EditServiceRequest::route('/{record}/edit'),
+            'edit' => Pages\EditServiceRequest::route('/{record}/edit'),
         ];
     }
 

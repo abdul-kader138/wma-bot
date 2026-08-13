@@ -48,7 +48,7 @@ class AuditLogResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')->label(__('admin.audit_log.fields.time'))->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->label(__('admin.audit_log.fields.time'))->dateTime('d/m/Y H:i')->sortable(),
                 Tables\Columns\TextColumn::make('actor.name')->label(__('admin.audit_log.fields.actor'))->searchable()->placeholder('System'),
                 Tables\Columns\TextColumn::make('owner.name')->label(__('admin.audit_log.fields.owner'))->searchable()->placeholder('—'),
                 Tables\Columns\TextColumn::make('category')->badge()->sortable(),

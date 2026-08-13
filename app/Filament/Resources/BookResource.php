@@ -39,12 +39,12 @@ class BookResource extends MariaResource
             Forms\Components\TextInput::make('edition'), Forms\Components\Select::make('stage')->options(array_combine($stages, array_map(fn ($stage) => str($stage)->headline()->toString(), $stages)))->required(),
             Forms\Components\TextInput::make('manuscript_url')->url()->columnSpanFull(),
             Forms\Components\TextInput::make('current_milestone'), Forms\Components\TextInput::make('milestone_owner'),
-            Forms\Components\DateTimePicker::make('milestone_due_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')), Forms\Components\DatePicker::make('publication_target')->displayFormat(config('app.display_date_format', 'd/m/Y')),
+            Forms\Components\DatePicker::make('milestone_due_at')->displayFormat(config('app.display_date_format', 'd/m/Y')), Forms\Components\DatePicker::make('publication_target')->displayFormat(config('app.display_date_format', 'd/m/Y')),
             Forms\Components\Textarea::make('blocker')->columnSpanFull(),
             Forms\Components\KeyValue::make('contributors')->keyLabel('Contributor')->valueLabel('Status')->columnSpanFull(),
             Forms\Components\TextInput::make('marketing_status'),
             Forms\Components\Select::make('status')->options(['active' => 'Active', 'on_hold' => 'On hold', 'completed' => 'Completed', 'archived' => 'Archived'])->required(),
-            Forms\Components\Textarea::make('next_action')->columnSpanFull(), Forms\Components\DateTimePicker::make('next_action_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
+            Forms\Components\Textarea::make('next_action')->columnSpanFull(), Forms\Components\DatePicker::make('next_action_at')->displayFormat(config('app.display_date_format', 'd/m/Y')),
         ])->columns(2);
     }
 
@@ -54,7 +54,7 @@ class BookResource extends MariaResource
             Tables\Columns\TextColumn::make('exact_title')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('edition')->searchable()->placeholder('Unspecified'),
             Tables\Columns\TextColumn::make('stage')->badge(), Tables\Columns\TextColumn::make('current_milestone')->limit(40),
-            Tables\Columns\TextColumn::make('milestone_owner'), Tables\Columns\TextColumn::make('milestone_due_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
+            Tables\Columns\TextColumn::make('milestone_owner'), Tables\Columns\TextColumn::make('milestone_due_at')->date(config('app.display_date_format', 'd/m/Y'))->sortable(),
             Tables\Columns\IconColumn::make('blocker')->label('Blocked')->boolean(),
             Tables\Columns\TextColumn::make('status')->badge(),
         ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);

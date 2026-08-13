@@ -41,8 +41,8 @@ class MariaProjectResource extends MariaResource
                 Forms\Components\Select::make('confidentiality')->options(['public' => 'Public', 'internal' => 'Internal', 'confidential' => 'Confidential', 'restricted' => 'Restricted'])->required(),
                 Forms\Components\TextInput::make('owner_name')->required(),
                 Forms\Components\Textarea::make('next_action')->required()->columnSpanFull(),
-                Forms\Components\DateTimePicker::make('next_action_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i'))->required(),
-                Forms\Components\DateTimePicker::make('deadline_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
+                Forms\Components\DatePicker::make('next_action_at')->displayFormat(config('app.display_date_format', 'd/m/Y'))->required(),
+                Forms\Components\DatePicker::make('deadline_at')->displayFormat(config('app.display_date_format', 'd/m/Y')),
                 Forms\Components\Select::make('status')->options(['completed' => 'Completed', 'awaiting_approval' => 'Awaiting Approval', 'waiting' => 'Waiting on Another Person', 'scheduled' => 'Scheduled', 'blocked' => 'Blocked'])->required(),
                 Forms\Components\Textarea::make('blocker')->columnSpanFull(),
             ])->columns(2),
@@ -56,8 +56,8 @@ class MariaProjectResource extends MariaResource
             Tables\Columns\TextColumn::make('domain')->badge(),
             Tables\Columns\TextColumn::make('priority')->badge(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('next_action_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
-            Tables\Columns\TextColumn::make('deadline_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable(),
+            Tables\Columns\TextColumn::make('next_action_at')->date(config('app.display_date_format', 'd/m/Y'))->sortable(),
+            Tables\Columns\TextColumn::make('deadline_at')->date(config('app.display_date_format', 'd/m/Y'))->sortable(),
         ])->defaultSort('next_action_at')->actions([
             Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make(),
         ]);

@@ -54,23 +54,25 @@ class DeadlineMonitorService
 
     private function taskCandidate(MariaTask $task, $now): array
     {
-        $overdue = $task->due_at?->lt($now) ?? false;
+        $overdue = $task->due_at?->lt($now->copy()->startOfDay()) ?? false;
 
         return [
             'type' => $task->status === 'waiting' ? 'waiting_followup' : 'task_deadline',
             'severity' => $overdue ? 'high' : 'normal', 'subject_type' => MariaTask::class, 'subject_id' => $task->id,
             'message' => $overdue ? "Overdue: {$task->task}" : ($task->status === 'waiting' ? "Waiting item needs review: {$task->task}" : "Due soon: {$task->task}"),
-            'state' => [$task->status, $task->due_at?->toIso8601String(), $task->follow_up_at?->toIso8601String()],
+            'state' => [$task->status, $task->due_at?->toDateString(), $task->follow_up_at?->toDateString()],
         ];
     }
 
     private function projectCandidate(MariaProject $project, $now): array
     {
+        $overdue = $project->deadline_at->lt($now->copy()->startOfDay());
+
         return [
-            'type' => 'project_deadline', 'severity' => $project->deadline_at->lt($now) ? 'high' : 'normal',
+            'type' => 'project_deadline', 'severity' => $overdue ? 'high' : 'normal',
             'subject_type' => MariaProject::class, 'subject_id' => $project->id,
-            'message' => ($project->deadline_at->lt($now) ? 'Overdue project: ' : 'Project deadline approaching: ').$project->name,
-            'state' => [$project->stage, $project->status, $project->deadline_at->toIso8601String()],
+            'message' => ($overdue ? 'Overdue project: ' : 'Project deadline approaching: ').$project->name,
+            'state' => [$project->stage, $project->status, $project->deadline_at->toDateString()],
         ];
     }
 }

@@ -10,11 +10,12 @@ class ClaimsVerificationService
     /** @return array{allowed:bool,matches:array,blocked_claims:array} */
     public function verify(User $owner, array $claimTexts, string $brand): array
     {
+        $today = now($owner->assistantProfile?->timezone ?? config('app.timezone'))->toDateString();
         $matches = [];
         $blocked = [];
         $candidates = Claim::where('user_id', $owner->id)
             ->where('status', 'verified')
-            ->where(fn ($query) => $query->whereNull('recheck_at')->orWhere('recheck_at', '>', now()))
+            ->where(fn ($query) => $query->whereNull('recheck_at')->orWhereDate('recheck_at', '>=', $today))
             ->get()
             ->filter(function (Claim $claim) use ($brand) {
                 $brands = $claim->permitted_brands ?? [];

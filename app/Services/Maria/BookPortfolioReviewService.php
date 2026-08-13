@@ -35,7 +35,7 @@ class BookPortfolioReviewService
                 'id' => $book->id, 'exact_title' => $book->exact_title, 'subtitle' => $book->subtitle,
                 'credits' => $book->credits, 'edition' => $book->edition, 'stage' => $book->stage,
                 'milestone' => $book->current_milestone, 'owner' => $book->milestone_owner,
-                'date' => $book->milestone_due_at?->toIso8601String(), 'blocker' => $book->blocker,
+                'date' => $book->milestone_due_at?->toDateString(), 'blocker' => $book->blocker,
                 'contributors' => $book->contributors, 'publication_target' => $book->publication_target?->toDateString(),
                 'marketing_status' => $book->marketing_status, 'next_action' => $book->next_action,
             ])->all();

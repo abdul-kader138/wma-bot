@@ -41,7 +41,7 @@ class AgverseOpportunityReviewService
                 'scores' => ['value' => $item->value_score, 'strategic_fit' => $item->strategic_fit_score, 'urgency' => $item->urgency_score, 'evidence' => $item->evidence_score, 'effort' => $item->effort_score, 'risk' => $item->risk_score],
                 'verified_facts' => $item->verified_facts ?? [], 'hypotheses' => $item->hypotheses ?? [],
                 'evidence_links' => $item->evidence_links ?? [], 'next_step' => $item->next_step,
-                'next_step_owner' => $item->next_step_owner, 'next_step_at' => $item->next_step_at?->toIso8601String(),
+                'next_step_owner' => $item->next_step_owner, 'next_step_at' => $item->next_step_at?->toDateString(),
                 'approval_required' => $item->approval_required || $item->risk_score >= 4,
             ])->all(),
             'top_three_next_steps' => $ranked->take(3)->map(fn (AgverseOpportunity $item) => [

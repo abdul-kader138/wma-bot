@@ -22,7 +22,7 @@ class MariaGovernanceTest extends TestCase
         $profile = AssistantProfile::create(['user_id' => $user->id, 'timezone' => 'Europe/Berlin']);
         MariaTask::create([
             'user_id' => $user->id, 'task' => 'Submit report', 'owner_name' => $user->name,
-            'due_at' => now()->subHour(), 'status' => 'open',
+            'due_at' => now()->subDay(), 'status' => 'open',
         ]);
 
         $monitor = app(DeadlineMonitorService::class);
@@ -40,7 +40,7 @@ class MariaGovernanceTest extends TestCase
         $profile = AssistantProfile::create(['user_id' => $user->id]);
         $task = MariaTask::create([
             'user_id' => $user->id, 'task' => 'Submit report', 'owner_name' => $user->name,
-            'due_at' => now()->subHour(), 'status' => 'open',
+            'due_at' => now()->subDay(), 'status' => 'open',
         ]);
         $monitor = app(DeadlineMonitorService::class);
         $monitor->run($profile);
@@ -68,5 +68,27 @@ class MariaGovernanceTest extends TestCase
         $this->assertTrue($allowed['allowed']);
         $this->assertFalse($blocked['allowed']);
         $this->assertSame(['Agverse has a verified UAE pilot.'], $blocked['blocked_claims']);
+    }
+
+    public function test_date_only_deadline_and_claim_remain_current_for_the_whole_due_date(): void
+    {
+        $user = User::factory()->create();
+        $profile = AssistantProfile::create(['user_id' => $user->id, 'timezone' => 'Europe/Berlin']);
+        MariaTask::create([
+            'user_id' => $user->id, 'task' => 'Due today', 'owner_name' => $user->name,
+            'due_at' => now('Europe/Berlin')->toDateString(), 'status' => 'open',
+        ]);
+        Claim::create([
+            'user_id' => $user->id, 'claim_text' => 'Current through today.',
+            'subject' => 'Policy', 'category' => 'policy', 'status' => 'verified',
+            'verified_at' => now()->subDay(), 'recheck_at' => now('Europe/Berlin')->toDateString(),
+            'permitted_brands' => ['Books'],
+        ]);
+
+        $alerts = app(DeadlineMonitorService::class)->run($profile);
+        $verification = app(ClaimsVerificationService::class)->verify($user, ['Current through today.'], 'Books');
+
+        $this->assertSame('normal', $alerts[0]->severity);
+        $this->assertTrue($verification['allowed']);
     }
 }

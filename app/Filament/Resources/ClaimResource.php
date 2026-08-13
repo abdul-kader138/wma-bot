@@ -36,8 +36,8 @@ class ClaimResource extends MariaResource
             Forms\Components\TextInput::make('subject')->required(),
             Forms\Components\TextInput::make('category')->required(),
             Forms\Components\TextInput::make('source_url')->url()->columnSpanFull(),
-            Forms\Components\DateTimePicker::make('verified_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
-            Forms\Components\DateTimePicker::make('recheck_at')->displayFormat(config('app.display_datetime_format', 'd/m/Y H:i')),
+            Forms\Components\DatePicker::make('verified_at')->displayFormat(config('app.display_date_format', 'd/m/Y')),
+            Forms\Components\DatePicker::make('recheck_at')->displayFormat(config('app.display_date_format', 'd/m/Y')),
             Forms\Components\TagsInput::make('permitted_brands')->suggestions(['Fr. Morson', 'All Catholic Media', 'Agverse AI UAE', 'Books'])->columnSpanFull(),
             Forms\Components\Select::make('status')->options(['unverified' => 'Unverified', 'verified' => 'Verified', 'expired' => 'Expired', 'rejected' => 'Rejected'])->required(),
             Forms\Components\Textarea::make('notes')->columnSpanFull(),
@@ -51,7 +51,7 @@ class ClaimResource extends MariaResource
             Tables\Columns\TextColumn::make('subject')->searchable(),
             Tables\Columns\TextColumn::make('category')->badge(),
             Tables\Columns\TextColumn::make('status')->badge(),
-            Tables\Columns\TextColumn::make('recheck_at')->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))->sortable()->placeholder('No expiry'),
+            Tables\Columns\TextColumn::make('recheck_at')->date(config('app.display_date_format', 'd/m/Y'))->sortable()->placeholder('No expiry'),
         ])->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
     }
 

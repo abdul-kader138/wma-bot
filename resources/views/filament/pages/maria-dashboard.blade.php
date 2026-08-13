@@ -60,6 +60,23 @@
         </x-filament::section>
     @endif
 
+    @if ($latestBookReview)
+        <x-filament::section heading="Weekly Book Portfolio Review">
+            <div class="grid gap-4 md:grid-cols-3">
+                @foreach ($latestBookReview->content['highest_value_actions'] ?? [] as $action)
+                    <div class="rounded-lg bg-gray-50 p-4 dark:bg-white/5">
+                        <div class="font-semibold text-gray-950 dark:text-white">{{ $action['title'] ?? $action['action'] ?? 'Priority action' }}</div>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $action['reason'] ?? '' }}</p>
+                        <p class="mt-2 text-xs text-gray-500">{{ $action['owner'] ?? 'Owner not set' }} · {{ $action['date'] ?? 'Date not set' }}</p>
+                    </div>
+                @endforeach
+            </div>
+            @if (!empty($latestBookReview->content['source_gaps']))
+                <p class="mt-4 text-sm text-warning-600">Missing book data: {{ implode(', ', $latestBookReview->content['source_gaps']) }}</p>
+            @endif
+        </x-filament::section>
+    @endif
+
     @if ($latestEveningReview)
         <x-filament::section heading="Latest Evening Review">
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

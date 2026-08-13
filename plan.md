@@ -40,10 +40,11 @@ Completed foundation work:
 - Draft-only Daily Five relationship recommendations with verified-source filtering, scoring, review decisions, and weekday scheduling.
 - Draft-only multi-channel content packages with brand separation, normalized duplicate prevention, attribution fields, and a hard Claims Registry gate.
 - Separately consented Gmail and Calendar writes with exact-content approvals, scope checks, idempotent action ledgers, and provider confirmations.
+- Structured Book Portfolio records and an idempotent weekly review with exact identifiers, milestone risks, source gaps, and three highest-value actions.
 
 Next implementation target:
 
-- Book portfolio review and weekly reporting.
+- Agverse opportunity review and Thursday ranking.
 
 ## 1. Objective
 

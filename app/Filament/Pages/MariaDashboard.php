@@ -55,6 +55,7 @@ class MariaDashboard extends Page
             'recentWorkflows' => (clone $workflows)->latest()->limit(5)->get(),
             'latestBrief' => $this->owned(AssistantBrief::query())->where('type', 'morning')->latest('brief_date')->first(),
             'latestEveningReview' => $this->owned(AssistantBrief::query())->where('type', 'evening')->latest('brief_date')->first(),
+            'latestBookReview' => $this->owned(AssistantBrief::query())->where('type', 'book_portfolio')->latest('brief_date')->first(),
             'dailyFive' => (clone $relationships)->with('contact')->whereDate('recommendation_date', now()->toDateString())->orderByDesc('score')->limit(5)->get(),
         ];
     }

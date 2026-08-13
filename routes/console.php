@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\Maria\GenerateBookPortfolioReview;
 use App\Jobs\Maria\GenerateDailyFive;
 use App\Jobs\Maria\GenerateEveningReview;
 use App\Jobs\Maria\GenerateMorningBrief;
@@ -74,3 +75,14 @@ Schedule::call(function () {
         }
     });
 })->everyMinute()->name('maria-daily-five')->withoutOverlapping();
+
+Schedule::call(function () {
+    AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
+        $local = now($profile->timezone);
+        $briefAt = $profile->morning_brief_at ? substr((string) $profile->morning_brief_at, 0, 5) : '07:30';
+        $reviewAt = Carbon\Carbon::createFromFormat('H:i', $briefAt, $profile->timezone)->addHour()->format('H:i');
+        if ($local->isMonday() && $local->format('H:i') === $reviewAt && in_array('book_portfolio_review', $profile->enabled_workflows ?? [], true)) {
+            GenerateBookPortfolioReview::dispatch($profile->id, $local->startOfWeek()->toDateString());
+        }
+    });
+})->everyMinute()->name('maria-book-portfolio-review')->withoutOverlapping();

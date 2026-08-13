@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Services\Maria\AcceptanceMetricsService;
+use App\Services\Maria\MariaAccess;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -21,7 +22,7 @@ class MariaAcceptanceDashboard extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->check();
+        return MariaAccess::allowed(auth()->user());
     }
 
     protected function getHeaderActions(): array

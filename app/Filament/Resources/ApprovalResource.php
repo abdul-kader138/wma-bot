@@ -9,12 +9,11 @@ use App\Services\Maria\ApprovedGoogleActionService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class ApprovalResource extends Resource
+class ApprovalResource extends MariaResource
 {
     protected static ?string $model = Approval::class;
 

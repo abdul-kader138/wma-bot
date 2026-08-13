@@ -6,12 +6,11 @@ use App\Filament\Resources\BookResource\Pages;
 use App\Models\Book;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class BookResource extends Resource
+class BookResource extends MariaResource
 {
     protected static ?string $model = Book::class;
 

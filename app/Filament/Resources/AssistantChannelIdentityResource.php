@@ -6,12 +6,11 @@ use App\Filament\Resources\AssistantChannelIdentityResource\Pages;
 use App\Models\AssistantChannelIdentity;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class AssistantChannelIdentityResource extends Resource
+class AssistantChannelIdentityResource extends MariaResource
 {
     protected static ?string $model = AssistantChannelIdentity::class;
 

@@ -6,12 +6,11 @@ use App\Filament\Resources\WorkflowRunResource\Pages;
 use App\Models\WorkflowRun;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class WorkflowRunResource extends Resource
+class WorkflowRunResource extends MariaResource
 {
     protected static ?string $model = WorkflowRun::class;
 

@@ -48,6 +48,7 @@ Completed foundation work:
 - Evidence-based 30-day Acceptance Dashboard, auditable snapshots, explicit unmeasured states, and final handover checklist.
 - Encrypted Google OAuth administration with environment fallback, consistent `dd/mm/yyyy` display formatting, and reduced Claims Registry/admin query load.
 - Configurable global timezone and application-wide date/date-time display formats, with safe timezone validation and Maria profile schedule overrides.
+- Global Maria feature switch plus role-based Access Maria Assistant permission controlling menus, routes, private identity routing, connectors, and schedules.
 
 Next implementation target:
 

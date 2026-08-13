@@ -5,12 +5,11 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ActionReconciliationResource\Pages;
 use App\Models\ActionReconciliation;
 use Filament\Forms;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class ActionReconciliationResource extends Resource
+class ActionReconciliationResource extends MariaResource
 {
     protected static ?string $model = ActionReconciliation::class;
 

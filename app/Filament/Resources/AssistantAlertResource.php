@@ -4,12 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AssistantAlertResource\Pages;
 use App\Models\AssistantAlert;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class AssistantAlertResource extends Resource
+class AssistantAlertResource extends MariaResource
 {
     protected static ?string $model = AssistantAlert::class;
 

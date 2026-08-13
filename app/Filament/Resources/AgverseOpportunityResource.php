@@ -7,12 +7,11 @@ use App\Models\AgverseOpportunity;
 use App\Services\Maria\AgverseOpportunityReviewService;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class AgverseOpportunityResource extends Resource
+class AgverseOpportunityResource extends MariaResource
 {
     protected static ?string $model = AgverseOpportunity::class;
 

@@ -7,6 +7,7 @@ use App\Models\AssistantChannelIdentity;
 use App\Models\AssistantProfile;
 use App\Models\ConnectorAccount;
 use App\Models\MariaProject;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\WhatsAppAccount;
 use App\Services\Maria\ApprovalService;
@@ -15,6 +16,7 @@ use App\Services\Maria\AssistantIdentityResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -48,6 +50,8 @@ class MariaFoundationTest extends TestCase
     public function test_only_active_verified_channel_identity_resolves_to_owner(): void
     {
         $user = User::factory()->create();
+        Setting::set('maria_assistant_enabled', true, 'maria');
+        $user->givePermissionTo(Permission::firstOrCreate(['name' => 'access_maria_assistant', 'guard_name' => 'web']));
         $profile = AssistantProfile::create(['user_id' => $user->id]);
         $account = WhatsAppAccount::create([
             'name' => 'Maria',

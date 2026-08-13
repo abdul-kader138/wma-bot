@@ -6,6 +6,7 @@ use App\Models\ActionReconciliation;
 use App\Models\AssistantAction;
 use App\Models\Setting;
 use App\Services\AuditLogger;
+use App\Services\Maria\MariaAccess;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
@@ -23,7 +24,7 @@ class ExternalActionControl extends Page
 
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->isAdmin();
+        return MariaAccess::allowed(auth()->user()) && (bool) auth()->user()?->isAdmin();
     }
 
     public function stopAll(): void

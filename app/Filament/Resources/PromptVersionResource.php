@@ -6,13 +6,12 @@ use App\Filament\Resources\PromptVersionResource\Pages;
 use App\Models\PromptVersion;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PromptVersionResource extends Resource
+class PromptVersionResource extends MariaResource
 {
     protected static ?string $model = PromptVersion::class;
 

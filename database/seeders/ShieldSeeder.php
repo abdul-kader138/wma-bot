@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class ShieldSeeder extends Seeder
@@ -15,13 +16,14 @@ class ShieldSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'panel_user',  'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'operator',    'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'access_maria_assistant', 'guard_name' => 'web']);
 
         // Default super admin user (credentials via .env: ADMIN_EMAIL, ADMIN_PASSWORD)
         $admin = User::firstOrCreate(
             ['email' => env('ADMIN_EMAIL', 'admin@admin.com')],
             [
-                'name'              => env('ADMIN_NAME', 'Super Admin'),
-                'password'          => Hash::make(env('ADMIN_PASSWORD', 'password')),
+                'name' => env('ADMIN_NAME', 'Super Admin'),
+                'password' => Hash::make(env('ADMIN_PASSWORD', 'password')),
                 'email_verified_at' => now(),
             ]
         );

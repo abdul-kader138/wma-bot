@@ -12,6 +12,7 @@ use App\Models\MariaProject;
 use App\Models\MariaTask;
 use App\Models\RelationshipRecommendation;
 use App\Models\WorkflowRun;
+use App\Services\Maria\MariaAccess;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -29,9 +30,7 @@ class MariaDashboard extends Page
 
     public static function canAccess(): bool
     {
-        $user = auth()->user();
-
-        return (bool) $user && ($user->hasAnyRole(['super_admin', 'panel_user']) || $user->getAllPermissions()->isNotEmpty());
+        return MariaAccess::allowed(auth()->user());
     }
 
     public function getViewData(): array

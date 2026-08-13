@@ -8,12 +8,11 @@ use App\Services\Maria\AcmProductionService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class AcmProductionPlanResource extends Resource
+class AcmProductionPlanResource extends MariaResource
 {
     protected static ?string $model = AcmProductionPlan::class;
 

@@ -6,12 +6,11 @@ use App\Filament\Resources\AssistantProfileResource\Pages;
 use App\Models\AssistantProfile;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class AssistantProfileResource extends Resource
+class AssistantProfileResource extends MariaResource
 {
     protected static ?string $model = AssistantProfile::class;
 

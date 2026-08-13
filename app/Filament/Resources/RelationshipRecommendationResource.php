@@ -6,12 +6,11 @@ use App\Filament\Resources\RelationshipRecommendationResource\Pages;
 use App\Models\RelationshipRecommendation;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class RelationshipRecommendationResource extends Resource
+class RelationshipRecommendationResource extends MariaResource
 {
     protected static ?string $model = RelationshipRecommendation::class;
 

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Jobs\HandleIncomingMessage;
 use App\Models\AssistantChannelIdentity;
 use App\Models\AssistantProfile;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\WhatsAppAccount;
 use App\Services\ClaudeAgent;
@@ -15,6 +16,7 @@ use App\Services\Maria\MariaConversationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Mockery;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class MariaConversationServiceTest extends TestCase
@@ -65,6 +67,8 @@ class MariaConversationServiceTest extends TestCase
     {
         Http::fake();
         $user = User::factory()->create();
+        Setting::set('maria_assistant_enabled', true, 'maria');
+        $user->givePermissionTo(Permission::firstOrCreate(['name' => 'access_maria_assistant', 'guard_name' => 'web']));
         $profile = AssistantProfile::create(['user_id' => $user->id]);
         $account = WhatsAppAccount::create([
             'name' => 'Maria private', 'platform' => 'whatsapp',

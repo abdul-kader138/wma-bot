@@ -6,12 +6,11 @@ use App\Filament\Resources\ClaimResource\Pages;
 use App\Models\Claim;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class ClaimResource extends Resource
+class ClaimResource extends MariaResource
 {
     protected static ?string $model = Claim::class;
 

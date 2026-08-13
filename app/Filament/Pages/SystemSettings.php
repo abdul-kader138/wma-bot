@@ -85,6 +85,7 @@ class SystemSettings extends Page implements HasForms
 
             // Security
             'two_factor_enabled' => Setting::get('two_factor_enabled', true),
+            'maria_assistant_enabled' => Setting::get('maria_assistant_enabled', false),
 
             // Appearance
             'admin_theme' => Setting::get('admin_theme', 'amber'),
@@ -183,6 +184,10 @@ class SystemSettings extends Page implements HasForms
                                 Toggle::make('maintenance_mode')
                                     ->label(__('admin.settings.fields.maintenance_mode'))
                                     ->helperText(__('admin.settings.fields.maintenance_help')),
+
+                                Toggle::make('maria_assistant_enabled')
+                                    ->label('Enable Maria Assistant')
+                                    ->helperText('When disabled, Maria menus, pages, private assistant routing, connectors, and scheduled workflows are unavailable. Users also need the Access Maria Assistant role permission.'),
 
                                 Select::make('admin_locale')
                                     ->label(__('admin.settings.fields.default_language'))
@@ -642,6 +647,7 @@ class SystemSettings extends Page implements HasForms
             'app_date_format' => 'regional',
             'app_datetime_format' => 'regional',
             'two_factor_enabled' => 'security',
+            'maria_assistant_enabled' => 'maria',
             'admin_theme' => 'appearance',
             'admin_panel_theme_mode' => 'appearance',
             'auth_theme_mode' => 'appearance',

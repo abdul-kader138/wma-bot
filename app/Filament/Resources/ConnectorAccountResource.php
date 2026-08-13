@@ -5,12 +5,11 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ConnectorAccountResource\Pages;
 use App\Models\ConnectorAccount;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class ConnectorAccountResource extends Resource
+class ConnectorAccountResource extends MariaResource
 {
     protected static ?string $model = ConnectorAccount::class;
 

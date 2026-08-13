@@ -6,12 +6,11 @@ use App\Filament\Resources\MariaProjectResource\Pages;
 use App\Models\MariaProject;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class MariaProjectResource extends Resource
+class MariaProjectResource extends MariaResource
 {
     protected static ?string $model = MariaProject::class;
 

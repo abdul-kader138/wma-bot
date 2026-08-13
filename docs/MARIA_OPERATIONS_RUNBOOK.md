@@ -36,6 +36,8 @@ Google Client ID, encrypted Client Secret, and Redirect URI can be managed under
 
 Global timezone and date/date-time display formats are managed under **System Settings → General**. Database timestamps remain normal Laravel timestamps; Maria profile timezones continue to control that owner's scheduled workflow times.
 
+Maria has two access gates: **System Settings → General → Enable Maria Assistant** must be enabled, and non-super-admin users need **Access Maria Assistant** in the role permission screen. Disabling the global switch hides and denies Maria pages, connector routes, private identity routing, and scheduled dispatches.
+
 ## Queue and scheduler recovery
 
 1. Confirm the scheduler invokes `php artisan schedule:run` every minute.

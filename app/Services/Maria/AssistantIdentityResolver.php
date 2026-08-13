@@ -12,11 +12,13 @@ class AssistantIdentityResolver
         string $externalIdentifier,
         ?int $channelAccountId = null,
     ): ?User {
-        return $this->resolveIdentity(
+        $user = $this->resolveIdentity(
             $platform,
             $externalIdentifier,
             $channelAccountId,
         )?->profile?->user;
+
+        return MariaAccess::allowed($user) ? $user : null;
     }
 
     public function resolveIdentity(
@@ -24,6 +26,10 @@ class AssistantIdentityResolver
         string $externalIdentifier,
         ?int $channelAccountId = null,
     ): ?AssistantChannelIdentity {
+        if (! MariaAccess::enabled()) {
+            return null;
+        }
+
         return AssistantChannelIdentity::resolveAuthorized($platform, $externalIdentifier, $channelAccountId);
     }
 }

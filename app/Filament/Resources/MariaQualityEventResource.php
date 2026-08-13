@@ -6,12 +6,11 @@ use App\Filament\Resources\MariaQualityEventResource\Pages;
 use App\Models\MariaQualityEvent;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class MariaQualityEventResource extends Resource
+class MariaQualityEventResource extends MariaResource
 {
     protected static ?string $model = MariaQualityEvent::class;
 

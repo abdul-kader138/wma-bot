@@ -39,6 +39,14 @@ php artisan migrate --force
 #    through the admin panel.
 php artisan db:seed --force
 
+# 5b. Regenerate Shield permissions — safe/idempotent, and required on every
+#     server. Without it the `permissions` table has no row for a given
+#     resource/page/widget, and NOBODY can see that resource in the panel —
+#     not even super_admin, since Shield checks the permission record, not
+#     just the role. This is the #1 cause of "I pulled the same code onto a
+#     new server and some pages are just missing from the menu."
+php artisan shield:generate --all --panel=admin --ignore-existing-policies --no-interaction
+
 # 6. Clear and rebuild Laravel caches
 php artisan config:clear
 php artisan route:clear
@@ -72,11 +80,11 @@ sudo cat /etc/cron.d/wma-bot-scheduler
 Maria workflows. Scheduler output is written to
 `/var/www/tmmtravels/storage/logs/scheduler.log`.
 
-If `shield:generate` needs re-running (only when you've added a new Filament
-resource/policy):
-```bash
-php artisan shield:generate --all --panel=admin --ignore-existing-policies --no-interaction
-```
+`shield:generate` (step 5b / part of `deploy.sh`) only assigns newly generated
+permissions to `super_admin`. If you've customized what `panel_user` or
+`operator` can see via the Shield Roles screen in the admin panel, those
+custom assignments are untouched by a re-run — you don't need to redo them
+after every deploy.
 
 ---
 

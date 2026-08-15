@@ -50,6 +50,15 @@ php artisan migrate --force
 echo "==> Seeding defaults (safe: updateOrCreate, won't overwrite your changes)"
 php artisan db:seed --force
 
+# Idempotent: (re)creates any permission missing from the DB for a current
+# resource/page/widget and assigns it to super_admin, without touching
+# existing custom role assignments (panel_user/operator stay as configured
+# in the admin UI). Without this, a brand-new database has an empty
+# permissions table and NOTHING is visible in the panel — not even to
+# super_admin, since Shield checks the permission record, not just the role.
+echo "==> Generating Shield permissions"
+php artisan shield:generate --all --panel=admin --ignore-existing-policies --no-interaction
+
 echo "==> Rebuilding caches"
 php artisan config:clear
 php artisan route:clear

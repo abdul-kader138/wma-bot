@@ -28,7 +28,7 @@ class MariaAgent
         $maxRounds = max(1, (int) config('maria.max_tool_rounds', 6));
 
         for ($round = 0; $round < $maxRounds; $round++) {
-            $response = $this->callClaude($prompt['content'], $messages);
+            $response = $this->callClaude($prompt['content'], $messages, $owner);
             $usage['input_tokens'] += (int) data_get($response, 'usage.input_tokens', 0);
             $usage['output_tokens'] += (int) data_get($response, 'usage.output_tokens', 0);
             $content = $response['content'] ?? [];
@@ -54,7 +54,7 @@ class MariaAgent
                 $input = (array) ($request['input'] ?? []);
 
                 try {
-                    $tool = $this->tools->get($name);
+                    $tool = $this->tools->get($name, $owner);
                     if ($tool->requiresApproval()) {
                         throw new RuntimeException('This tool requires approval and cannot execute in the reasoning loop.');
                     }
@@ -74,10 +74,10 @@ class MariaAgent
         throw new RuntimeException('Maria exceeded the maximum number of tool rounds.');
     }
 
-    private function callClaude(string $system, array $messages): array
+    private function callClaude(string $system, array $messages, User $owner): array
     {
         return Http::withHeaders([
-            'x-api-key' => Setting::get('claude_api_key') ?: config('services.anthropic.key'),
+            'x-api-key' => Setting::getSecret('claude_api_key') ?: config('services.anthropic.key'),
             'anthropic-version' => '2023-06-01',
             'content-type' => 'application/json',
         ])->timeout(40)->retry(2, 500, function (Throwable $error) {
@@ -88,7 +88,7 @@ class MariaAgent
             'max_tokens' => (int) Setting::get('claude_max_tokens', 1024),
             'temperature' => (float) Setting::get('claude_temperature', 0.2),
             'system' => $system,
-            'tools' => $this->tools->definitions(),
+            'tools' => $this->tools->definitions($owner),
             'messages' => $messages,
         ])->throw()->json();
     }

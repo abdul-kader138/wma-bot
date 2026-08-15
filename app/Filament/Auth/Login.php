@@ -187,6 +187,13 @@ class Login extends BaseLogin
     {
         return $this->twoFactorChallenge
             ? __('admin.auth.two_factor.heading')
-            : parent::getHeading();
+            : __('admin.auth.login.heading');
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return $this->twoFactorChallenge
+            ? null
+            : __('admin.auth.login.subheading');
     }
 }

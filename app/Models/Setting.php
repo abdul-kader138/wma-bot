@@ -55,15 +55,20 @@ class Setting extends Model
 
     public static function getSecret(string $key, mixed $default = null): mixed
     {
-        $encrypted = static::get($key);
-        if (blank($encrypted)) {
+        $stored = static::get($key);
+        if (blank($stored)) {
             return $default;
         }
 
         try {
-            return Crypt::decryptString((string) $encrypted);
+            return Crypt::decryptString((string) $stored);
         } catch (\Throwable) {
-            return $default;
+            // Legacy value written before this key moved to encrypted storage.
+            // Self-heal so it never round-trips in plaintext again.
+            $group = static::where('key', $key)->value('group') ?? 'security';
+            static::setSecret($key, (string) $stored, $group);
+
+            return $stored;
         }
     }
 

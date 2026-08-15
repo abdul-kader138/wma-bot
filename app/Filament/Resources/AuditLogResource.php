@@ -62,7 +62,7 @@ class AuditLogResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50, 100])
             ->filters([
-                SelectFilter::make('category')->options(['documents' => 'Documents']),
+                SelectFilter::make('category')->options(fn () => AuditLog::query()->distinct()->orderBy('category')->pluck('category', 'category')),
                 SelectFilter::make('action')->options(fn () => AuditLog::query()->distinct()->orderBy('action')->pluck('action', 'action')),
                 SelectFilter::make('actor_id')->label(__('admin.audit_log.fields.actor'))->options(fn () => User::orderBy('name')->pluck('name', 'id'))->searchable(),
                 SelectFilter::make('owner_id')->label(__('admin.audit_log.fields.owner'))->options(fn () => User::orderBy('name')->pluck('name', 'id'))->searchable(),

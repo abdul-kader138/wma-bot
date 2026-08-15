@@ -194,6 +194,24 @@ class MariaFoundationTest extends TestCase
         $this->assertFalse($owner->can('view', MariaProject::where('user_id', $other->id)->first()));
     }
 
+    public function test_resources_without_an_owner_column_opt_out_of_owner_scoping(): void
+    {
+        $owner = User::factory()->create();
+        Role::create(['name' => 'panel_user', 'guard_name' => 'web']);
+        $owner->assignRole('panel_user');
+        $this->actingAs($owner);
+
+        // These tables have no `user_id` column; the base MariaResource scoping would
+        // throw a SQL error if either resource inherited the default owner filter.
+        \App\Models\PromptVersion::create([
+            'prompt_type' => 'maria_system', 'version' => 'v1', 'content' => 'x',
+            'content_hash' => hash('sha256', 'x'), 'is_active' => false,
+        ]);
+
+        $this->assertSame(1, \App\Filament\Resources\PromptVersionResource::getEloquentQuery()->count());
+        $this->assertSame(0, \App\Filament\Resources\AssistantChannelIdentityResource::getEloquentQuery()->count());
+    }
+
     private function projectData(User $owner, string $name): array
     {
         return [

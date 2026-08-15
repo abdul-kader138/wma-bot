@@ -26,7 +26,7 @@ class ClaudeAgent
 
         try {
             $response = Http::withHeaders([
-                'x-api-key'         => Setting::get('claude_api_key') ?: config('services.anthropic.key'),
+                'x-api-key'         => Setting::getSecret('claude_api_key') ?: config('services.anthropic.key'),
                 'anthropic-version' => '2023-06-01',
                 'content-type'      => 'application/json',
             ])

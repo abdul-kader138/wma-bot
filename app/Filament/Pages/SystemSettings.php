@@ -103,8 +103,8 @@ class SystemSettings extends Page implements HasForms
             'messenger_verify_token' => Setting::get('messenger_verify_token', env('MESSENGER_VERIFY_TOKEN', '')),
             'instagram_verify_token' => Setting::get('instagram_verify_token', env('INSTAGRAM_VERIFY_TOKEN', '')),
 
-            // Claude AI
-            'claude_api_key' => Setting::get('claude_api_key', ''),
+            // Claude AI (secret intentionally never hydrated into the form)
+            'claude_api_key' => '',
             'claude_model' => Setting::get('claude_model', env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001')),
             'claude_max_tokens' => Setting::get('claude_max_tokens', 1024),
             'claude_temperature' => Setting::get('claude_temperature', 0.7),
@@ -426,7 +426,7 @@ class SystemSettings extends Page implements HasForms
                                         ->revealable()
                                         ->maxLength(255)
                                         ->autocomplete('new-password')
-                                        ->helperText('Your Anthropic API key from console.anthropic.com.'),
+                                        ->helperText(Setting::getSecret('claude_api_key') ? 'An API key is stored. Leave blank to keep it unchanged.' : 'No API key is stored in Settings; the environment fallback will be used.'),
 
                                     Grid::make(3)->schema([
                                         Select::make('claude_model')
@@ -660,7 +660,6 @@ class SystemSettings extends Page implements HasForms
             'whatsapp_verify_token' => 'whatsapp',
             'messenger_verify_token' => 'whatsapp',
             'instagram_verify_token' => 'whatsapp',
-            'claude_api_key' => 'claude',
             'claude_model' => 'claude',
             'claude_max_tokens' => 'claude',
             'claude_temperature' => 'claude',
@@ -688,12 +687,19 @@ class SystemSettings extends Page implements HasForms
         $googleSecret = trim((string) ($data['google_client_secret'] ?? ''));
         unset($data['google_client_secret']);
 
+        $claudeApiKey = trim((string) ($data['claude_api_key'] ?? ''));
+        unset($data['claude_api_key']);
+
         foreach ($data as $key => $value) {
             Setting::set($key, $value ?? '', $groups[$key] ?? 'general');
         }
 
         if ($googleSecret !== '') {
             Setting::setSecret('google_client_secret', $googleSecret, 'google');
+        }
+
+        if ($claudeApiKey !== '') {
+            Setting::setSecret('claude_api_key', $claudeApiKey, 'claude');
         }
         MariaPermissionVisibility::apply();
 

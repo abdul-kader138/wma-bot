@@ -98,4 +98,43 @@ class GoogleWorkspaceConnectorTest extends TestCase
 
         app(GoogleOAuthService::class)->connect(User::factory()->create(), 'code', 'wrong-state');
     }
+
+    public function test_transient_server_error_is_retried_and_succeeds(): void
+    {
+        $user = User::factory()->create();
+        $connector = ConnectorAccount::create([
+            'user_id' => $user->id, 'provider' => 'google', 'provider_account_id' => 'g1',
+            'access_token' => 'token', 'refresh_token' => 'refresh',
+            'token_expires_at' => now()->addHour(), 'status' => 'active',
+        ]);
+        Http::fake(['https://gmail.googleapis.com/*' => Http::sequence()
+            ->push(['error' => 'temporarily unavailable'], 503)
+            ->push(['messages' => [['id' => 'm1']]])]);
+
+        $result = app(GmailReadClient::class)->listMessages($connector);
+
+        $this->assertSame('m1', $result['messages'][0]['id']);
+        $this->assertSame('active', $connector->fresh()->status);
+        Http::assertSentCount(2);
+    }
+
+    public function test_unauthorized_response_marks_connector_needs_reauth(): void
+    {
+        $user = User::factory()->create();
+        $connector = ConnectorAccount::create([
+            'user_id' => $user->id, 'provider' => 'google', 'provider_account_id' => 'g1',
+            'access_token' => 'token', 'refresh_token' => 'refresh',
+            'token_expires_at' => now()->addHour(), 'status' => 'active',
+        ]);
+        Http::fake(['https://gmail.googleapis.com/*' => Http::response(['error' => 'invalid_grant'], 401)]);
+
+        try {
+            app(GmailReadClient::class)->listMessages($connector);
+            $this->fail('Expected a request exception.');
+        } catch (\Illuminate\Http\Client\RequestException) {
+            // expected
+        }
+
+        $this->assertSame('needs_reauth', $connector->fresh()->status);
+    }
 }

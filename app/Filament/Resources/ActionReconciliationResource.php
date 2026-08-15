@@ -7,7 +7,6 @@ use App\Models\ActionReconciliation;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class ActionReconciliationResource extends MariaResource
 {
@@ -20,13 +19,6 @@ class ActionReconciliationResource extends MariaResource
     protected static ?string $navigationLabel = 'Action Reconciliation';
 
     protected static ?int $navigationSort = 11;
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
 
     public static function table(Table $table): Table
     {

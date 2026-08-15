@@ -6,12 +6,16 @@ use App\Models\Approval;
 use App\Models\AssistantAction;
 use App\Models\User;
 use App\Models\WorkflowRun;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AssistantActionService
 {
-    public function __construct(private readonly ApprovalService $approvals) {}
+    public function __construct(
+        private readonly ApprovalService $approvals,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function reserve(
         User $owner,
@@ -77,6 +81,12 @@ class AssistantActionService
             'error' => null,
         ]);
 
+        $this->audit->recordContext(
+            category: 'maria_action', action: 'completed', actorId: $action->user_id,
+            ownerId: $action->user_id, subjectPath: "assistant_action:{$action->id}",
+            metadata: ['tool_name' => $action->tool_name, 'provider_confirmation_id' => $confirmationId],
+        );
+
         return $action->refresh();
     }
 
@@ -87,6 +97,12 @@ class AssistantActionService
         }
 
         $action->update(['status' => 'failed', 'error' => $error]);
+
+        $this->audit->recordContext(
+            category: 'maria_action', action: 'failed', actorId: $action->user_id,
+            ownerId: $action->user_id, subjectPath: "assistant_action:{$action->id}",
+            metadata: ['tool_name' => $action->tool_name, 'error' => $error],
+        );
 
         return $action->refresh();
     }

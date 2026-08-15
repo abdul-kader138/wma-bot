@@ -31,6 +31,12 @@ class ListCalendarEventsTool extends BaseAssistantTool
         ], 'required' => ['from', 'to']];
     }
 
+    public function availableFor(User $owner): bool
+    {
+        return in_array('meeting_preparation', $owner->assistantProfile?->enabled_workflows ?? [], true)
+            && $this->hasGoogleConnector($owner);
+    }
+
     public function execute(User $owner, array $input): array
     {
         $result = $this->calendar->events(

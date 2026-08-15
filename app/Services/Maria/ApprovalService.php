@@ -5,12 +5,15 @@ namespace App\Services\Maria;
 use App\Models\Approval;
 use App\Models\User;
 use App\Models\WorkflowRun;
+use App\Services\AuditLogger;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ApprovalService
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     public function request(
         User $owner,
         string $actionType,
@@ -66,6 +69,12 @@ class ApprovalService
                 'decided_at' => now(),
             ]);
 
+            $this->audit->recordContext(
+                category: 'maria_approval', action: 'approved', actorId: $actor->id,
+                ownerId: $approval->user_id, subjectPath: "approval:{$approval->id}",
+                metadata: ['action_type' => $approval->action_type, 'risk_level' => $approval->risk_level],
+            );
+
             return $approval->refresh();
         });
     }
@@ -85,6 +94,12 @@ class ApprovalService
             'decided_at' => now(),
             'audit_notes' => $notes,
         ]);
+
+        $this->audit->recordContext(
+            category: 'maria_approval', action: $decision, actorId: $actor->id,
+            ownerId: $approval->user_id, subjectPath: "approval:{$approval->id}",
+            metadata: ['action_type' => $approval->action_type, 'risk_level' => $approval->risk_level],
+        );
 
         return $approval->refresh();
     }

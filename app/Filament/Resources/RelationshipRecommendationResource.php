@@ -24,11 +24,7 @@ class RelationshipRecommendationResource extends MariaResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-
-        $query->with(['contact:id,full_name,organization,tier', 'reviewer:id,name']);
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
+        return parent::getEloquentQuery()->with(['contact:id,full_name,organization,tier', 'reviewer:id,name']);
     }
 
     public static function form(Form $form): Form

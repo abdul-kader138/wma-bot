@@ -142,6 +142,15 @@ class HandleIncomingMessage implements ShouldQueue
         // continues through the existing public intake state machine unchanged.
         $identity = $assistantIdentities->resolveIdentity($this->platform, $phone, $account->id);
         if ($identity) {
+            // Maria shares the single Anthropic API key/account rate limit with the public
+            // bot below, so an unmetered Maria path could exhaust that shared budget and
+            // start failing customer conversations. Gate it through the same per-minute
+            // limiter (not the customer-abuse daily/session caps, which don't apply to an
+            // allowlisted staff identity).
+            if ($this->deferIfClaudeRateLimited()) {
+                return;
+            }
+
             $wa->sendText($phone, $maria->handle($identity, $input));
 
             return;

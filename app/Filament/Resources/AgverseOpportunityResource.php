@@ -9,7 +9,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class AgverseOpportunityResource extends MariaResource
 {
@@ -22,13 +21,6 @@ class AgverseOpportunityResource extends MariaResource
     protected static ?string $navigationLabel = 'Agverse Opportunities';
 
     protected static ?int $navigationSort = 25;
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
 
     public static function form(Form $form): Form
     {

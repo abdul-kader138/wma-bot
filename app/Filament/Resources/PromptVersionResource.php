@@ -21,6 +21,9 @@ class PromptVersionResource extends MariaResource
 
     protected static ?int $navigationSort = 22;
 
+    /** Prompt versions have no owner column; visibility is governed entirely by the Shield permission. */
+    protected static bool $scopeToOwner = false;
+
     public static function form(Form $form): Form
     {
         return $form->schema([

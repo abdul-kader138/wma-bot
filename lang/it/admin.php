@@ -3,6 +3,10 @@
 return [
 
     'auth' => [
+        'login' => [
+            'heading'    => 'Piattaforma di Assistente Virtuale e Messaggistica',
+            'subheading' => 'Accedi per continuare.',
+        ],
         'two_factor' => [
             'heading'       => 'Autenticazione a due fattori',
             'code_label'    => 'Codice di autenticazione',

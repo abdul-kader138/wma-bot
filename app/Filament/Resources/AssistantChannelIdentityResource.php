@@ -22,6 +22,9 @@ class AssistantChannelIdentityResource extends MariaResource
 
     protected static ?int $navigationSort = 19;
 
+    /** Channel identities have no owner column; visibility is governed entirely by the Shield permission. */
+    protected static bool $scopeToOwner = false;
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->with(['profile.user:id,name,email', 'channelAccount:id,name']);

@@ -4,6 +4,7 @@ namespace App\Services\Maria\Google;
 
 use App\Models\ConnectorAccount;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -11,7 +12,10 @@ use RuntimeException;
 
 class GoogleOAuthService
 {
-    public function __construct(private readonly GoogleConfiguration $configuration) {}
+    public function __construct(
+        private readonly GoogleConfiguration $configuration,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function authorizationRedirect(bool $includeWriteScopes = false): RedirectResponse
     {
@@ -62,7 +66,7 @@ class GoogleOAuthService
         $existing = ConnectorAccount::where('user_id', $user->id)->where('provider', 'google')
             ->where('provider_account_id', $identity['sub'])->first();
 
-        return ConnectorAccount::updateOrCreate(
+        $connector = ConnectorAccount::updateOrCreate(
             ['user_id' => $user->id, 'provider' => 'google', 'provider_account_id' => $identity['sub']],
             [
                 'email' => $identity['email'] ?? null,
@@ -75,6 +79,14 @@ class GoogleOAuthService
                 'status' => 'active', 'last_error' => null,
             ],
         );
+
+        $this->audit->recordContext(
+            category: 'maria_connector', action: $existing ? 'reconnected' : 'connected', actorId: $user->id,
+            ownerId: $user->id, subjectPath: "connector_account:{$connector->id}",
+            metadata: ['provider' => 'google', 'scopes' => $connector->scopes, 'write_consent' => $writeConsent],
+        );
+
+        return $connector;
     }
 
     public function disconnect(ConnectorAccount $connector): void
@@ -82,6 +94,13 @@ class GoogleOAuthService
         if ($connector->access_token) {
             Http::asForm()->post('https://oauth2.googleapis.com/revoke', ['token' => $connector->access_token]);
         }
+
+        $this->audit->recordContext(
+            category: 'maria_connector', action: 'disconnected', actorId: auth()->id() ?? $connector->user_id,
+            ownerId: $connector->user_id, subjectPath: "connector_account:{$connector->id}",
+            metadata: ['provider' => $connector->provider],
+        );
+
         $connector->delete();
     }
 

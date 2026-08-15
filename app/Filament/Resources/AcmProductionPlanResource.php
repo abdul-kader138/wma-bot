@@ -10,7 +10,6 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class AcmProductionPlanResource extends MariaResource
 {
@@ -23,13 +22,6 @@ class AcmProductionPlanResource extends MariaResource
     protected static ?string $navigationLabel = 'ACM Production';
 
     protected static ?int $navigationSort = 26;
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
 
     public static function form(Form $form): Form
     {

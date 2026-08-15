@@ -3,6 +3,8 @@
 namespace App\Services\Maria\Google;
 
 use App\Models\ConnectorAccount;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -15,12 +17,12 @@ class GoogleWorkspaceClient
     public function get(ConnectorAccount $connector, string $url, array $query = []): array
     {
         try {
-            $response = Http::withToken($this->accessToken($connector))->get($url, $query)->throw()->json();
+            $response = $this->retrying()->withToken($this->accessToken($connector))->get($url, $query)->throw()->json();
             $connector->update(['last_synced_at' => now(), 'last_error' => null, 'status' => 'active']);
 
             return $response;
         } catch (Throwable $error) {
-            $connector->update(['last_error' => mb_substr($error->getMessage(), 0, 2000), 'status' => 'error']);
+            $connector->update(['last_error' => mb_substr($error->getMessage(), 0, 2000), 'status' => $this->statusFor($error)]);
             throw $error;
         }
     }
@@ -28,14 +30,32 @@ class GoogleWorkspaceClient
     public function post(ConnectorAccount $connector, string $url, array $payload): array
     {
         try {
-            $response = Http::withToken($this->accessToken($connector))->post($url, $payload)->throw()->json();
+            $response = $this->retrying()->withToken($this->accessToken($connector))->post($url, $payload)->throw()->json();
             $connector->update(['last_synced_at' => now(), 'last_error' => null, 'status' => 'active']);
 
             return $response;
         } catch (Throwable $error) {
-            $connector->update(['last_error' => mb_substr($error->getMessage(), 0, 2000), 'status' => 'error']);
+            $connector->update(['last_error' => mb_substr($error->getMessage(), 0, 2000), 'status' => $this->statusFor($error)]);
             throw $error;
         }
+    }
+
+    private function retrying(): \Illuminate\Http\Client\PendingRequest
+    {
+        return Http::retry(3, 1000, function (Throwable $error) {
+            return $error instanceof ConnectionException
+                || ($error instanceof RequestException && in_array($error->response->status(), [429, 500, 502, 503, 504], true));
+        });
+    }
+
+    /** A 401/invalid_grant means reconnection is required; anything else is treated as a transient/unknown error. */
+    private function statusFor(Throwable $error): string
+    {
+        if ($error instanceof RequestException && $error->response->status() === 401) {
+            return 'needs_reauth';
+        }
+
+        return 'error';
     }
 
     private function accessToken(ConnectorAccount $connector): string

@@ -29,6 +29,11 @@ class SearchDriveFilesTool extends BaseAssistantTool
         ]];
     }
 
+    public function availableFor(User $owner): bool
+    {
+        return $this->hasGoogleConnector($owner);
+    }
+
     public function execute(User $owner, array $input): array
     {
         $result = $this->drive->search($this->googleConnector($owner), $input['name'] ?? null, (int) ($input['limit'] ?? 20));

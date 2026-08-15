@@ -29,6 +29,12 @@ class ListPriorityEmailsTool extends BaseAssistantTool
         ]];
     }
 
+    public function availableFor(User $owner): bool
+    {
+        return in_array('email_triage', $owner->assistantProfile?->enabled_workflows ?? [], true)
+            && $this->hasGoogleConnector($owner);
+    }
+
     public function execute(User $owner, array $input): array
     {
         $connector = $this->googleConnector($owner);

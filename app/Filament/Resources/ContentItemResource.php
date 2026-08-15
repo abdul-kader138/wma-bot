@@ -10,7 +10,6 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class ContentItemResource extends MariaResource
 {
@@ -23,13 +22,6 @@ class ContentItemResource extends MariaResource
     protected static ?string $navigationLabel = 'Content Packages';
 
     protected static ?int $navigationSort = 23;
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
 
     public static function form(Form $form): Form
     {

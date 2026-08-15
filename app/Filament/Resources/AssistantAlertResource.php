@@ -6,7 +6,6 @@ use App\Filament\Resources\AssistantAlertResource\Pages;
 use App\Models\AssistantAlert;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class AssistantAlertResource extends MariaResource
 {
@@ -19,13 +18,6 @@ class AssistantAlertResource extends MariaResource
     protected static ?string $navigationLabel = 'Deadline Alerts';
 
     protected static ?int $navigationSort = 16;
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
 
     public static function table(Table $table): Table
     {

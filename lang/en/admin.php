@@ -3,6 +3,10 @@
 return [
 
     'auth' => [
+        'login' => [
+            'heading'    => 'Virtual Assistant & Messaging Platform',
+            'subheading' => 'Sign in to continue.',
+        ],
         'two_factor' => [
             'heading'       => 'Two-factor authentication',
             'code_label'    => 'Authentication code',

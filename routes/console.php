@@ -8,6 +8,7 @@ use App\Jobs\Maria\GenerateMorningBrief;
 use App\Jobs\Maria\GenerateQualityReport;
 use App\Jobs\Maria\MonitorDeadlines;
 use App\Jobs\Maria\PrepareUpcomingMeetings;
+use App\Jobs\Maria\ReconcileStuckActions;
 use App\Jobs\Maria\ReviewAgverseOpportunities;
 use App\Jobs\Maria\TriageGoogleInbox;
 use App\Models\AcmProductionPlan;
@@ -30,7 +31,7 @@ Schedule::call(function () {
             GenerateMorningBrief::dispatch($profile->id, $local->toDateString());
         }
     });
-})->everyMinute()->name('maria-morning-briefs')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-morning-briefs')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::query()->where('is_active', true)->whereNotNull('evening_review_at')->each(function (AssistantProfile $profile) {
@@ -39,7 +40,7 @@ Schedule::call(function () {
             GenerateEveningReview::dispatch($profile->id, $local->toDateString());
         }
     });
-})->everyMinute()->name('maria-evening-reviews')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-evening-reviews')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     ConnectorAccount::query()->where('provider', 'google')->where('status', 'active')
@@ -53,7 +54,7 @@ Schedule::call(function () {
                 TriageGoogleInbox::dispatch($connector->id, $local->format('Y-m-d-H-i'));
             }
         });
-})->everyThirtyMinutes()->name('maria-email-triage')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyThirtyMinutes()->name('maria-email-triage')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     ConnectorAccount::query()->where('provider', 'google')->where('status', 'active')
@@ -62,13 +63,13 @@ Schedule::call(function () {
             $profile = $connector->user->assistantProfile;
             PrepareUpcomingMeetings::dispatch($connector->id, $profile->id, now($profile->timezone)->format('Y-m-d-H'));
         });
-})->hourly()->name('maria-meeting-preparation')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->hourly()->name('maria-meeting-preparation')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
         MonitorDeadlines::dispatch($profile->id, now($profile->timezone)->format('Y-m-d-H'));
     });
-})->hourly()->name('maria-deadline-monitor')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->hourly()->name('maria-deadline-monitor')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
@@ -79,7 +80,7 @@ Schedule::call(function () {
             GenerateDailyFive::dispatch($profile->id, $local->toDateString());
         }
     });
-})->everyMinute()->name('maria-daily-five')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-daily-five')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
@@ -90,7 +91,7 @@ Schedule::call(function () {
             GenerateBookPortfolioReview::dispatch($profile->id, $local->startOfWeek()->toDateString());
         }
     });
-})->everyMinute()->name('maria-book-portfolio-review')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-book-portfolio-review')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
@@ -101,7 +102,7 @@ Schedule::call(function () {
             ReviewAgverseOpportunities::dispatch($profile->id, $local->toDateString());
         }
     });
-})->everyMinute()->name('maria-agverse-opportunity-review')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-agverse-opportunity-review')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::where('is_active', true)->whereNotNull('weekly_production_day')->whereNotNull('weekly_production_at')->each(function (AssistantProfile $profile) {
@@ -110,7 +111,7 @@ Schedule::call(function () {
             AcmProductionPlan::where('user_id', $profile->user_id)->whereDate('week_start', $local->startOfWeek()->toDateString())->whereIn('status', ['planned', 'blocked_claims'])->each(fn (AcmProductionPlan $plan) => GenerateAcmProductionPlan::dispatch($plan->id));
         }
     });
-})->everyMinute()->name('maria-acm-weekly-production')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-acm-weekly-production')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::call(function () {
     AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
@@ -121,4 +122,6 @@ Schedule::call(function () {
             GenerateQualityReport::dispatch($profile->id, $local->startOfWeek()->toDateString());
         }
     });
-})->everyMinute()->name('maria-quality-report')->withoutOverlapping()->when(fn () => MariaAccess::enabled());
+})->everyMinute()->name('maria-quality-report')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
+
+Schedule::job(new ReconcileStuckActions)->everyTenMinutes()->name('maria-reconcile-stuck-actions')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());

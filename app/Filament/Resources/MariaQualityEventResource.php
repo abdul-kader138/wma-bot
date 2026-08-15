@@ -22,13 +22,6 @@ class MariaQualityEventResource extends MariaResource
 
     protected static ?int $navigationSort = 27;
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
-
     public static function form(Form $form): Form
     {
         return $form->schema([

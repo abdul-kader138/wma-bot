@@ -22,11 +22,7 @@ class WorkflowRunResource extends MariaResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-
-        $query->with('user:id,name');
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
+        return parent::getEloquentQuery()->with('user:id,name');
     }
 
     public static function form(Form $form): Form

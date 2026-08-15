@@ -8,7 +8,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class CommunicationResource extends MariaResource
 {
@@ -21,13 +20,6 @@ class CommunicationResource extends MariaResource
     protected static ?string $navigationLabel = 'Email Triage';
 
     protected static ?int $navigationSort = 14;
-
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-
-        return auth()->user()?->isAdmin() ? $query : $query->where('user_id', auth()->id());
-    }
 
     public static function form(Form $form): Form
     {

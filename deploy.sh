@@ -8,7 +8,10 @@
 
 set -euo pipefail
 
-APP_DIR="/var/www/tmmtravels"
+# Resolves to the directory this script lives in (the app root), not the caller's
+# working directory — so the exact same file works unmodified whether it's checked
+# out at /var/www/tmmtravels or /var/www/virtual-assistant on another server.
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PHP_FPM_SERVICE="php8.5-fpm"
 HORIZON_SUPERVISOR_PROGRAM="wma-bot-horizon"
 SCHEDULER_CRON_FILE="/etc/cron.d/wma-bot-scheduler"

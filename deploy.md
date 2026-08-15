@@ -1,5 +1,11 @@
 # Deploying (run this after every `git pull`)
 
+This same repository is deployed to more than one server, each checked out to
+its own directory (currently `/var/www/tmmtravels` and
+`/var/www/virtual-assistant`). `deploy.sh` detects its own location from
+where it's checked out, so the identical file works unmodified on every
+server — never hardcode a path into it.
+
 All of the steps below are automated in `deploy.sh` — from the app directory,
 just run:
 ```bash
@@ -8,7 +14,8 @@ just run:
 It's safe to re-run (idempotent migrations/seeders), always turns maintenance
 mode back off even if a step fails, and exits non-zero with a clear message
 if Horizon doesn't come back up cleanly. The manual steps below are the same
-thing spelled out, for reference or if you need to run part of it by hand.
+thing spelled out, for reference or if you need to run part of it by hand —
+replace `/var/www/tmmtravels` with the actual app directory on that server.
 
 ```bash
 # 1. Go to the app directory
@@ -74,6 +81,12 @@ php artisan shield:generate --all --panel=admin --ignore-existing-policies --no-
 ---
 
 # One-time setup (new server only — already done on this server)
+
+Run this once per server, substituting that server's own app directory
+everywhere `/var/www/tmmtravels` appears below (e.g. `/var/www/virtual-assistant`
+on the other server) and giving the Supervisor program a name unique to that
+app if it ever shares a box with another instance — `wma-bot-horizon` as
+written assumes one instance per server, which is the current setup.
 
 Horizon supervises and auto-scales the actual queue workers (1..10 processes
 in production, scaling on average queue wait time — see `config/horizon.php`).

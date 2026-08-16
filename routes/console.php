@@ -86,7 +86,7 @@ Schedule::call(function () {
     AssistantProfile::where('is_active', true)->each(function (AssistantProfile $profile) {
         $local = now($profile->timezone);
         $briefAt = $profile->morning_brief_at ? substr((string) $profile->morning_brief_at, 0, 5) : '07:30';
-        $reviewAt = Carbon\Carbon::createFromFormat('H:i', $briefAt, $profile->timezone)->addHour()->format('H:i');
+        $reviewAt = Carbon::createFromFormat('H:i', $briefAt, $profile->timezone)->addHour()->format('H:i');
         if ($local->isMonday() && $local->format('H:i') === $reviewAt && in_array('book_portfolio_review', $profile->enabled_workflows ?? [], true)) {
             GenerateBookPortfolioReview::dispatch($profile->id, $local->startOfWeek()->toDateString());
         }

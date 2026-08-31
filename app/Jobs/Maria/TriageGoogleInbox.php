@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Maria;
 
+use App\Jobs\Maria\Concerns\AlertsStaffOnFailure;
 use App\Models\ConnectorAccount;
 use App\Services\Maria\EmailTriageService;
 use Illuminate\Bus\Queueable;
@@ -13,9 +14,15 @@ use Illuminate\Queue\SerializesModels;
 
 class TriageGoogleInbox implements ShouldBeUnique, ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use AlertsStaffOnFailure, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
+    /** Space out retries so a transient shared-budget rate limit clears before the next attempt. */
+    public function backoff(): array
+    {
+        return [60, 300, 900];
+    }
 
     public int $timeout = 180;
 
@@ -30,6 +37,13 @@ class TriageGoogleInbox implements ShouldBeUnique, ShouldQueue
 
     public function handle(EmailTriageService $triage): void
     {
-        $triage->triage(ConnectorAccount::findOrFail($this->connectorId));
+        $connector = ConnectorAccount::with('user.assistantProfile')->findOrFail($this->connectorId);
+        $profile = $connector->user?->assistantProfile;
+
+        if ($profile === null || ! $profile->is_active || ! $profile->runsWorkflow('email_triage')) {
+            return;
+        }
+
+        $triage->triage($connector);
     }
 }

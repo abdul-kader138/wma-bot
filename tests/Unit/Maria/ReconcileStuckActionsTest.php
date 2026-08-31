@@ -6,6 +6,7 @@ use App\Jobs\Maria\ReconcileStuckActions;
 use App\Models\ActionReconciliation;
 use App\Models\AssistantAction;
 use App\Models\User;
+use App\Services\Maria\AssistantActionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -31,7 +32,7 @@ class ReconcileStuckActionsTest extends TestCase
         $owner = User::factory()->create();
         $stuck = $this->action($owner, 'executing', now()->subMinutes(15));
 
-        app(ReconcileStuckActions::class)->handle(app(\App\Services\Maria\AssistantActionService::class));
+        app(ReconcileStuckActions::class)->handle(app(AssistantActionService::class));
 
         $this->assertSame('failed', $stuck->fresh()->status);
         $this->assertDatabaseHas('action_reconciliations', [
@@ -44,7 +45,7 @@ class ReconcileStuckActionsTest extends TestCase
         $owner = User::factory()->create();
         $recent = $this->action($owner, 'executing', now()->subMinutes(2));
 
-        app(ReconcileStuckActions::class)->handle(app(\App\Services\Maria\AssistantActionService::class));
+        app(ReconcileStuckActions::class)->handle(app(AssistantActionService::class));
 
         $this->assertSame('executing', $recent->fresh()->status);
         $this->assertDatabaseCount('action_reconciliations', 0);
@@ -59,7 +60,7 @@ class ReconcileStuckActionsTest extends TestCase
             'provider' => 'google', 'status' => 'pending', 'reason' => 'Existing manual flag.',
         ]);
 
-        app(ReconcileStuckActions::class)->handle(app(\App\Services\Maria\AssistantActionService::class));
+        app(ReconcileStuckActions::class)->handle(app(AssistantActionService::class));
 
         $this->assertSame('executing', $stuck->fresh()->status, 'Should not re-process an action that already has a reconciliation record.');
         $this->assertDatabaseCount('action_reconciliations', 1);
@@ -70,7 +71,7 @@ class ReconcileStuckActionsTest extends TestCase
         $owner = User::factory()->create();
         $completed = $this->action($owner, 'completed', now()->subMinutes(30));
 
-        app(ReconcileStuckActions::class)->handle(app(\App\Services\Maria\AssistantActionService::class));
+        app(ReconcileStuckActions::class)->handle(app(AssistantActionService::class));
 
         $this->assertSame('completed', $completed->fresh()->status);
         $this->assertDatabaseCount('action_reconciliations', 0);

@@ -4,6 +4,7 @@ namespace App\Services\Maria\Google;
 
 use App\Models\ConnectorAccount;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -40,7 +41,7 @@ class GoogleWorkspaceClient
         }
     }
 
-    private function retrying(): \Illuminate\Http\Client\PendingRequest
+    private function retrying(): PendingRequest
     {
         return Http::retry(3, 1000, function (Throwable $error) {
             return $error instanceof ConnectionException

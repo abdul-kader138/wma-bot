@@ -6,6 +6,7 @@ use App\Models\ActionReconciliation;
 use App\Models\AssistantAction;
 use App\Models\Setting;
 use App\Services\AuditLogger;
+use App\Services\Maria\ExternalActionGuard;
 use App\Services\Maria\MariaAccess;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -41,7 +42,7 @@ class ExternalActionControl extends Page
 
     public function getViewData(): array
     {
-        return ['enabled' => filter_var(Setting::get('maria_external_actions_enabled', true), FILTER_VALIDATE_BOOLEAN), 'executingCount' => AssistantAction::where('status', 'executing')->count(), 'pendingReconciliations' => ActionReconciliation::where('status', 'pending')->count()];
+        return ['enabled' => ExternalActionGuard::globallyEnabled(), 'executingCount' => AssistantAction::where('status', 'executing')->count(), 'pendingReconciliations' => ActionReconciliation::where('status', 'pending')->count()];
     }
 
     private function setEnabled(bool $enabled, string $auditAction): void

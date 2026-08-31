@@ -1,7 +1,7 @@
 # Maria Assistant User Manual
 
-Version: 2.0
-Last updated: 13 August 2026
+Version: 2.3
+Last updated: 31 August 2026
 
 ## 1. Purpose of this manual
 
@@ -128,6 +128,8 @@ Maria uses two access gates: the global switch and the user's role permission.
 
 Super-admins retain administrative access. When Maria is globally disabled, Maria permissions are hidden from the role editor but are not deleted.
 
+After a deployment that adds new Maria pages or resources — for example **Cost & Quality** and **Remembered Facts** — regenerate permissions (`php artisan shield:generate`, per your normal process) so they appear in the role editor, then grant them as below.
+
 Recommended permission approach:
 
 - Administrators: Maria access plus administrative resources, safety controls, identities, prompts, and workflow history.
@@ -199,7 +201,7 @@ Avoid placing secrets, passwords, OAuth tokens, or unnecessary confidential cont
 - **All Catholic Media Weekly Production:** configured weekday and time.
 - **Weekly Maria Quality Report:** Monday, two hours after the morning brief time.
 
-The profile must be active and Maria must be globally enabled for schedules to dispatch.
+The profile must be active and Maria must be globally enabled for schedules to dispatch. Every workflow, including Morning Brief, Evening Review, Email Triage, Meeting Preparation, and Deadline Monitor, only runs when it is selected in **Enabled Workflows**. The one exception is a profile whose workflow list has never been set at all: for that profile the five core workflows above run by default until the list is saved for the first time.
 
 #### How schedule times are calculated
 
@@ -580,6 +582,10 @@ External writes require all of the following:
 7. A current exact-content approval exists.
 8. No unresolved reconciliation prevents retry.
 
+The global External Action Control switch **fails safe**: until an administrator explicitly turns it on, and any time its stored value is missing or unreadable, every Maria external action is treated as stopped. Read-only workflows are unaffected. Turning it on is a deliberate one-click step on the **External Action Control** page, recorded in the audit log.
+
+All Maria chat turns are also recorded in the audit log (channel, tools used, prompt version, and token cost — never the message text), alongside the existing approval and external-action audit entries.
+
 ### Emergency stop
 
 If an external-action incident is suspected:
@@ -675,6 +681,7 @@ After configuration, confirm each item:
 - [ ] Horizon/queue workers are running.
 - [ ] A scheduled workflow produces a Workflow Run and expected output.
 - [ ] No unexpected workflow failures or connection errors remain.
+- [ ] `php artisan maria:eval` lists the behavioural cases; run `php artisan maria:eval --live` once against the configured model and confirm the pass rate is acceptable.
 
 ### Server administrator checks
 
@@ -727,9 +734,40 @@ Check:
 6. Horizon/queue workers are running.
 7. Failed jobs and Workflow Runs show no unresolved error.
 
+A single malformed model response no longer fails a workflow outright: the structured-output layer feeds the validation errors back for one automatic correction before giving up. A Workflow Run that still shows a `failed schema validation after a repair attempt` error means the model could not produce valid output twice — treat that as a prompt or schema problem, not a transient blip.
+
 ### Email triage does not run
 
 Confirm Email Triage is selected, Google is active, the profile is active, and the current local time is inside the configured working-hours window. Triage is scheduled every 30 minutes, not continuously.
+
+### Maria workflows or chat intermittently report a request-limit error
+
+Maria's AI calls (the conversational assistant and every scheduled workflow) draw from the **same per-minute Anthropic budget** as the public WhatsApp bot, controlled by **System Settings → AI → Requests per minute** (`claude_rate_limit_per_minute`). When that budget is momentarily full:
+
+- **Chat** replies with a short "try again in a minute" message; nothing is sent or billed.
+- **Scheduled workflows** fail the current attempt with a rate-limit message and retry automatically after a delay (60s, then 5 min, then 15 min). An occasional single failed Workflow Run that later completes is expected under load.
+
+If these errors are frequent, raise the per-minute limit (within your Anthropic account's real rate limit) or reduce how many owners run heavy workflows at the same clock minute. This shared budget is deliberate: it stops a Maria inbox-triage surge from starving customer WhatsApp conversations of API capacity.
+
+Two daily ceilings also apply, both **0 (disabled) by default**:
+
+- **`claude_daily_global_cap`** — an app-wide ceiling across all Claude calls, customer and Maria.
+- **`maria_daily_call_cap`** — a Maria-only ceiling (System Settings → AI). When hit, Maria chat asks the user to retry later and scheduled workflows defer; customer traffic is unaffected.
+
+Set them to match your real daily budget once you know your steady-state volume.
+
+### A Maria workflow keeps failing after all its retries
+
+When a scheduled Maria workflow job exhausts its retries, the configured **staff notification email** receives one message naming the workflow and the error, and the full record is in **Workflow Runs**. Transient rate-limit exhaustion is logged but not emailed, since it clears on its own. If you get one of these emails, open the Workflow Run, read the `error`, and check the source data or connector it depends on.
+
+### Regression-testing Maria's behaviour after a prompt or model change
+
+The repository ships a behavioural eval suite (`resources/evals/maria.php`) covering the blueprint's scenarios — domain routing, task capture, refusing to send/schedule from chat, not fabricating unread email, staying out of legal decisions, and correct tool use.
+
+- `php artisan maria:eval` — lists the cases (no model calls, no cost).
+- `php artisan maria:eval --live` — runs them against the configured model in a rolled-back transaction and prints a pass/fail table; exit code is non-zero if any case fails, so it can gate a deployment. Add `--json=path` to save a full report.
+
+Run `--live` after any change to the system prompt (`config/maria.php` or an active `PromptVersion`), the model id, or the tool set, and before promoting that change.
 
 ### A task due today appears in the due list
 
@@ -762,6 +800,41 @@ Compare the exact claim wording, status, permitted brand, evidence, and recheck 
 ### User sees another person's records
 
 Stop using the affected account and report a privacy incident immediately. Record the page, record type, user, time, and screenshot with sensitive details minimized. Do not change or delete evidence before an administrator investigates permissions and ownership.
+
+### Cost & Quality page
+
+**Maria Assistant → Cost & Quality** aggregates, for a 7 / 30 / 90-day window: estimated spend, workflow run count and success rate, estimated time saved, a per-workflow breakdown (runs, success rate, tokens, cost, time saved), chat token spend, and the most recent workflow failures. Administrators see all owners; other users see only their own workflows.
+
+Cost is derived from token counts and the **Input price** / **Output price** per million tokens set in **System Settings → AI**. Set those to your model's published prices (defaults assume Haiku-class pricing). Time saved is an estimate until a reviewer confirms it in **Quality & Corrections**.
+
+### Eval gate on prompt activation
+
+`resources/evals/maria.php` holds the behavioural eval suite. Beyond running it manually (see "Regression-testing" above), you can require it before a Maria system prompt goes live:
+
+1. In **System Settings → General**, turn on **Require a passing eval before activating a Maria system prompt** and set the **Minimum eval pass rate**.
+2. Create the new prompt version in **Prompt Versions** but leave it inactive.
+3. Run `php artisan maria:eval --live --prompt-version=<that version string>`. It records the result to `maria_eval_runs`.
+4. Only then can that version be activated. Activation is blocked unless a recorded run for that exact prompt text, within the last 30 days, met the minimum pass rate.
+
+The gate applies only to `maria_system` prompts and only while the toggle is on; with it off, activation is unrestricted.
+
+### Excluding sensitive email from triage, and secret redaction
+
+In **System Settings → General**:
+
+- **Email triage — excluded senders**: one email address or domain per line/comma. Messages from these are never read by email triage or the morning brief, and no record is stored for them.
+- **Email triage — excluded Gmail labels**: one label name/id per line/comma. Threads carrying any of these are skipped entirely.
+
+Independently, before any email snippet or meeting note is sent to the model, Maria runs a best-effort scrub that replaces obvious secrets — API keys, bearer tokens, `password:`-style pairs, card-like numbers, long opaque tokens — with `[redacted]`. This is a safety net; the primary control is still not connecting sensitive mailboxes and using the exclusion lists above. The user's original meeting notes are stored unredacted; only what the model sees is scrubbed.
+
+### Remembered facts and conversation memory
+
+Maria keeps two kinds of memory for the chat channel:
+
+- **Remembered Facts** (`assistant_memories`): durable, per-owner facts and standing preferences the user asked Maria to remember ("prefers morning meetings"). Review, edit, or delete them under **Maria Assistant → Remembered Facts**. They are surfaced to the assistant as context on every chat turn.
+- **Rolling conversation summary**: once a chat grows long, Maria folds its older turns into a short summary stored on the conversation, keeping recent turns verbatim. This bounds prompt size and cost while preserving continuity. If summarisation ever fails, the full history is kept rather than lost.
+
+Neither is used by the scheduled workflows; both are private to the owner and owner-scoped.
 
 ## 13. Good operating practices
 

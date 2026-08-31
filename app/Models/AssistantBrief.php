@@ -4,7 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $brief_date
+ * @property array<string, mixed>|null $content
+ * @property string $type
+ */
 class AssistantBrief extends Model
 {
     protected $fillable = ['user_id', 'workflow_run_id', 'type', 'brief_date', 'content'];

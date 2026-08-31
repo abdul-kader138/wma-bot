@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PromptVersionResource\Pages;
 use App\Models\PromptVersion;
+use App\Services\Maria\PromptActivationGuard;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
@@ -52,6 +53,7 @@ class PromptVersionResource extends MariaResource
         $data['created_by'] = $record?->created_by ?? auth()->id();
         $data['content_hash'] = hash('sha256', Str::of($data['content'])->trim()->toString());
         if ($data['is_active'] ?? false) {
+            app(PromptActivationGuard::class)->assertEvalPassed($data['prompt_type'], $data['content_hash']);
             DB::table('prompt_versions')->where('prompt_type', $data['prompt_type'])->when($record, fn ($query) => $query->where('id', '!=', $record->id))->update(['is_active' => false, 'updated_at' => now()]);
         }
 

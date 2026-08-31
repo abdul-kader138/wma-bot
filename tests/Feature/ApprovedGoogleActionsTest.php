@@ -20,6 +20,17 @@ class ApprovedGoogleActionsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // These tests exercise the approval/execution mechanics; the global
+        // emergency switch (fail-safe OFF by default) has its own test. Turn it
+        // on here so the mechanics under test are reachable. Individual tests
+        // still override it when the switch itself is the subject.
+        Setting::set('maria_external_actions_enabled', true, 'maria_safety');
+    }
+
     public function test_email_requires_exact_approval_and_executes_only_once(): void
     {
         $user = User::factory()->create();

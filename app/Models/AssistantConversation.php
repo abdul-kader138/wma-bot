@@ -9,7 +9,7 @@ class AssistantConversation extends Model
 {
     protected $fillable = [
         'assistant_profile_id', 'assistant_channel_identity_id', 'status',
-        'history', 'last_prompt_version', 'input_tokens', 'output_tokens',
+        'history', 'summary', 'last_prompt_version', 'input_tokens', 'output_tokens',
         'last_message_at',
     ];
 

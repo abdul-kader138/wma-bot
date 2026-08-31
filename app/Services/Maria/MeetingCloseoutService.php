@@ -4,6 +4,7 @@ namespace App\Services\Maria;
 
 use App\Models\Meeting;
 use App\Services\AuditLogger;
+use App\Services\Maria\Support\SecretRedactor;
 use Illuminate\Support\Facades\DB;
 
 class MeetingCloseoutService
@@ -19,13 +20,14 @@ class MeetingCloseoutService
     {
         $meeting->loadMissing('user');
         $prompt = $this->prompts->active();
+        $scrubbedNotes = SecretRedactor::scrub($notes);
         $result = $this->agent->run(
             $prompt['content'],
-            'Close out this meeting using only the supplied notes. Extract explicit decisions and commitments. Draft but do not send a thank-you. Meeting: '.json_encode($meeting->only(['title', 'starts_at', 'attendees', 'objective']), JSON_THROW_ON_ERROR)."\nNotes:\n{$notes}",
+            'Close out this meeting using only the supplied notes. Extract explicit decisions and commitments. Draft but do not send a thank-you. Meeting: '.json_encode($meeting->only(['title', 'starts_at', 'attendees', 'objective']), JSON_THROW_ON_ERROR)."\nNotes:\n{$scrubbedNotes}",
             'save_meeting_closeout', 'Return meeting decisions, actions, unanswered questions, and an unsent thank-you draft.', $this->schema(),
         );
 
-        return DB::transaction(function () use ($meeting, $notes, $result) {
+        return DB::transaction(function () use ($meeting, $notes, $result, $prompt) {
             $data = $result['data'];
             $meeting->update([
                 'notes_source' => $notes,
@@ -43,7 +45,7 @@ class MeetingCloseoutService
             $this->audit->recordContext(
                 category: 'maria_meeting', action: 'closeout', actorId: $meeting->user_id,
                 ownerId: $meeting->user_id, subjectPath: "meeting:{$meeting->id}",
-                metadata: ['task_count' => count($data['action_items'] ?? []), 'prompt_version' => $result['usage']],
+                metadata: ['task_count' => count($data['action_items'] ?? []), 'prompt_version' => $prompt['version'], 'usage' => $result['usage']],
             );
 
             return $meeting->refresh();

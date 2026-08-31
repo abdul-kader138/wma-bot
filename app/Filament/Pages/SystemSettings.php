@@ -87,6 +87,10 @@ class SystemSettings extends Page implements HasForms
             // Security
             'two_factor_enabled' => Setting::get('two_factor_enabled', true),
             'maria_assistant_enabled' => Setting::get('maria_assistant_enabled', false),
+            'maria_eval_gate_enabled' => Setting::get('maria_eval_gate_enabled', false),
+            'maria_eval_min_pass_rate' => Setting::get('maria_eval_min_pass_rate', 100),
+            'maria_triage_excluded_senders' => Setting::get('maria_triage_excluded_senders', ''),
+            'maria_triage_excluded_labels' => Setting::get('maria_triage_excluded_labels', ''),
 
             // Appearance
             'admin_theme' => Setting::get('admin_theme', 'amber'),
@@ -108,10 +112,13 @@ class SystemSettings extends Page implements HasForms
             'claude_model' => Setting::get('claude_model', env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001')),
             'claude_max_tokens' => Setting::get('claude_max_tokens', 1024),
             'claude_temperature' => Setting::get('claude_temperature', 0.7),
+            'claude_price_input_per_mtok' => Setting::get('claude_price_input_per_mtok', 1.0),
+            'claude_price_output_per_mtok' => Setting::get('claude_price_output_per_mtok', 5.0),
             'claude_rate_limit_per_minute' => Setting::get('claude_rate_limit_per_minute', 50),
             'claude_max_messages_per_session' => Setting::get('claude_max_messages_per_session', 20),
             'claude_max_messages_per_day' => Setting::get('claude_max_messages_per_day', 100),
             'claude_daily_global_cap' => Setting::get('claude_daily_global_cap', 0),
+            'maria_daily_call_cap' => Setting::get('maria_daily_call_cap', 0),
 
             // Google Workspace (secret intentionally never hydrated into the form)
             'google_client_id' => Setting::get('google_client_id', config('services.google.client_id', '')),
@@ -189,6 +196,25 @@ class SystemSettings extends Page implements HasForms
                                 Toggle::make('maria_assistant_enabled')
                                     ->label('Enable Maria Assistant')
                                     ->helperText('When disabled, Maria menus, pages, private assistant routing, connectors, and scheduled workflows are unavailable. Users also need the Access Maria Assistant role permission.'),
+
+                                Toggle::make('maria_eval_gate_enabled')
+                                    ->label('Require a passing eval before activating a Maria system prompt')
+                                    ->helperText('When on, a "maria_system" prompt version can only be activated after `php artisan maria:eval --live --prompt-version=…` has recorded a run at or above the pass rate below for that exact prompt text within the last 30 days.'),
+
+                                TextInput::make('maria_eval_min_pass_rate')
+                                    ->label('Minimum eval pass rate (%)')
+                                    ->numeric()->minValue(0)->maxValue(100)
+                                    ->helperText('Used only when the eval gate above is on.'),
+
+                                Textarea::make('maria_triage_excluded_senders')
+                                    ->label('Email triage — excluded senders')
+                                    ->rows(2)
+                                    ->helperText('One email address or domain per line/comma. Messages from these are never read by Maria\'s email triage or morning brief, and no record is stored. E.g. legal@example.com, mybank.example'),
+
+                                Textarea::make('maria_triage_excluded_labels')
+                                    ->label('Email triage — excluded Gmail labels')
+                                    ->rows(2)
+                                    ->helperText('One Gmail label name or id per line/comma. Threads carrying any of these are skipped entirely.'),
 
                                 Select::make('admin_locale')
                                     ->label(__('admin.settings.fields.default_language'))
@@ -455,6 +481,22 @@ class SystemSettings extends Page implements HasForms
                                     ]),
 
                                     Grid::make(2)->schema([
+                                        TextInput::make('claude_price_input_per_mtok')
+                                            ->label('Input price ($ / million tokens)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->step(0.01)
+                                            ->helperText('Used only to estimate cost on the Maria Cost & Quality page. Match your model\'s published input price.'),
+
+                                        TextInput::make('claude_price_output_per_mtok')
+                                            ->label('Output price ($ / million tokens)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->step(0.01)
+                                            ->helperText('Used only to estimate cost on the Maria Cost & Quality page. Match your model\'s published output price.'),
+                                    ]),
+
+                                    Grid::make(2)->schema([
                                         TextInput::make('claude_rate_limit_per_minute')
                                             ->label('Rate Limit (requests/min)')
                                             ->numeric()
@@ -484,6 +526,14 @@ class SystemSettings extends Page implements HasForms
                                             ->minValue(0)
                                             ->required()
                                             ->helperText('Absolute ceiling on Claude calls per day across everyone — a circuit breaker for when something is badly wrong. Staff get one email when it trips. 0 disables it (default); set it to match your real daily budget.'),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        TextInput::make('maria_daily_call_cap')
+                                            ->label('Maria Daily Claude Call Cap')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->helperText('Ceiling on Claude calls per day made by the Maria assistant and its workflows specifically (separate from customer traffic). When hit, Maria chat asks the user to retry later and scheduled workflows defer. 0 disables it (default).'),
                                     ]),
                                 ]),
                         ]),
@@ -649,6 +699,10 @@ class SystemSettings extends Page implements HasForms
             'app_datetime_format' => 'regional',
             'two_factor_enabled' => 'security',
             'maria_assistant_enabled' => 'maria',
+            'maria_eval_gate_enabled' => 'maria',
+            'maria_eval_min_pass_rate' => 'maria',
+            'maria_triage_excluded_senders' => 'maria',
+            'maria_triage_excluded_labels' => 'maria',
             'admin_theme' => 'appearance',
             'admin_panel_theme_mode' => 'appearance',
             'auth_theme_mode' => 'appearance',
@@ -663,10 +717,13 @@ class SystemSettings extends Page implements HasForms
             'claude_model' => 'claude',
             'claude_max_tokens' => 'claude',
             'claude_temperature' => 'claude',
+            'claude_price_input_per_mtok' => 'claude',
+            'claude_price_output_per_mtok' => 'claude',
             'claude_rate_limit_per_minute' => 'claude',
             'claude_max_messages_per_session' => 'claude',
             'claude_max_messages_per_day' => 'claude',
             'claude_daily_global_cap' => 'claude',
+            'maria_daily_call_cap' => 'maria',
             'google_client_id' => 'google',
             'google_redirect_uri' => 'google',
             'faq_confidence_threshold' => 'bot',

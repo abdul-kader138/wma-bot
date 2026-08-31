@@ -26,6 +26,12 @@ class MonitorDeadlines implements ShouldBeUnique, ShouldQueue
 
     public function handle(DeadlineMonitorService $monitor): void
     {
-        $monitor->run(AssistantProfile::findOrFail($this->profileId));
+        $profile = AssistantProfile::findOrFail($this->profileId);
+
+        if (! $profile->is_active || ! $profile->runsWorkflow('deadline_monitor')) {
+            return;
+        }
+
+        $monitor->run($profile);
     }
 }

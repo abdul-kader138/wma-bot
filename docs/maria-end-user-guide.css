@@ -1,0 +1,40 @@
+@import url("maria-user-manual.css");
+
+/* End-user guide: many worked tables and long example blockquotes. Keep the
+   base look, but make sure wide cells wrap instead of running off the page and
+   that rows/list items are not split across a page break. */
+
+@page {
+  @bottom-center {
+    content: "Maria Assistant — User Guide  •  Page " counter(page) " of " counter(pages);
+  }
+}
+
+table {
+  font-size: 8.7pt;
+}
+
+th,
+td {
+  overflow-wrap: anywhere;
+}
+
+tr,
+li {
+  page-break-inside: avoid;
+}
+
+table,
+blockquote {
+  page-break-inside: auto;
+}
+
+h2,
+h3 {
+  page-break-after: avoid;
+}
+
+p {
+  orphans: 2;
+  widows: 2;
+}

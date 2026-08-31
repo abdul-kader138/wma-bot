@@ -4,7 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $due_at
+ * @property Carbon|null $follow_up_at
+ */
 class MariaTask extends Model
 {
     protected $table = 'maria_tasks';

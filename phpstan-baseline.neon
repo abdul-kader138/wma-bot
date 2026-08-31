@@ -91,12 +91,6 @@ parameters:
 			path: app/Models/Approval.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$timezone\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/AcceptanceMetricsService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>timezone" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -205,12 +199,6 @@ parameters:
 			path: app/Services/Maria/AssistantActionService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/AssistantIdentityResolver.php
-
-		-
 			message: '#^Cannot call method toDateString\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 2
@@ -221,12 +209,6 @@ parameters:
 			identifier: argument.unresolvableType
 			count: 1
 			path: app/Services/Maria/BookPortfolioReviewService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$timezone\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/ClaimsVerificationService.php
 
 		-
 			message: '#^Parameter \#2 \$haystack of function in_array expects array, string given\.$#'
@@ -265,58 +247,16 @@ parameters:
 			path: app/Services/Maria/DailyFiveService.php
 
 		-
-			message: '#^Cannot call method lt\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Services/Maria/DeadlineMonitorService.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: app/Services/Maria/DeadlineMonitorService.php
-
-		-
-			message: '#^Parameter \#1 \$owner of method App\\Services\\Maria\\CommitmentTaskService\:\:create\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Maria/EmailTriageService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$external_actions_enabled\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/ExternalActionGuard.php
-
-		-
 			message: '#^Cannot call method isAfter\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 2
 			path: app/Services/Maria/Google/GoogleWorkspaceClient.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/MariaConversationService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/MariaConversationService.php
-
-		-
 			message: '#^Parameter \#1 \$owner of method App\\Services\\Maria\\CommitmentTaskService\:\:create\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Maria/MeetingCloseoutService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 7
-			path: app/Services/Maria/MorningBriefService.php
 
 		-
 			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
@@ -337,28 +277,10 @@ parameters:
 			path: app/Services/Maria/Support/JsonSchemaValidator.php
 
 		-
-			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Services/Maria/Tools/CreateTaskTool.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$enabled_workflows\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/Tools/ListCalendarEventsTool.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>enabled_workflows" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/Maria/Tools/ListCalendarEventsTool.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$enabled_workflows\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Maria/Tools/ListPriorityEmailsTool.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>enabled_workflows" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'

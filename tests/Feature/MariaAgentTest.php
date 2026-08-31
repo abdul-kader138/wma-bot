@@ -75,6 +75,7 @@ class MariaAgentTest extends TestCase
         $result = app(MariaAgent::class)->handle(User::factory()->create(), 'Hello');
 
         $this->assertSame('2.0', $result['prompt_version']);
-        Http::assertSent(fn ($request) => $request->data()['system'] === 'CUSTOM MARIA PROMPT');
+        Http::assertSent(fn ($request) => data_get($request->data(), 'system.0.text') === 'CUSTOM MARIA PROMPT'
+            && data_get($request->data(), 'system.0.cache_control.type') === 'ephemeral');
     }
 }

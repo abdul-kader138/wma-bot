@@ -11,6 +11,8 @@ use App\Models\MariaTask;
 use App\Models\WorkflowRun;
 use App\Services\Maria\Google\GmailReadClient;
 use App\Services\Maria\Google\GoogleCalendarReadClient;
+use App\Services\Maria\Support\SecretRedactor;
+use App\Services\Maria\Support\TriageExclusions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
@@ -82,8 +84,20 @@ class MorningBriefService
         }
 
         try {
+            $exclusions = new TriageExclusions;
             $messages = $this->gmail->listMessages($connector, 'is:unread -category:promotions -category:social', 10);
-            $sources['emails'] = collect($messages['messages'] ?? [])->take(10)->map(fn ($item) => $this->gmail->getMessage($connector, $item['id']))->all();
+            $sources['emails'] = collect($messages['messages'] ?? [])->take(10)
+                ->map(fn ($item) => $this->gmail->getMessage($connector, $item['id']))
+                ->reject(function ($message) use ($exclusions) {
+                    $from = collect(data_get($message, 'payload.headers', []))->firstWhere('name', 'From')['value'] ?? null;
+
+                    return $exclusions->excludes($from, $message['labelIds'] ?? []);
+                })
+                ->map(fn ($message) => [
+                    ...$message,
+                    'snippet' => SecretRedactor::scrub($message['snippet'] ?? ''),
+                ])
+                ->values()->all();
         } catch (Throwable) {
             $gaps[] = 'gmail_unavailable';
         }

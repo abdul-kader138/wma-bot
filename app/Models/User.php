@@ -14,6 +14,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property-read AssistantProfile|null $assistantProfile
+ */
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
@@ -82,6 +85,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasRole('super_admin');
     }
 
+    /** @return HasOne<AssistantProfile, $this> */
     public function assistantProfile(): HasOne
     {
         return $this->hasOne(AssistantProfile::class);

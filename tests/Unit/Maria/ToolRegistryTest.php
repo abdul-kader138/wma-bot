@@ -19,8 +19,24 @@ class ToolRegistryTest extends TestCase
         $owner = User::factory()->create();
         $names = collect(app(ToolRegistry::class)->definitions($owner))->pluck('name');
 
-        $this->assertTrue($names->contains('list_tasks'));
-        $this->assertTrue($names->contains('create_task'));
+        foreach ([
+            'list_tasks', 'create_task', 'complete_task', 'update_task',
+            'list_projects', 'list_meetings', 'list_pending_approvals', 'get_latest_brief',
+            'remember_fact',
+        ] as $tool) {
+            $this->assertTrue($names->contains($tool), "{$tool} should always be available");
+        }
+    }
+
+    public function test_relationship_followup_tool_requires_the_daily_five_workflow(): void
+    {
+        $owner = User::factory()->create();
+        $withoutProfile = collect(app(ToolRegistry::class)->definitions($owner))->pluck('name');
+        $this->assertFalse($withoutProfile->contains('list_relationship_followups'));
+
+        AssistantProfile::create(['user_id' => $owner->id, 'enabled_workflows' => ['daily_five']]);
+        $withWorkflow = collect(app(ToolRegistry::class)->definitions($owner->refresh()))->pluck('name');
+        $this->assertTrue($withWorkflow->contains('list_relationship_followups'));
     }
 
     public function test_connector_backed_tools_are_hidden_without_a_google_connector(): void

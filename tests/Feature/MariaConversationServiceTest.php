@@ -8,9 +8,11 @@ use App\Models\AssistantProfile;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\WhatsAppAccount;
+use App\Services\AuditLogger;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
 use App\Services\Maria\AssistantIdentityResolver;
+use App\Services\Maria\ConversationMemoryService;
 use App\Services\Maria\MariaAgent;
 use App\Services\Maria\MariaConversationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +50,7 @@ class MariaConversationServiceTest extends TestCase
                 'usage' => ['input_tokens' => 30, 'output_tokens' => 12],
             ]);
 
-        $reply = (new MariaConversationService($agent))->handle($identity, 'What is next?');
+        $reply = (new MariaConversationService($agent, app(AuditLogger::class), app(ConversationMemoryService::class)))->handle($identity, 'What is next?');
 
         $this->assertSame('Your next task is the meeting brief. Status: Completed', $reply);
         $this->assertDatabaseHas('assistant_conversations', [
@@ -61,6 +63,13 @@ class MariaConversationServiceTest extends TestCase
         $history = $profile->conversations()->first()->history;
         $this->assertSame('What is next?', $history[0]['content']);
         $this->assertSame($reply, $history[1]['content']);
+
+        // The chat turn is audited without storing the message text.
+        $this->assertDatabaseHas('audit_logs', [
+            'category' => 'maria_chat',
+            'action' => 'message',
+            'owner_id' => $user->id,
+        ]);
     }
 
     public function test_verified_identity_routes_to_maria_instead_of_public_intake(): void

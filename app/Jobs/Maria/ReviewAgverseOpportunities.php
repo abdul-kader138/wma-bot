@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Maria;
 
+use App\Jobs\Maria\Concerns\AlertsStaffOnFailure;
 use App\Models\AssistantProfile;
 use App\Services\Maria\AgverseOpportunityReviewService;
 use Illuminate\Bus\Queueable;
@@ -13,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ReviewAgverseOpportunities implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use AlertsStaffOnFailure, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(public int $profileId, public string $reviewDate) {}
 

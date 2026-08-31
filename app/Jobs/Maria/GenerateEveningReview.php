@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Maria;
 
+use App\Jobs\Maria\Concerns\AlertsStaffOnFailure;
 use App\Models\AssistantProfile;
 use App\Services\Maria\EveningReviewService;
 use Illuminate\Bus\Queueable;
@@ -13,9 +14,15 @@ use Illuminate\Queue\SerializesModels;
 
 class GenerateEveningReview implements ShouldBeUnique, ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use AlertsStaffOnFailure, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
+    /** Space out retries so a transient shared-budget rate limit clears before the next attempt. */
+    public function backoff(): array
+    {
+        return [60, 300, 900];
+    }
 
     public int $timeout = 120;
 
@@ -30,6 +37,12 @@ class GenerateEveningReview implements ShouldBeUnique, ShouldQueue
 
     public function handle(EveningReviewService $reviews): void
     {
-        $reviews->generate(AssistantProfile::findOrFail($this->profileId));
+        $profile = AssistantProfile::findOrFail($this->profileId);
+
+        if (! $profile->is_active || ! $profile->runsWorkflow('evening_review')) {
+            return;
+        }
+
+        $reviews->generate($profile);
     }
 }

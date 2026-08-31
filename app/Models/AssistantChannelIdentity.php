@@ -18,6 +18,7 @@ class AssistantChannelIdentity extends Model
         return ['is_active' => 'boolean', 'verified_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<AssistantProfile, $this> */
     public function profile(): BelongsTo
     {
         return $this->belongsTo(AssistantProfile::class, 'assistant_profile_id');

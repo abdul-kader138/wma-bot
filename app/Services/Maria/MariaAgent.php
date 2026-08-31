@@ -15,12 +15,17 @@ class MariaAgent
     public function __construct(
         private readonly ToolRegistry $tools,
         private readonly PromptResolver $prompts,
+        private readonly ClaudeGate $gate,
     ) {}
 
-    /** @return array{text:string, prompt_version:string, tool_calls:array, usage:array} */
-    public function handle(User $owner, string $message, array $history = []): array
+    /**
+     * @param  array{version:string, content:string}|null  $promptOverride  Used by the eval harness to test a
+     *                                                                      specific prompt version without activating it.
+     * @return array{text:string, prompt_version:string, tool_calls:array, usage:array}
+     */
+    public function handle(User $owner, string $message, array $history = [], ?array $promptOverride = null): array
     {
-        $prompt = $this->prompts->active();
+        $prompt = $promptOverride ?? $this->prompts->active();
         $messages = $this->normalizeHistory($history);
         $messages[] = ['role' => 'user', 'content' => $message];
         $toolCalls = [];
@@ -76,6 +81,8 @@ class MariaAgent
 
     private function callClaude(string $system, array $messages, User $owner): array
     {
+        $this->gate->reserve();
+
         return Http::withHeaders([
             'x-api-key' => Setting::getSecret('claude_api_key') ?: config('services.anthropic.key'),
             'anthropic-version' => '2023-06-01',
@@ -87,7 +94,10 @@ class MariaAgent
             'model' => Setting::get('claude_model') ?: config('services.anthropic.model'),
             'max_tokens' => (int) Setting::get('claude_max_tokens', 1024),
             'temperature' => (float) Setting::get('claude_temperature', 0.2),
-            'system' => $system,
+            // The system prompt and tool schemas are identical on every turn and
+            // large; caching them cuts input-token cost sharply across the
+            // multi-round tool loop and busy days.
+            'system' => [['type' => 'text', 'text' => $system, 'cache_control' => ['type' => 'ephemeral']]],
             'tools' => $this->tools->definitions($owner),
             'messages' => $messages,
         ])->throw()->json();

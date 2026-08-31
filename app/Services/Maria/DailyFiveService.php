@@ -69,7 +69,11 @@ class DailyFiveService
     {
         $tier = ['A' => 40, 'B' => 25, 'C' => 10][$contact->tier] ?? 5;
         $due = $contact->follow_up_at?->isPast() ? 30 : ($contact->follow_up_at?->isBefore(now()->addWeek()) ? 20 : 0);
-        $stale = $contact->last_interaction_at ? min(20, $contact->last_interaction_at->diffInDays(now())) : 20;
+        // Older last-contact => higher score, capped at 20. abs() guards a
+        // future-dated last_interaction_at (data entry error) from going negative.
+        $stale = $contact->last_interaction_at
+            ? (int) min(20, abs($contact->last_interaction_at->diffInDays(now())))
+            : 20;
         $warm = filled($contact->warm_path) ? 10 : 0;
 
         return $tier + $due + $stale + $warm;

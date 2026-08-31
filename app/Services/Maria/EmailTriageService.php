@@ -5,6 +5,8 @@ namespace App\Services\Maria;
 use App\Models\Communication;
 use App\Models\ConnectorAccount;
 use App\Services\Maria\Google\GmailReadClient;
+use App\Services\Maria\Support\SecretRedactor;
+use App\Services\Maria\Support\TriageExclusions;
 
 class EmailTriageService
 {
@@ -17,6 +19,7 @@ class EmailTriageService
 
     public function triage(ConnectorAccount $connector, int $limit = 20): array
     {
+        $exclusions = new TriageExclusions;
         $list = $this->gmail->listMessages($connector, 'is:unread -category:promotions -category:social -in:spam', $limit);
         $messages = collect($list['messages'] ?? [])->take($limit)->map(function ($item) use ($connector) {
             $message = $this->gmail->getMessage($connector, $item['id']);
@@ -28,7 +31,16 @@ class EmailTriageService
                 'subject' => $headers->get('Subject'), 'date' => $headers->get('Date'),
                 'snippet' => $message['snippet'] ?? '', 'labels' => $message['labelIds'] ?? [],
             ];
-        })->values()->all();
+        })
+            // Never let an excluded sender or label reach the model or a stored record.
+            ->reject(fn ($m) => $exclusions->excludes($m['from'], (array) $m['labels']))
+            // Scrub obvious secrets from the text the model sees.
+            ->map(fn ($m) => [
+                ...$m,
+                'subject' => SecretRedactor::scrub((string) $m['subject']),
+                'snippet' => SecretRedactor::scrub((string) $m['snippet']),
+            ])
+            ->values()->all();
 
         if ($messages === []) {
             return [];

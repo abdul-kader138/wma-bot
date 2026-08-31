@@ -14,11 +14,22 @@ class ExternalActionGuardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_passes_when_no_switch_is_set(): void
+    public function test_global_switch_fails_safe_and_blocks_when_no_setting_exists(): void
     {
         $owner = User::factory()->create();
 
-        $this->expectNotToPerformAssertions();
+        // No 'maria_external_actions_enabled' row at all — the switch must be
+        // treated as OFF, not ON.
+        $this->expectException(ValidationException::class);
+        app(ExternalActionGuard::class)->assertEnabled($owner);
+    }
+
+    public function test_global_switch_blocks_when_stored_as_a_falsey_string(): void
+    {
+        $owner = User::factory()->create();
+        Setting::set('maria_external_actions_enabled', 'false', 'maria_safety');
+
+        $this->expectException(ValidationException::class);
         app(ExternalActionGuard::class)->assertEnabled($owner);
     }
 
@@ -47,6 +58,7 @@ class ExternalActionGuardTest extends TestCase
         $allowed = User::factory()->create();
         AssistantProfile::create(['user_id' => $blocked->id, 'external_actions_enabled' => false]);
         AssistantProfile::create(['user_id' => $allowed->id, 'external_actions_enabled' => true]);
+        Setting::set('maria_external_actions_enabled', true, 'maria_safety');
 
         $this->expectException(ValidationException::class);
         app(ExternalActionGuard::class)->assertEnabled($blocked);
@@ -58,6 +70,7 @@ class ExternalActionGuardTest extends TestCase
         $allowed = User::factory()->create();
         AssistantProfile::create(['user_id' => $blocked->id, 'external_actions_enabled' => false]);
         AssistantProfile::create(['user_id' => $allowed->id, 'external_actions_enabled' => true]);
+        Setting::set('maria_external_actions_enabled', true, 'maria_safety');
 
         $this->expectNotToPerformAssertions();
         app(ExternalActionGuard::class)->assertEnabled($allowed);

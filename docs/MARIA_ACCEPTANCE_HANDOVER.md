@@ -6,6 +6,10 @@ The Acceptance Dashboard uses the latest 30 days of owner-scoped records. A metr
 
 Use **Save 30-day snapshot** to preserve a dated, auditable report in `assistant_briefs` with its corresponding workflow run.
 
+**Cost & Quality** (Maria Assistant menu) is the day-to-day observability surface: estimated spend, per-workflow success rate, chat token spend, and recent failures over 7 / 30 / 90 days. It complements — does not replace — the Acceptance Dashboard's verified figures.
+
+**Behavioural evals**: `resources/evals/*.php` codifies the blueprint scenario tests (chat and structured-workflow). `php artisan maria:eval --live` records each run to `maria_eval_runs`; when the eval gate is on, a new system prompt cannot be activated without a recent passing run.
+
 ## Before client acceptance
 
 1. Complete at least 30 operating days with production scheduler and queue monitoring.
@@ -20,10 +24,12 @@ Use **Save 30-day snapshot** to preserve a dated, auditable report in `assistant
 ## Handover package
 
 - Deployment checklist and operations runbook.
+- End-user guide (`MARIA_END_USER_GUIDE.md`/`.pdf`) and administrator manual (`MARIA_USER_MANUAL.md`/`.pdf`).
 - Current `plan.md` and client blueprint.
 - Database migration history and schema backup.
 - Google OAuth permission inventory and revocation owner.
-- Prompt versions and Claims Registry review owner.
+- Prompt versions, latest `maria:eval` result, and Claims Registry review owner.
 - Queue/scheduler monitoring owner.
-- Latest Quality Report and saved 30-day Acceptance snapshot.
+- Latest Quality Report, Cost & Quality readout, and saved 30-day Acceptance snapshot.
+- AI settings inventory (primary/fallback model, caps, prices, digest, triage exclusions, eval gate).
 - Open corrections, safety incidents, reconciliations, and failed workflows.

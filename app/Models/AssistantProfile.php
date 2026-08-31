@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  * @property bool $external_actions_enabled
  * @property string|null $timezone
+ * @property string|null $language
  */
 class AssistantProfile extends Model
 {

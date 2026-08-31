@@ -1,6 +1,6 @@
 # Maria Assistant User Manual
 
-Version: 2.3
+Version: 2.4
 Last updated: 31 August 2026
 
 ## 1. Purpose of this manual
@@ -156,7 +156,7 @@ Recommended permission approach:
 #### Profile fields
 
 - **Timezone:** the user's local timezone. This controls the local execution time of briefs and scheduled workflows.
-- **Language:** the user's preferred working language.
+- **Language:** the user's preferred working language (English, Italian, or Bengali). Maria replies in this language in chat, and writes the Morning Brief and Evening Review text in it.
 - **Working hours start/end:** email triage runs only within this window.
 - **Morning brief at:** local time for the Morning Command Brief.
 - **Evening review at:** local time for the Evening Review.
@@ -762,10 +762,10 @@ When a scheduled Maria workflow job exhausts its retries, the configured **staff
 
 ### Regression-testing Maria's behaviour after a prompt or model change
 
-The repository ships a behavioural eval suite (`resources/evals/maria.php`) covering the blueprint's scenarios — domain routing, task capture, refusing to send/schedule from chat, not fabricating unread email, staying out of legal decisions, and correct tool use.
+The repository ships a behavioural eval suite covering the blueprint's scenarios. `resources/evals/maria.php` holds the **chat** cases (domain routing, task capture, refusing to send/schedule from chat, not fabricating unread email, staying out of legal decisions, correct tool use). `resources/evals/maria-workflows.php` holds **structured-workflow** cases (email‑triage classification, "no more than three outcomes" in a brief, marking a missing source instead of inventing it). Every `resources/evals/*.php` file is loaded automatically.
 
 - `php artisan maria:eval` — lists the cases (no model calls, no cost).
-- `php artisan maria:eval --live` — runs them against the configured model in a rolled-back transaction and prints a pass/fail table; exit code is non-zero if any case fails, so it can gate a deployment. Add `--json=path` to save a full report.
+- `php artisan maria:eval --live` — runs them against the configured model in a rolled-back transaction and prints a pass/fail table; exit code is non-zero if any case fails, so it can gate a deployment. Add `--json=path` to save a full report, or `--filter=<text>` to run a subset.
 
 Run `--live` after any change to the system prompt (`config/maria.php` or an active `PromptVersion`), the model id, or the tool set, and before promoting that change.
 
@@ -817,6 +817,14 @@ Cost is derived from token counts and the **Input price** / **Output price** per
 4. Only then can that version be activated. Activation is blocked unless a recorded run for that exact prompt text, within the last 30 days, met the minimum pass rate.
 
 The gate applies only to `maria_system` prompts and only while the toggle is on; with it off, activation is unrestricted.
+
+### Model fallback
+
+In **System Settings → AI**, **Fallback model (Maria)** is optional. When set, if a Maria call to the primary model fails because the provider is unreachable, is returning 5xx/overloaded errors, or the primary model id is unknown (404), Maria retries the call once on the fallback model. A client error such as a 400 is *not* retried. Leave it as **None** to keep the current single‑model behaviour.
+
+### Emailed brief digests
+
+In **System Settings → General**, **Email owners a digest when a brief is generated** (off by default) sends each owner a short email — the Morning Brief's three outcomes and risk, or the Evening Review's highlights, plus pending‑approval and active‑alert counts and a link to the Command Center — whenever their brief is generated. It is a nudge, not a replacement for opening the app. It uses the owner's account email; owners with no email are skipped, and a send failure is logged, never fatal.
 
 ### Excluding sensitive email from triage, and secret redaction
 

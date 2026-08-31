@@ -4,9 +4,6 @@ namespace App\Services\Maria;
 
 use App\Models\Setting;
 use App\Models\User;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Throwable;
 
@@ -16,6 +13,7 @@ class MariaAgent
         private readonly ToolRegistry $tools,
         private readonly PromptResolver $prompts,
         private readonly ClaudeGate $gate,
+        private readonly ClaudeClient $client,
     ) {}
 
     /**
@@ -83,15 +81,7 @@ class MariaAgent
     {
         $this->gate->reserve();
 
-        return Http::withHeaders([
-            'x-api-key' => Setting::getSecret('claude_api_key') ?: config('services.anthropic.key'),
-            'anthropic-version' => '2023-06-01',
-            'content-type' => 'application/json',
-        ])->timeout(40)->retry(2, 500, function (Throwable $error) {
-            return $error instanceof ConnectionException
-                || ($error instanceof RequestException && in_array($error->response->status(), [429, 500, 502, 503, 529], true));
-        })->post('https://api.anthropic.com/v1/messages', [
-            'model' => Setting::get('claude_model') ?: config('services.anthropic.model'),
+        return $this->client->messages([
             'max_tokens' => (int) Setting::get('claude_max_tokens', 1024),
             'temperature' => (float) Setting::get('claude_temperature', 0.2),
             // The system prompt and tool schemas are identical on every turn and
@@ -100,7 +90,7 @@ class MariaAgent
             'system' => [['type' => 'text', 'text' => $system, 'cache_control' => ['type' => 'ephemeral']]],
             'tools' => $this->tools->definitions($owner),
             'messages' => $messages,
-        ])->throw()->json();
+        ]);
     }
 
     private function normalizeHistory(array $history): array

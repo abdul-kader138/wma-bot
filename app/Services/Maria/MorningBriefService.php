@@ -9,8 +9,10 @@ use App\Models\ConnectorAccount;
 use App\Models\MariaProject;
 use App\Models\MariaTask;
 use App\Models\WorkflowRun;
+use App\Services\Maria\Concerns\SendsBriefDigest;
 use App\Services\Maria\Google\GmailReadClient;
 use App\Services\Maria\Google\GoogleCalendarReadClient;
+use App\Services\Maria\Support\Language;
 use App\Services\Maria\Support\SecretRedactor;
 use App\Services\Maria\Support\TriageExclusions;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +21,8 @@ use Throwable;
 
 class MorningBriefService
 {
+    use SendsBriefDigest;
+
     public function __construct(
         private readonly GmailReadClient $gmail,
         private readonly GoogleCalendarReadClient $calendar,
@@ -46,11 +50,12 @@ class MorningBriefService
             $prompt = $this->prompts->active();
             $result = $this->agent->run(
                 $prompt['content'],
-                "Prepare the Morning Command Brief for {$today}. Use only this JSON. Mark source gaps and never invent context:\n".json_encode($sources, JSON_THROW_ON_ERROR),
+                "Prepare the Morning Command Brief for {$today}. Use only this JSON. Mark source gaps and never invent context."
+                .Language::instructionClause($profile->language)."\n".json_encode($sources, JSON_THROW_ON_ERROR),
                 'save_morning_brief', 'Return the final structured morning command brief.', $this->schema(),
             );
 
-            return DB::transaction(function () use ($run, $user, $today, $result, $gaps, $sources, $prompt) {
+            $brief = DB::transaction(function () use ($run, $user, $today, $result, $gaps, $sources, $prompt) {
                 $run->update([
                     'status' => 'completed', 'input_references' => $this->references($sources),
                     'source_gaps' => $gaps, 'structured_output' => $result['data'],
@@ -63,6 +68,10 @@ class MorningBriefService
                     'type' => 'morning', 'brief_date' => $today, 'content' => $result['data'],
                 ]);
             });
+
+            $this->sendBriefDigest($brief, $user);
+
+            return $brief;
         } catch (Throwable $error) {
             $run->update(['status' => 'failed', 'error' => mb_substr($error->getMessage(), 0, 5000), 'finished_at' => now()]);
             throw $error;
@@ -86,17 +95,24 @@ class MorningBriefService
         try {
             $exclusions = new TriageExclusions;
             $messages = $this->gmail->listMessages($connector, 'is:unread -category:promotions -category:social', 10);
+            // Pass the model compact header+snippet records only — never the raw
+            // Gmail message with its base64 body parts (token-heavy and leaky).
             $sources['emails'] = collect($messages['messages'] ?? [])->take(10)
                 ->map(fn ($item) => $this->gmail->getMessage($connector, $item['id']))
-                ->reject(function ($message) use ($exclusions) {
-                    $from = collect(data_get($message, 'payload.headers', []))->firstWhere('name', 'From')['value'] ?? null;
+                ->map(function ($message) {
+                    $headers = collect(data_get($message, 'payload.headers', []))->pluck('value', 'name');
 
-                    return $exclusions->excludes($from, $message['labelIds'] ?? []);
+                    return [
+                        'id' => $message['id'] ?? null,
+                        'thread_id' => $message['threadId'] ?? null,
+                        'from' => $headers->get('From'),
+                        'subject' => SecretRedactor::scrub((string) $headers->get('Subject')),
+                        'date' => $headers->get('Date'),
+                        'snippet' => SecretRedactor::scrub((string) ($message['snippet'] ?? '')),
+                        'labels' => $message['labelIds'] ?? [],
+                    ];
                 })
-                ->map(fn ($message) => [
-                    ...$message,
-                    'snippet' => SecretRedactor::scrub($message['snippet'] ?? ''),
-                ])
+                ->reject(fn ($m) => $exclusions->excludes($m['from'], (array) $m['labels']))
                 ->values()->all();
         } catch (Throwable) {
             $gaps[] = 'gmail_unavailable';

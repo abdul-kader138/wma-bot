@@ -7,12 +7,16 @@ use App\Models\AssistantBrief;
 use App\Models\AssistantProfile;
 use App\Models\MariaTask;
 use App\Models\WorkflowRun;
+use App\Services\Maria\Concerns\SendsBriefDigest;
+use App\Services\Maria\Support\Language;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
 
 class EveningReviewService
 {
+    use SendsBriefDigest;
+
     public function __construct(private readonly StructuredWorkflowAgent $agent, private readonly PromptResolver $prompts) {}
 
     public function generate(AssistantProfile $profile): AssistantBrief
@@ -39,11 +43,12 @@ class EveningReviewService
             $prompt = $this->prompts->active();
             $result = $this->agent->run(
                 $prompt['content'],
-                "Prepare the Evening Review for {$today} using only this JSON. Explain unfinished work and give tomorrow's likely top three:\n".json_encode($sources, JSON_THROW_ON_ERROR),
+                "Prepare the Evening Review for {$today} using only this JSON. Explain unfinished work and give tomorrow's likely top three."
+                .Language::instructionClause($profile->language)."\n".json_encode($sources, JSON_THROW_ON_ERROR),
                 'save_evening_review', 'Return the final structured evening review.', $this->schema(),
             );
 
-            return DB::transaction(function () use ($profile, $today, $run, $sources, $prompt, $result) {
+            $brief = DB::transaction(function () use ($profile, $today, $run, $sources, $prompt, $result) {
                 $run->update([
                     'status' => 'completed', 'input_references' => collect($sources)->map(fn ($items) => collect($items)->pluck('id')->all())->all(),
                     'structured_output' => $result['data'], 'prompt_version' => $prompt['version'],
@@ -55,6 +60,10 @@ class EveningReviewService
                     'type' => 'evening', 'brief_date' => $today, 'content' => $result['data'],
                 ]);
             });
+
+            $this->sendBriefDigest($brief, $profile->user);
+
+            return $brief;
         } catch (Throwable $error) {
             $run->update(['status' => 'failed', 'error' => mb_substr($error->getMessage(), 0, 5000), 'finished_at' => now()]);
             throw $error;

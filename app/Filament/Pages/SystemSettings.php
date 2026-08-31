@@ -87,6 +87,7 @@ class SystemSettings extends Page implements HasForms
             // Security
             'two_factor_enabled' => Setting::get('two_factor_enabled', true),
             'maria_assistant_enabled' => Setting::get('maria_assistant_enabled', false),
+            'maria_digest_email_enabled' => Setting::get('maria_digest_email_enabled', false),
             'maria_eval_gate_enabled' => Setting::get('maria_eval_gate_enabled', false),
             'maria_eval_min_pass_rate' => Setting::get('maria_eval_min_pass_rate', 100),
             'maria_triage_excluded_senders' => Setting::get('maria_triage_excluded_senders', ''),
@@ -110,6 +111,7 @@ class SystemSettings extends Page implements HasForms
             // Claude AI (secret intentionally never hydrated into the form)
             'claude_api_key' => '',
             'claude_model' => Setting::get('claude_model', env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001')),
+            'claude_fallback_model' => Setting::get('claude_fallback_model', ''),
             'claude_max_tokens' => Setting::get('claude_max_tokens', 1024),
             'claude_temperature' => Setting::get('claude_temperature', 0.7),
             'claude_price_input_per_mtok' => Setting::get('claude_price_input_per_mtok', 1.0),
@@ -196,6 +198,10 @@ class SystemSettings extends Page implements HasForms
                                 Toggle::make('maria_assistant_enabled')
                                     ->label('Enable Maria Assistant')
                                     ->helperText('When disabled, Maria menus, pages, private assistant routing, connectors, and scheduled workflows are unavailable. Users also need the Access Maria Assistant role permission.'),
+
+                                Toggle::make('maria_digest_email_enabled')
+                                    ->label('Email owners a digest when a brief is generated')
+                                    ->helperText('Sends a short email with the Morning Brief / Evening Review highlights to each owner\'s account email, so they get the day\'s priorities without opening the app.'),
 
                                 Toggle::make('maria_eval_gate_enabled')
                                     ->label('Require a passing eval before activating a Maria system prompt')
@@ -464,6 +470,16 @@ class SystemSettings extends Page implements HasForms
                                             ])
                                             ->required(),
 
+                                        Select::make('claude_fallback_model')
+                                            ->label('Fallback model (Maria)')
+                                            ->options([
+                                                '' => 'None',
+                                                'claude-haiku-4-5-20251001' => 'Haiku 4.5',
+                                                'claude-sonnet-4-6' => 'Sonnet 4.6',
+                                                'claude-opus-4-8' => 'Opus 4.8',
+                                            ])
+                                            ->helperText('If the primary model is unreachable or unknown, Maria retries the call once on this model. Leave as None to disable failover.'),
+
                                         TextInput::make('claude_max_tokens')
                                             ->label('Max Tokens')
                                             ->numeric()
@@ -699,6 +715,7 @@ class SystemSettings extends Page implements HasForms
             'app_datetime_format' => 'regional',
             'two_factor_enabled' => 'security',
             'maria_assistant_enabled' => 'maria',
+            'maria_digest_email_enabled' => 'maria',
             'maria_eval_gate_enabled' => 'maria',
             'maria_eval_min_pass_rate' => 'maria',
             'maria_triage_excluded_senders' => 'maria',
@@ -715,6 +732,7 @@ class SystemSettings extends Page implements HasForms
             'messenger_verify_token' => 'whatsapp',
             'instagram_verify_token' => 'whatsapp',
             'claude_model' => 'claude',
+            'claude_fallback_model' => 'claude',
             'claude_max_tokens' => 'claude',
             'claude_temperature' => 'claude',
             'claude_price_input_per_mtok' => 'claude',

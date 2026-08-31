@@ -4,7 +4,6 @@ namespace App\Services\Maria;
 
 use App\Models\Setting;
 use App\Services\Maria\Support\JsonSchemaValidator;
-use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 class StructuredWorkflowAgent
@@ -12,7 +11,10 @@ class StructuredWorkflowAgent
     /** One corrective round is allowed when the first tool output fails schema validation. */
     private const MAX_ATTEMPTS = 2;
 
-    public function __construct(private readonly ClaudeGate $gate) {}
+    public function __construct(
+        private readonly ClaudeGate $gate,
+        private readonly ClaudeClient $client,
+    ) {}
 
     /**
      * @return array{data:array,usage:array}
@@ -60,11 +62,7 @@ class StructuredWorkflowAgent
 
     private function call(string $system, array $messages, string $toolName, string $toolDescription, array $schema): array
     {
-        return Http::withHeaders([
-            'x-api-key' => Setting::getSecret('claude_api_key') ?: config('services.anthropic.key'),
-            'anthropic-version' => '2023-06-01', 'content-type' => 'application/json',
-        ])->timeout(40)->retry(2, 500)->post('https://api.anthropic.com/v1/messages', [
-            'model' => Setting::get('claude_model') ?: config('services.anthropic.model'),
+        return $this->client->messages([
             'max_tokens' => (int) Setting::get('claude_max_tokens', 2048),
             'temperature' => 0.1,
             'system' => [['type' => 'text', 'text' => $system, 'cache_control' => ['type' => 'ephemeral']]],
@@ -73,6 +71,6 @@ class StructuredWorkflowAgent
                 'name' => $toolName, 'description' => $toolDescription, 'input_schema' => $schema,
             ]],
             'tool_choice' => ['type' => 'tool', 'name' => $toolName],
-        ])->throw()->json();
+        ]);
     }
 }

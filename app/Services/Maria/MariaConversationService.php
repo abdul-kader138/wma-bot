@@ -5,6 +5,7 @@ namespace App\Services\Maria;
 use App\Models\AssistantChannelIdentity;
 use App\Models\AssistantConversation;
 use App\Services\AuditLogger;
+use App\Services\Maria\Support\Language;
 use Illuminate\Support\Facades\DB;
 
 class MariaConversationService
@@ -33,7 +34,8 @@ class MariaConversationService
         // Fold an over-long history into the rolling summary before this turn.
         [$history, $newSummary] = $this->memory->compress($conversation, $conversation->history ?? []);
 
-        $preamble = $this->memory->preamble($owner, $conversation);
+        $preamble = Language::chatDirective($profile->language)
+            .$this->memory->preamble($owner, $conversation);
 
         try {
             $result = $this->agent->handle($owner, $preamble.$message, $history);

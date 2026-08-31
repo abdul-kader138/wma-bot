@@ -1,6 +1,6 @@
 # Maria Assistant — Step‑by‑Step User Guide (with sample data)
 
-Version: 1.3
+Version: 1.4
 Last updated: 31 August 2026
 Audience: the person who will use Maria every day (not the administrator)
 
@@ -101,7 +101,7 @@ Your example settings (already in your Maria Settings profile):
 | Field | Value |
 |---|---|
 | Timezone | `Europe/Rome` |
-| Language | English |
+| Language | English *(set this to Italian or Bengali and Maria replies — in chat, and in your briefs — in that language)* |
 | Working hours | `08:00`–`18:00` |
 | Morning brief at | `07:30` |
 | Evening review at | `18:30` |
@@ -555,6 +555,11 @@ conversation back up later without repeating yourself.
 At your **morning brief time** (07:30 Rome, weekdays) Maria assembles one
 screen‑sized brief from your tasks, projects, pending approvals, and — if Google
 is connected — your next 48 hours of calendar and your unread priority email.
+
+If your administrator has turned on brief emails, you'll also get a short email
+with the three outcomes and the risk to watch, so you see the day's priorities
+before you open the app. The email is a summary only — act on things in the
+Command Center.
 
 ### 7.1 What Maria reads (sample)
 

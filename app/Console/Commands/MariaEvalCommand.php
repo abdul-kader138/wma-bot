@@ -28,15 +28,25 @@ class MariaEvalCommand extends Command
 
     public function handle(EvalRunner $runner, PromptResolver $prompts): int
     {
-        $path = $this->option('file') ?: resource_path('evals/maria.php');
-        if (! is_file($path)) {
-            $this->error("Cases file not found: {$path}");
+        if ($file = $this->option('file')) {
+            $files = [$file];
+        } else {
+            $files = glob(resource_path('evals/*.php')) ?: [];
+        }
+        $files = array_values(array_filter($files, 'is_file'));
+        if ($files === []) {
+            $this->error('No eval case files found under resources/evals/.');
 
             return self::FAILURE;
         }
 
         /** @var array<int,array<string,mixed>> $cases */
-        $cases = require $path;
+        $cases = [];
+        foreach ($files as $f) {
+            $cases = array_merge($cases, require $f);
+        }
+        $path = implode(', ', array_map('basename', $files));
+
         if ($filter = $this->option('filter')) {
             $cases = array_values(array_filter(
                 $cases,
@@ -46,12 +56,6 @@ class MariaEvalCommand extends Command
 
         $this->info(count($cases).' eval case(s) loaded from '.$path);
 
-        $prompt = $this->resolvePrompt($prompts);
-        if ($prompt === null) {
-            return self::FAILURE;
-        }
-        $this->line("Prompt under test: {$prompt['version']}");
-
         if (! $this->option('live')) {
             foreach ($cases as $c) {
                 $this->line("  · [{$c['category']}] {$c['name']}");
@@ -60,6 +64,12 @@ class MariaEvalCommand extends Command
 
             return self::SUCCESS;
         }
+
+        $prompt = $this->resolvePrompt($prompts);
+        if ($prompt === null) {
+            return self::FAILURE;
+        }
+        $this->line("Prompt under test: {$prompt['version']}");
 
         DB::beginTransaction();
         $results = [];

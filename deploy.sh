@@ -1,143 +1,320 @@
+
 #!/usr/bin/env bash
-#
-# Run this after every `git pull` to deploy. Safe to re-run: migrations and
-# seeders are idempotent, and maintenance mode always gets turned back off
-# (via the trap below) even if a step in the middle fails.
-#
-# Usage: ./deploy.sh
+# TMM Travels / WMA Bot production deployment
+# Usage:
+#   ./deploy.sh
+#   RUN_SEEDERS=true ./deploy.sh
+#   GENERATE_SHIELD=true ./deploy.sh
 
-set -euo pipefail
+set -Eeuo pipefail
 
-# Resolves to the directory this script lives in (the app root), not the caller's
-# working directory — so the exact same file works unmodified whether it's checked
-# out at /var/www/tmmtravels or /var/www/virtual-assistant on another server.
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PHP_FPM_SERVICE="php8.5-fpm"
 HORIZON_SUPERVISOR_PROGRAM="wma-bot-horizon"
 SCHEDULER_CRON_FILE="/etc/cron.d/wma-bot-scheduler"
 SCHEDULER_LOG="${APP_DIR}/storage/logs/scheduler.log"
 
+RUN_SEEDERS="${RUN_SEEDERS:-false}"
+GENERATE_SHIELD="${GENERATE_SHIELD:-false}"
+
 cd "$APP_DIR"
 
-echo "==> Entering maintenance mode"
-php artisan down --render="errors::503" --retry=60
+MAINTENANCE_ENABLED=false
 
-# No matter how this script exits (success, failure, or Ctrl-C), always try
-# to bring the site back up rather than leaving it stuck behind the 503 page.
 cleanup() {
-    echo "==> Bringing site back up"
-    php artisan up || true
+    local exit_code=$?
+
+    trap - EXIT
+
+    if [[ "$MAINTENANCE_ENABLED" == "true" ]]; then
+        echo "==> Exiting maintenance mode"
+        php artisan up || true
+    fi
+
+    if [[ "$exit_code" -ne 0 ]]; then
+        echo "!! Deployment failed with exit code $exit_code"
+        echo "!! Check application health before considering deployment complete."
+    fi
+
+    exit "$exit_code"
 }
+
 trap cleanup EXIT
 
-echo "==> Pulling latest code"
-git fetch origin
-git checkout main
-git pull origin main
+echo "========================================"
+echo " TMM Travels Production Deployment"
+echo "========================================"
 
-echo "==> Installing composer dependencies"
-composer install --no-dev --optimize-autoloader
+# --------------------------------------------------
+# 1. Preflight checks
+# --------------------------------------------------
 
-echo "==> Installing frontend dependencies"
+echo "==> Checking required commands"
+
+for cmd in git php composer npm sudo curl; do
+    command -v "$cmd" >/dev/null || {
+        echo "!! Missing command: $cmd"
+        exit 1
+    }
+done
+
+echo "==> Checking Git branch"
+
+CURRENT_BRANCH="$(git branch --show-current)"
+
+if [[ "$CURRENT_BRANCH" != "main" ]]; then
+    echo "!! Expected main branch, found: $CURRENT_BRANCH"
+    exit 1
+fi
+
+echo "==> Checking tracked Git changes"
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "!! Tracked Git changes detected"
+    git status --short
+    exit 1
+fi
+
+echo "==> Fetching latest code"
+
+git fetch origin main
+
+echo "==> Checking fast-forward compatibility"
+
+git merge-base --is-ancestor HEAD origin/main || {
+    echo "!! Local main has diverged from origin/main"
+    exit 1
+}
+
+# --------------------------------------------------
+# 2. Maintenance mode
+# --------------------------------------------------
+
+echo "==> Entering maintenance mode"
+
+php artisan down --render="errors::503" --retry=60
+
+MAINTENANCE_ENABLED=true
+
+# --------------------------------------------------
+# 3. Update source
+# --------------------------------------------------
+
+echo "==> Updating main branch"
+
+git merge --ff-only origin/main
+
+# --------------------------------------------------
+# 4. Composer dependencies
+# --------------------------------------------------
+
+echo "==> Installing production Composer dependencies"
+
+composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --prefer-dist
+
+echo "==> Auditing Composer dependencies"
+
+composer audit --locked
+
+# --------------------------------------------------
+# 5. Frontend dependencies
+# --------------------------------------------------
+
+echo "==> Installing npm dependencies"
+
 npm ci
 
+echo "==> Auditing npm dependencies"
+
+npm audit --audit-level=high
+
 echo "==> Building frontend assets"
+
 npm run build
 
-echo "==> Running migrations"
+# --------------------------------------------------
+# 6. Database migrations
+# --------------------------------------------------
+
+echo "==> Running database migrations"
+
 php artisan migrate --force
 
-echo "==> Seeding defaults (safe: updateOrCreate, won't overwrite your changes)"
-php artisan db:seed --force
+# --------------------------------------------------
+# 7. Optional database seeding
+# --------------------------------------------------
 
-# Idempotent: (re)creates any permission missing from the DB for a current
-# resource/page/widget and assigns it to super_admin, without touching
-# existing custom role assignments (panel_user/operator stay as configured
-# in the admin UI). Without this, a brand-new database has an empty
-# permissions table and NOTHING is visible in the panel — not even to
-# super_admin, since Shield checks the permission record, not just the role.
-echo "==> Generating Shield permissions"
-php artisan shield:generate --all --panel=admin --ignore-existing-policies --no-interaction
+if [[ "$RUN_SEEDERS" == "true" ]]; then
+    echo "==> Running database seeders"
+    php artisan db:seed --force
+else
+    echo "==> Skipping database seeders"
+fi
 
-echo "==> Rebuilding caches"
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+# --------------------------------------------------
+# 8. Optional Shield permissions
+# --------------------------------------------------
+
+if [[ "$GENERATE_SHIELD" == "true" ]]; then
+    echo "==> Generating Filament Shield permissions"
+
+    php artisan shield:generate \
+        --all \
+        --panel=admin \
+        --ignore-existing-policies \
+        --no-interaction
+else
+    echo "==> Skipping Shield permission generation"
+fi
+
+# --------------------------------------------------
+# 9. Laravel cache optimization
+# --------------------------------------------------
+
+echo "==> Rebuilding Laravel caches"
+
+php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-echo "==> Installing Laravel scheduler cron"
-# /etc/cron.d is used instead of a mutable user crontab so deployment remains
-# repeatable and there can only be one scheduler entry for this application.
-# flock also prevents two schedule:run processes overlapping if one invocation
-# takes longer than expected.
-SCHEDULER_CRON_TEMP=$(mktemp)
-cleanup_scheduler_temp() {
-    rm -f "$SCHEDULER_CRON_TEMP"
-}
-trap 'cleanup_scheduler_temp; cleanup' EXIT
+# --------------------------------------------------
+# 10. Laravel scheduler
+# --------------------------------------------------
 
-{
-    echo 'SHELL=/bin/bash'
-    echo 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-    echo "* * * * * www-data cd ${APP_DIR} && /usr/bin/flock -n /tmp/wma-bot-scheduler.lock /usr/bin/php artisan schedule:run >> ${SCHEDULER_LOG} 2>&1"
-} > "$SCHEDULER_CRON_TEMP"
+echo "==> Configuring scheduler"
 
-sudo install -o root -g root -m 0644 "$SCHEDULER_CRON_TEMP" "$SCHEDULER_CRON_FILE"
-cleanup_scheduler_temp
+SCHEDULER_CRON_TEMP="$(mktemp)"
+
+cat > "$SCHEDULER_CRON_TEMP" <<EOF
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * www-data cd ${APP_DIR} && /usr/bin/flock -n /tmp/wma-bot-scheduler.lock /usr/bin/php artisan schedule:run >> ${SCHEDULER_LOG} 2>&1
+EOF
+
+sudo install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$SCHEDULER_CRON_TEMP" \
+    "$SCHEDULER_CRON_FILE"
+
+rm -f "$SCHEDULER_CRON_TEMP"
+
 sudo touch "$SCHEDULER_LOG"
 sudo chown www-data:www-data "$SCHEDULER_LOG"
 
-if systemctl list-unit-files cron.service >/dev/null 2>&1; then
+if systemctl list-unit-files cron.service 2>/dev/null | grep -q '^cron.service'; then
     sudo systemctl enable --now cron
-elif systemctl list-unit-files crond.service >/dev/null 2>&1; then
+elif systemctl list-unit-files crond.service 2>/dev/null | grep -q '^crond.service'; then
     sudo systemctl enable --now crond
 else
-    echo "!! Neither cron.service nor crond.service is installed. Install cron and rerun deployment."
+    echo "!! Cron service not installed"
     exit 1
 fi
 
-echo "==> Verifying Laravel schedules"
+echo "==> Checking scheduled tasks"
+
 php artisan schedule:list
-if ! sudo grep -Fq "artisan schedule:run" "$SCHEDULER_CRON_FILE"; then
-    echo "!! Laravel scheduler cron was not installed correctly"
-    exit 1
-fi
 
-echo "==> Reloading nginx and PHP-FPM"
+# --------------------------------------------------
+# 11. Reload services
+# --------------------------------------------------
+
+echo "==> Testing Nginx configuration"
+
 sudo nginx -t
-sudo systemctl reload nginx
+
+echo "==> Reloading PHP-FPM"
+
 sudo systemctl reload "$PHP_FPM_SERVICE"
 
-echo "==> Gracefully restarting Horizon (finishes in-flight jobs, Supervisor restarts it on the new code)"
+echo "==> Reloading Nginx"
+
+sudo systemctl reload nginx
+
+# --------------------------------------------------
+# 12. Restart Horizon
+# --------------------------------------------------
+
+echo "==> Restarting Horizon workers"
+
 php artisan horizon:terminate
 
-echo "==> Waiting for Supervisor to bring Horizon back up"
+echo "==> Waiting for Horizon"
+
 sleep 5
 
-echo "==> Verifying Horizon came back up"
-STATUS=$(sudo supervisorctl status "${HORIZON_SUPERVISOR_PROGRAM}:*")
+echo "==> Checking Supervisor"
+
+STATUS="$(sudo supervisorctl status "${HORIZON_SUPERVISOR_PROGRAM}:*")"
+
 echo "$STATUS"
-if ! echo "$STATUS" | grep -q RUNNING; then
-    echo "!! Horizon is NOT running under Supervisor — check storage/logs/horizon.log"
+
+if ! echo "$STATUS" | grep -q "RUNNING"; then
+    echo "!! Horizon is not running"
     exit 1
 fi
 
-HORIZON_STATUS=$(php artisan horizon:status)
+echo "==> Checking Horizon status"
+
+HORIZON_STATUS="$(php artisan horizon:status)"
+
 echo "$HORIZON_STATUS"
+
 if ! echo "$HORIZON_STATUS" | grep -qi "running"; then
-    echo "!! horizon:status did not report running"
+    echo "!! Horizon did not report running"
     exit 1
 fi
 
-echo "==> Verifying scheduler service"
-if systemctl list-unit-files cron.service >/dev/null 2>&1; then
-    sudo systemctl is-active --quiet cron
-else
-    sudo systemctl is-active --quiet crond
-fi
-echo "Scheduler cron: $SCHEDULER_CRON_FILE"
-echo "Scheduler log:  $SCHEDULER_LOG"
+# --------------------------------------------------
+# 13. Exit maintenance mode
+# --------------------------------------------------
 
-echo "==> Deploy complete."
+echo "==> Bringing application online"
+
+php artisan up
+
+MAINTENANCE_ENABLED=false
+
+# --------------------------------------------------
+# 14. HTTP health check
+# --------------------------------------------------
+
+echo "==> Checking application health"
+
+HTTP_CODE="$(curl \
+    --silent \
+    --show-error \
+    --location \
+    --output /dev/null \
+    --write-out "%{http_code}" \
+    --max-time 20 \
+    https://tmmtravels.it/)"
+
+if [[ "$HTTP_CODE" != "200" ]]; then
+    echo "!! HTTP health check failed: $HTTP_CODE"
+    exit 1
+fi
+
+echo "==> HTTP health check passed: $HTTP_CODE"
+
+# --------------------------------------------------
+# 15. Final verification
+# --------------------------------------------------
+
+echo "==> Laravel version"
+
+php artisan --version
+
+echo "==> Git commit"
+
+git log -1 --oneline
+
+echo "========================================"
+echo " Deployment completed successfully"
+echo "========================================"

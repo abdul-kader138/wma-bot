@@ -24,7 +24,9 @@ class VoyageEmbeddingProvider implements EmbeddingProvider
         }
 
         $response = Http::withToken(config('services.embeddings.voyage.key'))
-            ->timeout(30)
+            // A full batch (up to 500 texts — see IngestKnowledgeDocument::EMBED_BATCH_SIZE)
+            // can take noticeably longer than a single-text query embed.
+            ->timeout(90)
             ->retry(2, 500, fn (\Throwable $e) => $e instanceof \Illuminate\Http\Client\ConnectionException
                 || ($e instanceof \Illuminate\Http\Client\RequestException && in_array($e->response->status(), [429, 500, 502, 503], true)))
             ->post(self::URL, [

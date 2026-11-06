@@ -28,7 +28,15 @@ class IngestKnowledgeDocument implements ShouldQueue
 
     private const WORD_OVERLAP = 50;
 
+    // Voyage rejects a single request above 1000 texts (confirmed in production:
+    // a 1287-chunk document failed with "The batch size limit is 1000"). Stay
+    // comfortably under that so large documents (PDFs of hundreds of pages)
+    // still ingest, just as several smaller API calls instead of one.
+    private const EMBED_BATCH_SIZE = 500;
+
     public int $tries = 3;
+
+    public int $timeout = 300;
 
     public function __construct(public KnowledgeDocument $document) {}
 
@@ -46,10 +54,14 @@ class IngestKnowledgeDocument implements ShouldQueue
         }
 
         try {
-            $vectors = $embeddings->embedMany($chunks, 'document');
+            $vectors = [];
+            foreach (array_chunk($chunks, self::EMBED_BATCH_SIZE) as $batch) {
+                $vectors = [...$vectors, ...$embeddings->embedMany($batch, 'document')];
+            }
         } catch (\Throwable $e) {
             Log::error('Knowledge document ingestion failed to embed chunks', [
                 'document_id' => $this->document->id,
+                'chunk_count' => count($chunks),
                 'error' => $e->getMessage(),
             ]);
 

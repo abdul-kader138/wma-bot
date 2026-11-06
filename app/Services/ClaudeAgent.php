@@ -5,11 +5,14 @@ namespace App\Services;
 use App\Models\Conversation;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Services\KnowledgeRetriever;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ClaudeAgent
 {
+    public function __construct(private KnowledgeRetriever $knowledge) {}
+
     /**
      * Returns one of:
      *   ['type' => 'text', 'text' => '...']                    -> relay to the customer
@@ -20,9 +23,10 @@ class ClaudeAgent
         $service      = Service::toConfig($convo->whatsapp_account_id)[$convo->service] ?? null;
         $languageName = config("services_bot.languages.{$convo->language}", 'English');
 
-        $tool     = $this->buildTool($service);
-        $system   = $this->buildSystemPrompt($service, $languageName);
-        $messages = $this->buildMessages($convo);
+        $tool      = $this->buildTool($service);
+        $reference = $this->retrieveReference($convo);
+        $system    = $this->buildSystemPrompt($service, $languageName, $reference);
+        $messages  = $this->buildMessages($convo);
 
         try {
             $response = Http::withHeaders([
@@ -98,7 +102,7 @@ class ClaudeAgent
         ];
     }
 
-    private function buildSystemPrompt(array $service, string $languageName): string
+    private function buildSystemPrompt(array $service, string $languageName, string $reference = ''): string
     {
         $lines = [];
         foreach ($service['tool']['fields'] as $name => $f) {
@@ -110,7 +114,7 @@ class ClaudeAgent
         $toolName = $service['tool']['name'];
         $label    = $service['prompt_label'];
 
-        return <<<PROMPT
+        $prompt = <<<PROMPT
         You are a friendly assistant handling WhatsApp enquiries.
         Reply ONLY in {$languageName}. Keep every message short, like a real WhatsApp chat.
 
@@ -125,6 +129,42 @@ class ClaudeAgent
         - Only after the customer confirms, call the `{$toolName}` tool with the collected values.
         - Never call the tool before the customer has confirmed.
         PROMPT;
+
+        if ($reference !== '') {
+            $prompt .= <<<PROMPT
+
+
+            Reference information — use ONLY this to answer the customer's questions about {$label}; never invent facts beyond it. If it's a question, answer briefly first, then continue collecting the details above.
+            {$reference}
+            PROMPT;
+        }
+
+        return $prompt;
+    }
+
+    /** Semantic fallback for whatever the customer's latest message asks that isn't a field value. */
+    private function retrieveReference(Conversation $convo): string
+    {
+        $history = $convo->history ?? [];
+        $latestUser = collect($history)->last(fn ($turn) => $turn['role'] === 'user');
+
+        if (! $latestUser) {
+            return '';
+        }
+
+        // A Voyage outage/timeout must degrade to the existing field-collection-only
+        // behaviour, not break the customer's conversation entirely.
+        try {
+            $chunks = $this->knowledge->search($latestUser['content'], $convo->service, $convo->whatsapp_account_id);
+        } catch (\Throwable $e) {
+            Log::warning('Knowledge retrieval failed; continuing without reference info', ['error' => $e->getMessage()]);
+
+            return '';
+        }
+
+        return $chunks
+            ->map(fn ($chunk) => '- '.$chunk->content)
+            ->implode("\n");
     }
 
     private function buildMessages(Conversation $convo): array

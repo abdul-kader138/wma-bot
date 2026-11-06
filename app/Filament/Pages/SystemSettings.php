@@ -129,6 +129,7 @@ class SystemSettings extends Page implements HasForms
 
             // Bot Behaviour
             'faq_confidence_threshold' => Setting::get('faq_confidence_threshold', 0.7),
+            'knowledge_max_distance' => Setting::get('knowledge_max_distance', 0.4),
             'bot_welcome_message' => Setting::get('bot_welcome_message', [
                 'en' => 'Hello! How can I help you today?',
                 'it' => 'Ciao! Come posso aiutarti oggi?',
@@ -579,6 +580,14 @@ class SystemSettings extends Page implements HasForms
                                     ->step(0.05)
                                     ->helperText('Minimum similarity score (0–1) to match a FAQ. Lower = more permissive.'),
 
+                                TextInput::make('knowledge_max_distance')
+                                    ->label('Knowledge Base Match Distance')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(2)
+                                    ->step(0.05)
+                                    ->helperText('Maximum cosine distance (0–2) for a knowledge base chunk to be used in a reply. Lower = stricter/more relevant only.'),
+
                                 Section::make('Welcome Message')
                                     ->description('Sent right after the customer picks a service, in their chosen language.')
                                     ->schema(
@@ -745,6 +754,7 @@ class SystemSettings extends Page implements HasForms
             'google_client_id' => 'google',
             'google_redirect_uri' => 'google',
             'faq_confidence_threshold' => 'bot',
+            'knowledge_max_distance' => 'bot',
             'bot_welcome_message' => 'bot',
             'bot_fallback_message' => 'bot',
             'claude_session_limit_message' => 'bot',

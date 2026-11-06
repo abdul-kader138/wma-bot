@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Setting;
 use App\Policies\RolePolicy;
+use App\Services\Embeddings\EmbeddingProvider;
+use App\Services\Embeddings\VoyageEmbeddingProvider;
 use App\Services\Maria\MariaPermissionVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -19,7 +21,21 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(EmbeddingProvider::class, fn () => match (config('services.embeddings.driver', 'voyage')) {
+            'voyage' => new VoyageEmbeddingProvider,
+            default => new VoyageEmbeddingProvider,
+        });
+
+        // Explicitly excluded from package auto-discovery (composer.json
+        // extra.laravel.dont-discover): registering the package's own service
+        // provider would also run its bundled migration (CREATE EXTENSION) against
+        // this app's DEFAULT connection (MySQL) via loadMigrationsFrom(), which is
+        // invalid SQL there. We only want its Blueprint::vector()/typeVector()
+        // macros, so call that registration directly — our own knowledge-base
+        // migration creates the extension itself, explicitly on 'pgvector'.
+        if (config('database.connections.pgvector.host')) {
+            \Pgvector\Laravel\Schema::register();
+        }
     }
 
     public function boot(): void

@@ -21,6 +21,7 @@ return [
         'service_requests' => 'Service Requests',
         'conversations'    => 'Conversations',
         'faqs'             => 'FAQs',
+        'knowledge_base'   => 'Knowledge Base',
         'documents'        => 'Documents',
         'audit_logs'       => 'Audit Logs',
         'users'            => 'Users',
@@ -147,6 +148,29 @@ return [
             'keywords'     => 'Trigger phrases',
             'keywords_help'=> 'Words or short phrases that should trigger this answer, e.g. "price", "how much", "opening hours".',
             'triggers'     => 'Triggers',
+        ],
+    ],
+
+    'knowledge_document' => [
+        'label'        => 'Knowledge Entry',
+        'label_plural' => 'Knowledge Base',
+        'sections' => [
+            'details' => 'Details',
+            'content' => 'Content',
+        ],
+        'fields' => [
+            'applies_to'   => 'Applies to',
+            'all_services' => 'All services',
+            'all_accounts' => 'All accounts',
+            'accounts_help' => 'Leave empty to apply to every account.',
+            'active'       => 'Active',
+            'title'        => 'Title',
+            'language'     => 'Language',
+            'content'      => 'Content',
+            'content_help' => 'Plain text staff knowledge used to answer customer questions (prices, requirements, policies, etc.). Saved content is automatically chunked and embedded for search. Leave blank if uploading a file below instead.',
+            'upload'       => 'Or upload a document',
+            'upload_help'  => 'PDF, DOCX, or plain text. Text is extracted automatically and chunked/embedded the same way as pasted content — this can take a minute for larger files.',
+            'chunks'       => 'Chunks',
         ],
     ],
 

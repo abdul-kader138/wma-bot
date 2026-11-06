@@ -99,6 +99,29 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        // Dedicated connection for the RAG knowledge base (KnowledgeDocument/KnowledgeChunk,
+        // app/Services/KnowledgeRetriever.php) ONLY — deliberately separate from 'default'
+        // (mysql in production, app/config/database.php stays unchanged otherwise). This lets
+        // the main app keep running on MySQL on a shared server while a small, isolated
+        // Postgres+pgvector instance handles just vector search. Because of this, nothing in
+        // these two tables may have a real foreign key or Eloquent relationship to a table
+        // on another connection (e.g. whatsapp_accounts) — a single SQL query can't join
+        // across two different database servers. Account scoping is a plain JSON/int column
+        // compared by value, never a relationship.
+        'pgvector' => [
+            'driver' => 'pgsql',
+            'host' => env('PGVECTOR_HOST'),
+            'port' => env('PGVECTOR_PORT', '5432'),
+            'database' => env('PGVECTOR_DATABASE', 'wma_bot_knowledge'),
+            'username' => env('PGVECTOR_USERNAME'),
+            'password' => env('PGVECTOR_PASSWORD', ''),
+            'charset' => env('PGVECTOR_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('PGVECTOR_SSLMODE', 'prefer'),
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

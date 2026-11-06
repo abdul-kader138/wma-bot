@@ -72,4 +72,20 @@ return [
         'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
     ],
 
+    // Deliberately separate from the chat LLM above: the embedding model only
+    // feeds vector search (KnowledgeRetriever), so switching the answering
+    // model (Anthropic/OpenAI/Mistral/...) never has to touch this.
+    'embeddings' => [
+        'driver' => env('EMBEDDINGS_PROVIDER', 'voyage'),
+
+        'voyage' => [
+            'key' => env('VOYAGE_API_KEY'),
+            'model' => env('VOYAGE_EMBEDDING_MODEL', 'voyage-3.5-lite'),
+            // Voyage models default to 1024 dims but support Matryoshka truncation via
+            // `output_dimension` — pinned explicitly so the stored vector width never
+            // silently changes if Voyage changes a model's default.
+            'dimensions' => env('VOYAGE_EMBEDDING_DIMENSIONS', 512),
+        ],
+    ],
+
 ];

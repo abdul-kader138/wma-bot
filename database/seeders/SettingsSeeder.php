@@ -39,6 +39,7 @@ class SettingsSeeder extends Seeder
 
             // Bot Behaviour
             ['group' => 'bot', 'key' => 'faq_confidence_threshold', 'value' => '0.7',                                          'type' => 'float',  'label' => 'FAQ Confidence Threshold', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'knowledge_max_distance',   'value' => '0.4',                                          'type' => 'float',  'label' => 'Knowledge Base Match Distance', 'is_public' => false],
             ['group' => 'bot', 'key' => 'bot_welcome_message',      'value' => json_encode([
                 'en' => 'Hello! How can I help you today?',
                 'it' => 'Ciao! Come posso aiutarti oggi?',

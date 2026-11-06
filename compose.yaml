@@ -64,6 +64,30 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+    # Isolated Postgres+pgvector instance for the knowledge base ONLY (config/database.php's
+    # 'pgvector' connection, app/Services/KnowledgeRetriever.php) — the app's main DB stays
+    # on mysql above. Set PGVECTOR_HOST=pgvector (and the other PGVECTOR_* vars to match
+    # below) to test the knowledge-base feature locally against real Postgres.
+    pgvector:
+        image: 'pgvector/pgvector:pg17'
+        ports:
+            - '${FORWARD_PGVECTOR_PORT:-5433}:5432'
+        environment:
+            POSTGRES_DB: '${PGVECTOR_DATABASE:-wma_bot_knowledge}'
+            POSTGRES_USER: '${PGVECTOR_USERNAME:-sail}'
+            POSTGRES_PASSWORD: '${PGVECTOR_PASSWORD:-password}'
+        volumes:
+            - 'sail-pgvector:/var/lib/postgresql/data'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - pg_isready
+                - '-U'
+                - '${PGVECTOR_USERNAME:-sail}'
+            retries: 3
+            timeout: 5s
 networks:
     sail:
         driver: bridge
@@ -71,4 +95,6 @@ volumes:
     sail-mysql:
         driver: local
     sail-redis:
+        driver: local
+    sail-pgvector:
         driver: local

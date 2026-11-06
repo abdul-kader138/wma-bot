@@ -16,6 +16,7 @@ use App\Services\Maria\Tools\ListRelationshipFollowUpsTool;
 use App\Services\Maria\Tools\ListTasksTool;
 use App\Services\Maria\Tools\RememberFactTool;
 use App\Services\Maria\Tools\SearchDriveFilesTool;
+use App\Services\Maria\Tools\SearchKnowledgeBaseTool;
 use App\Services\Maria\Tools\UpdateTaskTool;
 use InvalidArgumentException;
 
@@ -38,6 +39,7 @@ class ToolRegistry
         ListPriorityEmailsTool $emails,
         ListCalendarEventsTool $calendar,
         SearchDriveFilesTool $drive,
+        SearchKnowledgeBaseTool $knowledgeBase,
     ) {
         $this->tools = [
             $listTasks->name() => $listTasks, $createTask->name() => $createTask,
@@ -46,6 +48,7 @@ class ToolRegistry
             $listApprovals->name() => $listApprovals, $latestBrief->name() => $latestBrief,
             $relationshipFollowUps->name() => $relationshipFollowUps, $rememberFact->name() => $rememberFact,
             $emails->name() => $emails, $calendar->name() => $calendar, $drive->name() => $drive,
+            $knowledgeBase->name() => $knowledgeBase,
         ];
     }
 

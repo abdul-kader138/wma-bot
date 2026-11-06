@@ -14,8 +14,11 @@
         "laravel/horizon": "^5.48",
         "laravel/sail": "^1.62",
         "laravel/tinker": "^3.0",
+        "pgvector/pgvector": "^0.2.2",
+        "phpoffice/phpword": "^1.4",
         "pragmarx/google2fa-qrcode": "^4.0",
         "predis/predis": "^3.5",
+        "smalot/pdfparser": "^2.13",
         "spatie/laravel-permission": "^6.25"
     },
     "require-dev": {
@@ -80,7 +83,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "pgvector/pgvector"
+            ]
         }
     },
     "config": {

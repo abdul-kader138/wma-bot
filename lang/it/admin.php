@@ -21,6 +21,7 @@ return [
         'service_requests' => 'Richieste di Servizio',
         'conversations'    => 'Conversazioni',
         'faqs'             => 'Domande Frequenti',
+        'knowledge_base'   => 'Base di Conoscenza',
         'documents'        => 'Documenti',
         'audit_logs'       => 'Registro Attività',
         'users'            => 'Utenti',
@@ -147,6 +148,29 @@ return [
             'keywords'     => 'Frasi trigger',
             'keywords_help'=> 'Parole o frasi brevi che devono attivare questa risposta, es. "prezzo", "quanto costa", "orari di apertura".',
             'triggers'     => 'Trigger',
+        ],
+    ],
+
+    'knowledge_document' => [
+        'label'        => 'Voce Conoscenza',
+        'label_plural' => 'Base di Conoscenza',
+        'sections' => [
+            'details' => 'Dettagli',
+            'content' => 'Contenuto',
+        ],
+        'fields' => [
+            'applies_to'   => 'Si applica a',
+            'all_services' => 'Tutti i servizi',
+            'all_accounts' => 'Tutti gli account',
+            'accounts_help' => 'Lascia vuoto per applicare a tutti gli account.',
+            'active'       => 'Attivo',
+            'title'        => 'Titolo',
+            'language'     => 'Lingua',
+            'content'      => 'Contenuto',
+            'content_help' => 'Testo scritto dallo staff usato per rispondere alle domande dei clienti (prezzi, requisiti, politiche, ecc.). Il contenuto salvato viene automaticamente suddiviso e indicizzato per la ricerca. Lascia vuoto se carichi un file sotto.',
+            'upload'       => 'Oppure carica un documento',
+            'upload_help'  => 'PDF, DOCX o testo semplice. Il testo viene estratto automaticamente e suddiviso/indicizzato come il contenuto incollato — può richiedere un minuto per file più grandi.',
+            'chunks'       => 'Blocchi',
         ],
     ],
 

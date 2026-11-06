@@ -58,7 +58,12 @@ class IngestKnowledgeDocument implements ShouldQueue
 
         // A document with no account scoping at all is treated as global (null),
         // same semantics as Faq's null service meaning "applies to everything".
-        $accountIds = $this->document->account_ids ?: [null];
+        // account_ids should always be an array (the form's multi-select guarantees
+        // that), but normalize defensively in case a row was ever written outside
+        // the form (e.g. via tinker) with a bare scalar instead.
+        $accountIds = $this->document->account_ids;
+        $accountIds = is_array($accountIds) ? $accountIds : ($accountIds !== null ? [$accountIds] : []);
+        $accountIds = $accountIds ?: [null];
 
         foreach ($accountIds as $accountId) {
             foreach ($chunks as $index => $content) {

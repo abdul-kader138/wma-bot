@@ -116,6 +116,10 @@ class KnowledgeDocumentResource extends Resource
                     // Eloquent's 'array' cast having already run.
                     ->formatStateUsing(function ($state) {
                         $ids = is_string($state) ? json_decode($state, true) : $state;
+                        // A row saved outside the normal form (e.g. via tinker) could have
+                        // stored a bare scalar instead of an array — normalize rather than
+                        // let whereIn() crash on a non-array.
+                        $ids = is_array($ids) ? $ids : ($ids !== null ? [$ids] : null);
 
                         return $ids
                             ? WhatsAppAccount::whereIn('id', $ids)->pluck('name')->implode(', ')

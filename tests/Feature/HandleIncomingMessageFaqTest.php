@@ -100,11 +100,14 @@ class HandleIncomingMessageFaqTest extends TestCase
         $job = new HandleIncomingMessage($this->makeValue($phone, 'how much does it cost?'), $this->account->id);
         $job->handle($agent, app(FaqMatcher::class));
 
+        // FAQ answers during an active IN_SERVICE conversation go out with a
+        // "change service" quick-reply button attached (sendTextWithServiceSwitch),
+        // not as a plain text message — see MessagingChannel::sendTextWithServiceSwitch().
         Http::assertSent(function ($request) use ($phone) {
             $payload = $request->data();
 
             return ($payload['to'] ?? null) === $phone
-                && ($payload['text']['body'] ?? null) === 'Our standard fee is €50.';
+                && ($payload['interactive']['body']['text'] ?? null) === 'Our standard fee is €50.';
         });
     }
 

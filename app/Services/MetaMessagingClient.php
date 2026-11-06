@@ -40,6 +40,24 @@ abstract class MetaMessagingClient implements MessagingChannel
         ]);
     }
 
+    public function sendTextWithServiceSwitch(string $to, string $body, string $lang): void
+    {
+        $label = config("services_bot.replies.change_service_button.{$lang}")
+            ?? config('services_bot.replies.change_service_button.en');
+
+        $this->post([
+            'recipient' => ['id' => $to],
+            'messaging_type' => 'RESPONSE',
+            'message' => [
+                'text' => $body,
+                // Matches the "service" keyword HandleIncomingMessage already checks for.
+                'quick_replies' => [
+                    ['content_type' => 'text', 'title' => $label, 'payload' => 'service'],
+                ],
+            ],
+        ]);
+    }
+
     public function sendLanguageList(string $to): void
     {
         $replies = [];

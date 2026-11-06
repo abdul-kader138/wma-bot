@@ -31,6 +31,30 @@ class WhatsAppClient implements MessagingChannel
         ]);
     }
 
+    public function sendTextWithServiceSwitch(string $to, string $body, string $lang): void
+    {
+        $label = config("services_bot.replies.change_service_button.{$lang}")
+            ?? config('services_bot.replies.change_service_button.en');
+
+        $this->post([
+            'messaging_product' => 'whatsapp',
+            'to'                => $to,
+            'type'              => 'interactive',
+            'interactive'       => [
+                'type'   => 'button',
+                'body'   => ['text' => $body],
+                'action' => [
+                    // WhatsApp caps interactive button messages at 3 — only one is
+                    // needed here, matching the "service" keyword already handled
+                    // in HandleIncomingMessage.
+                    'buttons' => [
+                        ['type' => 'reply', 'reply' => ['id' => 'service', 'title' => $label]],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
     public function sendLanguageList(string $to): void
     {
         $rows = [];

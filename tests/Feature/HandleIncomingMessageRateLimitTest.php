@@ -126,6 +126,8 @@ class HandleIncomingMessageRateLimitTest extends TestCase
         $job = new HandleIncomingMessage($this->makeTextValue($phone, 'what is the price?', 'r3'), $this->account->id);
         $job->handle($agent, app(FaqMatcher::class));
 
-        Http::assertSent(fn ($request) => ($request->data()['text']['body'] ?? null) === 'It costs €50.');
+        // FAQ answers during IN_SERVICE go out with a "change service" quick-reply
+        // button attached — see MessagingChannel::sendTextWithServiceSwitch().
+        Http::assertSent(fn ($request) => ($request->data()['interactive']['body']['text'] ?? null) === 'It costs €50.');
     }
 }

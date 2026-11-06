@@ -60,7 +60,7 @@ class ClaudeAgentTest extends TestCase
             'history'             => [['role' => 'assistant', 'content' => 'Welcome!']],
         ]);
 
-        (new ClaudeAgent())->handle($convo);
+        app(ClaudeAgent::class)->handle($convo);
 
         Http::assertSent(function ($request) {
             $messages = $request->data()['messages'] ?? [];

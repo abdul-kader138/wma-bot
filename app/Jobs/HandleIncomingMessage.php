@@ -229,7 +229,7 @@ class HandleIncomingMessage implements ShouldQueue
                 if ($faq = $faqs->match($input, $convo->service, $account->id)) {
                     $this->appendHistory($convo, 'user', $input);
                     $answer = $faq->answerFor($convo->language ?? 'en');
-                    $wa->sendText($phone, $answer);
+                    $wa->sendTextWithServiceSwitch($phone, $answer, $convo->language ?? 'en');
                     $this->appendHistory($convo, 'assistant', $answer);
                     break;
                 }
@@ -477,7 +477,7 @@ class HandleIncomingMessage implements ShouldQueue
         }
 
         $this->appendHistory($convo, 'assistant', $reply['text']);
-        $wa->sendText($phone, $reply['text']);
+        $wa->sendTextWithServiceSwitch($phone, $reply['text'], $convo->language ?? 'en');
     }
 
     private function sendWelcome(MessagingChannel $wa, Conversation $convo, string $phone): void

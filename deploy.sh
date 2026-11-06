@@ -11,6 +11,7 @@ set -Eeuo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PHP_FPM_SERVICE="php8.5-fpm"
 HORIZON_SUPERVISOR_PROGRAM="wma-bot-horizon"
+WORKER_SUPERVISOR_PROGRAM="wma-bot-worker"
 SCHEDULER_CRON_FILE="/etc/cron.d/wma-bot-scheduler"
 SCHEDULER_LOG="${APP_DIR}/storage/logs/scheduler.log"
 
@@ -238,8 +239,14 @@ echo "==> Reloading Nginx"
 sudo systemctl reload nginx
 
 # --------------------------------------------------
-# 12. Restart Horizon
+# 12. Restart Horizon and the plain queue worker
 # --------------------------------------------------
+#
+# Both consume the same Redis queue, and each is a long-running process that
+# only loads PHP code once at startup — restarting only Horizon here left
+# wma-bot-worker running stale code indefinitely after every deploy, with
+# jobs silently failing or behaving incorrectly whenever that stale worker
+# (rather than freshly-restarted Horizon) happened to grab them first.
 
 echo "==> Restarting Horizon workers"
 
@@ -249,7 +256,7 @@ echo "==> Waiting for Horizon"
 
 sleep 5
 
-echo "==> Checking Supervisor"
+echo "==> Checking Supervisor (Horizon)"
 
 STATUS="$(sudo supervisorctl status "${HORIZON_SUPERVISOR_PROGRAM}:*")"
 
@@ -268,6 +275,21 @@ echo "$HORIZON_STATUS"
 
 if ! echo "$HORIZON_STATUS" | grep -qi "running"; then
     echo "!! Horizon did not report running"
+    exit 1
+fi
+
+echo "==> Restarting plain queue worker"
+
+sudo supervisorctl restart "${WORKER_SUPERVISOR_PROGRAM}:*"
+
+echo "==> Checking Supervisor (worker)"
+
+WORKER_STATUS="$(sudo supervisorctl status "${WORKER_SUPERVISOR_PROGRAM}:*")"
+
+echo "$WORKER_STATUS"
+
+if ! echo "$WORKER_STATUS" | grep -q "RUNNING"; then
+    echo "!! Queue worker is not running"
     exit 1
 fi
 

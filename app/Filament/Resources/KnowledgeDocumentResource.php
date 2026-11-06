@@ -111,9 +111,16 @@ class KnowledgeDocumentResource extends Resource
 
                 Tables\Columns\TextColumn::make('account_ids')
                     ->label(__('admin.whatsapp_account.label_plural'))
-                    ->formatStateUsing(fn (?array $state) => $state
-                        ? WhatsAppAccount::whereIn('id', $state)->pluck('name')->implode(', ')
-                        : __('admin.knowledge_document.fields.all_accounts'))
+                    // Filament hands the table column its raw DB value here, not the
+                    // cast model attribute — decode defensively rather than relying on
+                    // Eloquent's 'array' cast having already run.
+                    ->formatStateUsing(function ($state) {
+                        $ids = is_string($state) ? json_decode($state, true) : $state;
+
+                        return $ids
+                            ? WhatsAppAccount::whereIn('id', $ids)->pluck('name')->implode(', ')
+                            : __('admin.knowledge_document.fields.all_accounts');
+                    })
                     ->badge()
                     ->color('gray'),
 

@@ -167,6 +167,21 @@ class HandleIncomingMessage implements ShouldQueue
             $convo->update(['step' => 'NEW', 'service' => null, 'history' => [], 'claude_message_count' => 0]);
         }
 
+        // Lighter than the full reset above: a customer mid-way through one service
+        // (e.g. immigration) who wants to ask about another (e.g. driving licence)
+        // shouldn't have to re-pick their language too. Only applies from IN_SERVICE —
+        // elsewhere the customer is already on the service-selection step or earlier.
+        // Deterministic keyword match, not an LLM judgment call, for the same reason
+        // the reset keywords above aren't: switching services is a routing decision,
+        // not conversational nuance, and must not depend on Claude's interpretation.
+        if ($convo->step === 'IN_SERVICE' && in_array(mb_strtolower($input), [
+            'service', 'services', 'change service', 'other service', 'switch service',
+            'cambia servizio', 'altro servizio',
+            'সেবা পরিবর্তন', 'অন্য সেবা',
+        ], true)) {
+            $convo->update(['step' => 'AWAIT_SERVICE', 'service' => null, 'history' => [], 'claude_message_count' => 0]);
+        }
+
         switch ($convo->step) {
             case 'NEW':
                 $wa->sendLanguageList($phone);

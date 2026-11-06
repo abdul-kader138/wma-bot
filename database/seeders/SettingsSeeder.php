@@ -50,6 +50,11 @@ class SettingsSeeder extends Seeder
                 'it' => 'Mi dispiace, non ho capito. Contatta il nostro supporto.',
                 'bn' => 'দুঃখিত, আমি বুঝতে পারিনি। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।',
             ]), 'type' => 'json', 'label' => 'Fallback Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_close_conversation_message', 'value' => json_encode([
+                'en' => 'Thanks for chatting! If you need anything else, just message us again anytime.',
+                'it' => 'Grazie per la chat! Se hai bisogno di altro, scrivici di nuovo in qualsiasi momento.',
+                'bn' => 'চ্যাট করার জন্য ধন্যবাদ! আরও কিছু লাগলে যেকোনো সময় আবার মেসেজ করুন।',
+            ]), 'type' => 'json', 'label' => 'Close Conversation Message', 'is_public' => false],
 
             // Email
             ['group' => 'email', 'key' => 'mail_from_name',    'value' => 'WMA Bot',          'type' => 'string', 'label' => 'From Name'],

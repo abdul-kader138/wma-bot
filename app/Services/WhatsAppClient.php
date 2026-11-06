@@ -31,10 +31,12 @@ class WhatsAppClient implements MessagingChannel
         ]);
     }
 
-    public function sendTextWithServiceSwitch(string $to, string $body, string $lang): void
+    public function sendTextWithQuickActions(string $to, string $body, string $lang): void
     {
-        $label = config("services_bot.replies.change_service_button.{$lang}")
+        $switchLabel = config("services_bot.replies.change_service_button.{$lang}")
             ?? config('services_bot.replies.change_service_button.en');
+        $closeLabel = config("services_bot.replies.close_conversation_button.{$lang}")
+            ?? config('services_bot.replies.close_conversation_button.en');
 
         $this->post([
             'messaging_product' => 'whatsapp',
@@ -44,11 +46,12 @@ class WhatsAppClient implements MessagingChannel
                 'type'   => 'button',
                 'body'   => ['text' => $body],
                 'action' => [
-                    // WhatsApp caps interactive button messages at 3 — only one is
-                    // needed here, matching the "service" keyword already handled
-                    // in HandleIncomingMessage.
+                    // WhatsApp caps interactive button messages at 3 — two used here,
+                    // matching the "service" and "close_chat" keywords already
+                    // handled in HandleIncomingMessage.
                     'buttons' => [
-                        ['type' => 'reply', 'reply' => ['id' => 'service', 'title' => $label]],
+                        ['type' => 'reply', 'reply' => ['id' => 'service', 'title' => $switchLabel]],
+                        ['type' => 'reply', 'reply' => ['id' => 'close_chat', 'title' => $closeLabel]],
                     ],
                 ],
             ],

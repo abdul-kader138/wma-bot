@@ -182,6 +182,24 @@ class HandleIncomingMessage implements ShouldQueue
             $convo->update(['step' => 'AWAIT_SERVICE', 'service' => null, 'history' => [], 'claude_message_count' => 0]);
         }
 
+        // Lets a customer deliberately end the chat with one tap/keyword, same
+        // reasoning as the service-switch check above (deterministic, not an LLM
+        // decision). Returns immediately rather than falling into the switch below:
+        // that would also trigger the DONE step's own reset-to-language-list in the
+        // same turn, sending the customer two messages back to back.
+        if ($convo->step === 'IN_SERVICE' && in_array(mb_strtolower($input), [
+            'close_chat', 'close', 'close conversation', 'end', 'end conversation', 'end chat', 'bye', 'goodbye',
+            'chiudi', 'chiudi conversazione', 'fine',
+            'কথোপকথন শেষ করুন', 'শেষ', 'বিদায়',
+        ], true)) {
+            if ($message = $this->localizedMessage('bot_close_conversation_message', $convo->language)) {
+                $wa->sendText($phone, $message);
+            }
+            $convo->update(['step' => 'DONE', 'history' => [], 'claude_message_count' => 0]);
+
+            return;
+        }
+
         switch ($convo->step) {
             case 'NEW':
                 $wa->sendLanguageList($phone);
@@ -229,7 +247,7 @@ class HandleIncomingMessage implements ShouldQueue
                 if ($faq = $faqs->match($input, $convo->service, $account->id)) {
                     $this->appendHistory($convo, 'user', $input);
                     $answer = $faq->answerFor($convo->language ?? 'en');
-                    $wa->sendTextWithServiceSwitch($phone, $answer, $convo->language ?? 'en');
+                    $wa->sendTextWithQuickActions($phone, $answer, $convo->language ?? 'en');
                     $this->appendHistory($convo, 'assistant', $answer);
                     break;
                 }
@@ -477,7 +495,7 @@ class HandleIncomingMessage implements ShouldQueue
         }
 
         $this->appendHistory($convo, 'assistant', $reply['text']);
-        $wa->sendTextWithServiceSwitch($phone, $reply['text'], $convo->language ?? 'en');
+        $wa->sendTextWithQuickActions($phone, $reply['text'], $convo->language ?? 'en');
     }
 
     private function sendWelcome(MessagingChannel $wa, Conversation $convo, string $phone): void

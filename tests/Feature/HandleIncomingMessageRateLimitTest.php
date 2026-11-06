@@ -127,7 +127,7 @@ class HandleIncomingMessageRateLimitTest extends TestCase
         $job->handle($agent, app(FaqMatcher::class));
 
         // FAQ answers during IN_SERVICE go out with a "change service" quick-reply
-        // button attached — see MessagingChannel::sendTextWithServiceSwitch().
+        // button attached — see MessagingChannel::sendTextWithQuickActions().
         Http::assertSent(fn ($request) => ($request->data()['interactive']['body']['text'] ?? null) === 'It costs €50.');
     }
 }

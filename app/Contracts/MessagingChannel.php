@@ -14,11 +14,12 @@ interface MessagingChannel
     public function sendText(string $to, string $body): void;
 
     /**
-     * Same as sendText, but with a persistent "change service" quick reply/button
-     * attached — so a customer mid-way through one service can switch to another
-     * with a single tap, in any language, without needing to type a keyword.
+     * Same as sendText, but with persistent "change service" and "close conversation"
+     * quick replies/buttons attached — so a customer mid-way through one service can
+     * switch to another, or end the chat, with a single tap in any language, without
+     * needing to type a keyword.
      */
-    public function sendTextWithServiceSwitch(string $to, string $body, string $lang): void;
+    public function sendTextWithQuickActions(string $to, string $body, string $lang): void;
 
     public function sendLanguageList(string $to): void;
 

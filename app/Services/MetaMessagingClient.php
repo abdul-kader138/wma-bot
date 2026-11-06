@@ -40,19 +40,23 @@ abstract class MetaMessagingClient implements MessagingChannel
         ]);
     }
 
-    public function sendTextWithServiceSwitch(string $to, string $body, string $lang): void
+    public function sendTextWithQuickActions(string $to, string $body, string $lang): void
     {
-        $label = config("services_bot.replies.change_service_button.{$lang}")
+        $switchLabel = config("services_bot.replies.change_service_button.{$lang}")
             ?? config('services_bot.replies.change_service_button.en');
+        $closeLabel = config("services_bot.replies.close_conversation_button.{$lang}")
+            ?? config('services_bot.replies.close_conversation_button.en');
 
         $this->post([
             'recipient' => ['id' => $to],
             'messaging_type' => 'RESPONSE',
             'message' => [
                 'text' => $body,
-                // Matches the "service" keyword HandleIncomingMessage already checks for.
+                // Matches the "service" and "close_chat" keywords HandleIncomingMessage
+                // already checks for.
                 'quick_replies' => [
-                    ['content_type' => 'text', 'title' => $label, 'payload' => 'service'],
+                    ['content_type' => 'text', 'title' => $switchLabel, 'payload' => 'service'],
+                    ['content_type' => 'text', 'title' => $closeLabel, 'payload' => 'close_chat'],
                 ],
             ],
         ]);

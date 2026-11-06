@@ -101,8 +101,8 @@ class HandleIncomingMessageFaqTest extends TestCase
         $job->handle($agent, app(FaqMatcher::class));
 
         // FAQ answers during an active IN_SERVICE conversation go out with a
-        // "change service" quick-reply button attached (sendTextWithServiceSwitch),
-        // not as a plain text message — see MessagingChannel::sendTextWithServiceSwitch().
+        // "change service" quick-reply button attached (sendTextWithQuickActions),
+        // not as a plain text message — see MessagingChannel::sendTextWithQuickActions().
         Http::assertSent(function ($request) use ($phone) {
             $payload = $request->data();
 

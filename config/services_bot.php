@@ -19,15 +19,21 @@ return [
             'it' => 'Grazie! La tua richiesta è stata registrata. Il nostro team ti contatterà a breve.',
             'bn' => 'ধন্যবাদ! আপনার অনুরোধ রেকর্ড করা হয়েছে। আমাদের টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।',
         ],
-        // Button/quick-reply label attached to every IN_SERVICE reply (see
-        // MessagingChannel::sendTextWithServiceSwitch()) so a customer can switch
-        // services with one tap instead of needing to type a keyword in the right
-        // language. Its id/payload is literally "service", matching one of the
-        // typed keywords HandleIncomingMessage already checks for.
+        // Button/quick-reply labels attached to every IN_SERVICE reply (see
+        // MessagingChannel::sendTextWithQuickActions()) so a customer can switch
+        // services or end the chat with one tap instead of needing to type a
+        // keyword in the right language. Their ids/payloads are literally "service"
+        // and "close_chat", matching the typed keywords HandleIncomingMessage
+        // already checks for.
         'change_service_button' => [
             'en' => 'Change service',
             'it' => 'Cambia servizio',
             'bn' => 'সেবা পরিবর্তন',
+        ],
+        'close_conversation_button' => [
+            'en' => 'Close conversation',
+            'it' => 'Chiudi conversazione',
+            'bn' => 'কথোপকথন শেষ করুন',
         ],
     ],
 

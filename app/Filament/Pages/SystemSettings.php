@@ -140,6 +140,11 @@ class SystemSettings extends Page implements HasForms
                 'it' => 'Mi dispiace, non ho capito. Contatta il nostro team di supporto.',
                 'bn' => 'দুঃখিত, আমি বুঝতে পারিনি। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।',
             ]),
+            'bot_close_conversation_message' => Setting::get('bot_close_conversation_message', [
+                'en' => 'Thanks for chatting! If you need anything else, just message us again anytime.',
+                'it' => 'Grazie per la chat! Se hai bisogno di altro, scrivici di nuovo in qualsiasi momento.',
+                'bn' => 'চ্যাট করার জন্য ধন্যবাদ! আরও কিছু লাগলে যেকোনো সময় আবার মেসেজ করুন।',
+            ]),
             'claude_session_limit_message' => Setting::get('claude_session_limit_message', [
                 'en' => "You've reached the message limit for this session. Please type \"menu\" to start a new conversation.",
                 'it' => 'Hai raggiunto il limite di messaggi per questa sessione. Digita "menu" per iniziare una nuova conversazione.',
@@ -614,6 +619,19 @@ class SystemSettings extends Page implements HasForms
                                     )
                                     ->columns(count(config('services_bot.languages', ['en' => 'English']))),
 
+                                Section::make('Close Conversation Message')
+                                    ->description('Sent when a customer taps "Close conversation" or types a close keyword mid-chat, in their chosen language.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) => Textarea::make("bot_close_conversation_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+
                                 Section::make('Session Limit Message')
                                     ->description('Sent when a customer hits the "Max AI Replies per Session" cap set in the Claude AI tab, in the customer\'s chosen language.')
                                     ->schema(
@@ -757,6 +775,7 @@ class SystemSettings extends Page implements HasForms
             'knowledge_max_distance' => 'bot',
             'bot_welcome_message' => 'bot',
             'bot_fallback_message' => 'bot',
+            'bot_close_conversation_message' => 'bot',
             'claude_session_limit_message' => 'bot',
             'claude_daily_limit_message' => 'bot',
             'mail_from_name' => 'email',

@@ -11,6 +11,7 @@ class Conversation extends Model
     protected $fillable = [
         'whatsapp_account_id', 'wa_phone', 'platform', 'step', 'language', 'service', 'history', 'claude_message_count',
         'escalated_at', 'escalation_status', 'last_customer_message_at', 'idle_nudged_at',
+        'opted_out_at', 'assigned_user_id',
     ];
 
     protected $casts = [
@@ -18,11 +19,17 @@ class Conversation extends Model
         'escalated_at' => 'datetime',
         'last_customer_message_at' => 'datetime',
         'idle_nudged_at' => 'datetime',
+        'opted_out_at' => 'datetime',
     ];
 
     public function whatsAppAccount(): BelongsTo
     {
         return $this->belongsTo(WhatsAppAccount::class, 'whatsapp_account_id');
+    }
+
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
     }
 
     public function contactIdentifierType(): string

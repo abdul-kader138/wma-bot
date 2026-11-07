@@ -132,8 +132,10 @@ return [
             'DONE'          => 'Done',
         ],
         'actions' => [
-            'reset'  => 'Reset',
-            'resume' => 'Resume bot',
+            'reset'   => 'Reset',
+            'resume'  => 'Resume bot',
+            'claim'   => 'Claim',
+            'release' => 'Release',
         ],
     ],
 

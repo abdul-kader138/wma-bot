@@ -72,6 +72,21 @@ class SettingsSeeder extends Seeder
             ]), 'type' => 'json', 'label' => 'Idle Follow-up Message', 'is_public' => false],
             ['group' => 'bot', 'key' => 'bot_idle_follow_up_hours', 'value' => '4', 'type' => 'integer', 'label' => 'Idle Follow-up Hours', 'is_public' => false],
             ['group' => 'bot', 'key' => 'knowledge_stale_after_months', 'value' => '6', 'type' => 'integer', 'label' => 'Knowledge Staleness (months)', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_opt_out_message', 'value' => json_encode([
+                'en' => "You've been unsubscribed and won't receive further messages from us. Message us anytime to start again.",
+                'it' => 'Sei stato disiscritto e non riceverai più messaggi da noi. Scrivici in qualsiasi momento per ricominciare.',
+                'bn' => 'আপনি আনসাবস্ক্রাইব করেছেন এবং আর আমাদের থেকে মেসেজ পাবেন না। পুনরায় শুরু করতে যেকোনো সময় আমাদের মেসেজ করুন।',
+            ]), 'type' => 'json', 'label' => 'Opt-out Confirmation Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_escalation_after_hours_message', 'value' => json_encode([
+                'en' => "We've let our team know you'd like to speak with a person. We're outside business hours right now, but someone will respond as soon as we're back.",
+                'it' => "Abbiamo avvisato il nostro team che vorresti parlare con una persona. Al momento siamo fuori orario, ma qualcuno ti risponderà appena possibile.",
+                'bn' => 'আমরা আমাদের টিমকে জানিয়েছি যে আপনি একজন মানুষের সাথে কথা বলতে চান। এখন আমাদের কর্মঘণ্টার বাইরে, তবে ফিরে আসার সাথে সাথে কেউ উত্তর দেবে।',
+            ]), 'type' => 'json', 'label' => 'After-hours Escalation Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'business_hours_enabled', 'value' => '0', 'type' => 'boolean', 'label' => 'Business Hours Enabled', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'business_hours_timezone', 'value' => 'UTC', 'type' => 'string', 'label' => 'Business Hours Timezone', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'business_hours_start', 'value' => '09:00', 'type' => 'string', 'label' => 'Business Hours Start', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'business_hours_end', 'value' => '18:00', 'type' => 'string', 'label' => 'Business Hours End', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'business_hours_days', 'value' => json_encode(['mon', 'tue', 'wed', 'thu', 'fri']), 'type' => 'json', 'label' => 'Business Hours Days', 'is_public' => false],
 
             // Email
             ['group' => 'email', 'key' => 'mail_from_name',    'value' => 'WMA Bot',          'type' => 'string', 'label' => 'From Name'],

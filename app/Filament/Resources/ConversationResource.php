@@ -14,6 +14,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class ConversationResource extends Resource
@@ -37,6 +38,20 @@ class ConversationResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return __('admin.conversation.label_plural');
+    }
+
+    // Unclaimed "talk to a human" escalations waiting in the queue — the badge that
+    // turns this nav item into a real support queue instead of just a conversation list.
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::where('step', 'HUMAN')->whereNull('assigned_user_id')->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
     }
 
     public static function form(Form $form): Form
@@ -86,7 +101,24 @@ class ConversationResource extends Resource
                         ->label('Escalation')
                         ->visible(fn (Conversation $record) => filled($record->escalation_status))
                         ->badge()
-                        ->color(fn (?string $state) => $state === 'pending' ? 'danger' : 'gray'),
+                        ->color(fn (?string $state) => match ($state) {
+                            'pending' => 'danger',
+                            'claimed' => 'warning',
+                            default => 'gray',
+                        }),
+
+                    TextEntry::make('assignedUser.name')
+                        ->label('Claimed by')
+                        ->visible(fn (Conversation $record) => filled($record->assigned_user_id))
+                        ->badge()
+                        ->color('warning'),
+
+                    TextEntry::make('opted_out_at')
+                        ->label('Opted out')
+                        ->visible(fn (Conversation $record) => filled($record->opted_out_at))
+                        ->badge()
+                        ->color('gray')
+                        ->formatStateUsing(fn () => 'Yes'),
 
                     TextEntry::make('language')
                         ->label(__('admin.conversation.fields.language')),
@@ -172,6 +204,18 @@ class ConversationResource extends Resource
                     ->label(__('admin.service_request.fields.service'))
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('assignedUser.name')
+                    ->label('Claimed by')
+                    ->placeholder('—')
+                    ->badge()
+                    ->color('warning')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('opted_out_at')
+                    ->label('Opted out')
+                    ->formatStateUsing(fn (?string $state) => $state ? 'Yes' : '—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('admin.conversation.fields.last_activity'))
                     ->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))
@@ -205,9 +249,41 @@ class ConversationResource extends Resource
                         'messenger' => 'Facebook Messenger',
                         'instagram' => 'Instagram',
                     ]),
+
+                Tables\Filters\Filter::make('unclaimed_escalations')
+                    ->label('Waiting for staff (unclaimed)')
+                    ->query(fn ($query) => $query->where('step', 'HUMAN')->whereNull('assigned_user_id')),
+
+                TernaryFilter::make('opted_out')
+                    ->label('Opted out')
+                    ->queries(
+                        true: fn ($query) => $query->whereNotNull('opted_out_at'),
+                        false: fn ($query) => $query->whereNull('opted_out_at'),
+                    ),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+
+                Tables\Actions\Action::make('claim')
+                    ->label(__('admin.conversation.actions.claim'))
+                    ->icon('heroicon-o-hand-raised')
+                    ->color('warning')
+                    ->visible(fn (Conversation $c) => $c->step === 'HUMAN' && ! $c->assigned_user_id)
+                    ->action(fn (Conversation $c) => $c->update([
+                        'assigned_user_id' => auth()->id(),
+                        'escalation_status' => 'claimed',
+                    ])),
+
+                Tables\Actions\Action::make('release')
+                    ->label(__('admin.conversation.actions.release'))
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('gray')
+                    ->visible(fn (Conversation $c) => $c->step === 'HUMAN' && (bool) $c->assigned_user_id)
+                    ->requiresConfirmation()
+                    ->action(fn (Conversation $c) => $c->update([
+                        'assigned_user_id' => null,
+                        'escalation_status' => 'pending',
+                    ])),
 
                 Tables\Actions\Action::make('resume')
                     ->label(__('admin.conversation.actions.resume'))
@@ -218,6 +294,7 @@ class ConversationResource extends Resource
                     ->action(fn (Conversation $c) => $c->update([
                         'step' => $c->service ? 'IN_SERVICE' : 'AWAIT_SERVICE',
                         'escalation_status' => 'resolved',
+                        'assigned_user_id' => null,
                     ])),
 
                 Tables\Actions\Action::make('reset')
@@ -227,7 +304,7 @@ class ConversationResource extends Resource
                     ->requiresConfirmation()
                     ->action(fn (Conversation $c) => $c->update([
                         'step' => 'NEW', 'service' => null, 'history' => [],
-                        'escalation_status' => null, 'escalated_at' => null,
+                        'escalation_status' => null, 'escalated_at' => null, 'assigned_user_id' => null,
                     ])),
             ]);
     }

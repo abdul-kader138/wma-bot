@@ -14,6 +14,7 @@ use App\Notifications\BotJobFailedNotification;
 use App\Notifications\ClaudeBudgetExhaustedNotification;
 use App\Notifications\ConversationEscalatedNotification;
 use App\Notifications\NewServiceRequestNotification;
+use App\Services\BusinessHours;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
 use App\Services\InstagramClient;
@@ -48,6 +49,15 @@ class HandleIncomingMessage implements ShouldQueue
         'human', 'agent', 'talk to a human', 'talk to an agent', 'operator', 'representative', 'staff',
         'operatore', 'un operatore', 'parlare con un operatore', 'assistenza umana', 'rappresentante',
         'প্রতিনিধি', 'মানুষ', 'এজেন্ট', 'মানুষের সাথে কথা বলতে চাই',
+    ];
+
+    // Honored regardless of step/platform (WhatsApp, Messenger, Instagram alike) — Meta
+    // requires customers be able to opt out of further messages from the bot. Checked
+    // before everything else below. Exact full-message match, en/it/bn.
+    private const OPT_OUT_KEYWORDS = [
+        'stop', 'unsubscribe', 'stop messages', 'opt out',
+        'annulla iscrizione', 'basta', 'fermati',
+        'বন্ধ', 'বন্ধ করুন',
     ];
 
     public int $tries = 3;
@@ -172,11 +182,27 @@ class HandleIncomingMessage implements ShouldQueue
             ['step' => 'NEW', 'history' => [], 'platform' => $this->platform]
         );
 
+        // Honored before anything else, from any step: Meta requires customers be able
+        // to stop receiving messages from the bot. Only gates proactive sends
+        // (SendIdleFollowUps) — the confirmation reply below isn't itself a proactive
+        // send, it's a direct reply to this message.
+        if (in_array(mb_strtolower($input), self::OPT_OUT_KEYWORDS, true)) {
+            $convo->update(['opted_out_at' => now(), 'last_customer_message_at' => now()]);
+
+            if ($message = $this->localizedMessage('bot_opt_out_message', $convo->language)) {
+                $wa->sendText($phone, $message);
+            }
+
+            return;
+        }
+
         // Bumped on every genuine inbound customer message (this is the only place
         // that happens), independent of step — SendIdleFollowUps reads this to know
         // when a customer last said anything, and WhatsApp's 24h messaging window
-        // is measured from it.
-        $convo->update(['last_customer_message_at' => now()]);
+        // is measured from it. Also clears any earlier opt-out: the customer messaging
+        // again is treated as renewed consent (this never blocks the bot's normal
+        // reactive replies — only SendIdleFollowUps checks opted_out_at).
+        $convo->update(['last_customer_message_at' => now(), 'opted_out_at' => null]);
 
         // While escalated, the bot stays silent and just keeps the transcript for
         // staff to read — no reply, no step/history-resetting logic below applies.
@@ -593,16 +619,21 @@ class HandleIncomingMessage implements ShouldQueue
     }
 
     // Pauses the bot for this conversation and notifies staff. The only way out is
-    // the "Resume bot" action in ConversationResource.
+    // the "Resume bot" action in ConversationResource. Unclaimed/unassigned until a
+    // staff member claims it from the queue there.
     private function escalateToHuman(Conversation $convo, MessagingChannel $wa, string $phone): void
     {
         $convo->update([
             'step' => 'HUMAN',
             'escalated_at' => now(),
             'escalation_status' => 'pending',
+            'assigned_user_id' => null,
         ]);
 
-        if ($message = $this->localizedMessage('bot_escalation_message', $convo->language)) {
+        $afterHours = ! BusinessHours::isOpenNow();
+        $settingKey = $afterHours ? 'bot_escalation_after_hours_message' : 'bot_escalation_message';
+
+        if ($message = $this->localizedMessage($settingKey, $convo->language)) {
             $wa->sendText($phone, $message);
         }
 
@@ -613,7 +644,7 @@ class HandleIncomingMessage implements ShouldQueue
 
         try {
             Notification::route('mail', $email)
-                ->notify(new ConversationEscalatedNotification($convo));
+                ->notify(new ConversationEscalatedNotification($convo, $afterHours));
         } catch (\Throwable $e) {
             Log::error('Failed to send escalation notification', ['error' => $e->getMessage()]);
         }

@@ -40,6 +40,7 @@ class SendIdleFollowUps implements ShouldBeUnique, ShouldQueue
 
         Conversation::query()
             ->where('step', 'IN_SERVICE')
+            ->whereNull('opted_out_at')
             ->whereNotNull('last_customer_message_at')
             ->where('last_customer_message_at', '<', now()->subHours($hours))
             // WhatsApp's 24h customer-service window: beyond this, a send would just

@@ -7,6 +7,7 @@ use App\Providers\Filament\AdminPanelProvider;
 use App\Services\Maria\MariaPermissionVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Radio;
@@ -16,10 +17,12 @@ use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
@@ -172,6 +175,21 @@ class SystemSettings extends Page implements HasForms
             ]),
             'bot_idle_follow_up_hours' => Setting::get('bot_idle_follow_up_hours', 4),
             'knowledge_stale_after_months' => Setting::get('knowledge_stale_after_months', 6),
+            'bot_opt_out_message' => Setting::get('bot_opt_out_message', [
+                'en' => "You've been unsubscribed and won't receive further messages from us. Message us anytime to start again.",
+                'it' => 'Sei stato disiscritto e non riceverai più messaggi da noi. Scrivici in qualsiasi momento per ricominciare.',
+                'bn' => 'আপনি আনসাবস্ক্রাইব করেছেন এবং আর আমাদের থেকে মেসেজ পাবেন না। পুনরায় শুরু করতে যেকোনো সময় আমাদের মেসেজ করুন।',
+            ]),
+            'bot_escalation_after_hours_message' => Setting::get('bot_escalation_after_hours_message', [
+                'en' => "We've let our team know you'd like to speak with a person. We're outside business hours right now, but someone will respond as soon as we're back.",
+                'it' => 'Abbiamo avvisato il nostro team che vorresti parlare con una persona. Al momento siamo fuori orario, ma qualcuno ti risponderà appena possibile.',
+                'bn' => 'আমরা আমাদের টিমকে জানিয়েছি যে আপনি একজন মানুষের সাথে কথা বলতে চান। এখন আমাদের কর্মঘণ্টার বাইরে, তবে ফিরে আসার সাথে সাথে কেউ উত্তর দেবে।',
+            ]),
+            'business_hours_enabled' => Setting::get('business_hours_enabled', false),
+            'business_hours_timezone' => Setting::get('business_hours_timezone', config('app.timezone', 'UTC')),
+            'business_hours_start' => Setting::get('business_hours_start', '09:00'),
+            'business_hours_end' => Setting::get('business_hours_end', '18:00'),
+            'business_hours_days' => Setting::get('business_hours_days', ['mon', 'tue', 'wed', 'thu', 'fri']),
 
             // Email
             'mail_from_name' => Setting::get('mail_from_name', config('mail.from.name', '')),
@@ -735,6 +753,71 @@ class SystemSettings extends Page implements HasForms
                                         ->required()
                                         ->helperText('A knowledge entry is flagged "needs review" once this many months pass since it was last created or edited. 0 disables staleness flags.'),
                                 ]),
+
+                            Section::make('Opt-out')
+                                ->description('Sent when a customer types a STOP/unsubscribe keyword. They stop receiving idle follow-up nudges until they message again (which automatically re-enables them) — this never blocks the bot\'s normal replies.')
+                                ->schema(
+                                    collect(config('services_bot.languages', ['en' => 'English']))
+                                        ->map(fn ($name, $code) => Textarea::make("bot_opt_out_message.{$code}")
+                                            ->label($name)
+                                            ->rows(2)
+                                            ->maxLength(1000)
+                                            ->required($code === 'en')
+                                        )->values()->toArray()
+                                )
+                                ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+
+                            Section::make('Business Hours')
+                                ->description('One schedule applies across every channel (WhatsApp, Messenger, Instagram). When a customer escalates outside these hours, they get the after-hours message below instead of the usual one, and the staff email is flagged "outside business hours".')
+                                ->schema([
+                                    Toggle::make('business_hours_enabled')
+                                        ->label('Enable business hours')
+                                        ->live()
+                                        ->helperText('When off, every escalation is treated as within business hours.'),
+
+                                    Grid::make(3)->schema([
+                                        Select::make('business_hours_timezone')
+                                            ->label('Timezone')
+                                            ->options(array_combine(timezone_identifiers_list(), timezone_identifiers_list()))
+                                            ->searchable()
+                                            ->visible(fn (Get $get) => $get('business_hours_enabled'))
+                                            ->required(fn (Get $get) => $get('business_hours_enabled')),
+
+                                        TimePicker::make('business_hours_start')
+                                            ->label('Opens at')
+                                            ->seconds(false)
+                                            ->visible(fn (Get $get) => $get('business_hours_enabled'))
+                                            ->required(fn (Get $get) => $get('business_hours_enabled')),
+
+                                        TimePicker::make('business_hours_end')
+                                            ->label('Closes at')
+                                            ->seconds(false)
+                                            ->visible(fn (Get $get) => $get('business_hours_enabled'))
+                                            ->required(fn (Get $get) => $get('business_hours_enabled')),
+                                    ]),
+
+                                    CheckboxList::make('business_hours_days')
+                                        ->label('Open days')
+                                        ->options([
+                                            'mon' => 'Monday', 'tue' => 'Tuesday', 'wed' => 'Wednesday',
+                                            'thu' => 'Thursday', 'fri' => 'Friday', 'sat' => 'Saturday', 'sun' => 'Sunday',
+                                        ])
+                                        ->columns(4)
+                                        ->visible(fn (Get $get) => $get('business_hours_enabled')),
+
+                                    Section::make('After-hours Escalation Message')
+                                        ->visible(fn (Get $get) => $get('business_hours_enabled'))
+                                        ->schema(
+                                            collect(config('services_bot.languages', ['en' => 'English']))
+                                                ->map(fn ($name, $code) => Textarea::make("bot_escalation_after_hours_message.{$code}")
+                                                    ->label($name)
+                                                    ->rows(2)
+                                                    ->maxLength(1000)
+                                                    ->required($code === 'en')
+                                                )->values()->toArray()
+                                        )
+                                        ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+                                ]),
                         ]),
 
                     // ── Email ─────────────────────────────────────────────────
@@ -860,6 +943,13 @@ class SystemSettings extends Page implements HasForms
             'bot_idle_follow_up_message' => 'bot',
             'bot_idle_follow_up_hours' => 'bot',
             'knowledge_stale_after_months' => 'bot',
+            'bot_opt_out_message' => 'bot',
+            'bot_escalation_after_hours_message' => 'bot',
+            'business_hours_enabled' => 'bot',
+            'business_hours_timezone' => 'bot',
+            'business_hours_start' => 'bot',
+            'business_hours_end' => 'bot',
+            'business_hours_days' => 'bot',
             'mail_from_name' => 'email',
             'mail_from_address' => 'email',
             'mail_host' => 'email',

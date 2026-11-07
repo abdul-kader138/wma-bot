@@ -196,6 +196,66 @@ class HandleIncomingMessageEscalationTest extends TestCase
         $this->assertSame('what is the price?', $event->question);
     }
 
+    public function test_stop_keyword_opts_out_and_sends_confirmation(): void
+    {
+        \App\Models\Setting::set('bot_opt_out_message', ['en' => 'You are unsubscribed.'], 'bot');
+
+        $phone = '393000000008';
+        Conversation::create([
+            'whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone,
+            'step' => 'IN_SERVICE', 'language' => 'en', 'service' => 'ticket', 'history' => [],
+        ]);
+
+        $job = new HandleIncomingMessage($this->makeTextValue($phone, 'stop', 'o1'), $this->account->id);
+        $job->handle($this->createMock(ClaudeAgent::class), app(FaqMatcher::class));
+
+        $convo = Conversation::where('wa_phone', $phone)->first();
+        $this->assertNotNull($convo->opted_out_at);
+
+        Http::assertSent(fn ($request) => ($request->data()['text']['body'] ?? null) === 'You are unsubscribed.');
+    }
+
+    public function test_messaging_again_clears_opt_out(): void
+    {
+        $phone = '393000000009';
+        $convo = Conversation::create([
+            'whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone,
+            'step' => 'IN_SERVICE', 'language' => 'en', 'service' => 'ticket', 'history' => [],
+            'opted_out_at' => now()->subDay(),
+        ]);
+
+        $agent = $this->createMock(ClaudeAgent::class);
+        $agent->method('handle')->willReturn(['type' => 'text', 'text' => 'ok', 'chunk_count' => 0, 'top_distance' => null]);
+
+        $job = new HandleIncomingMessage($this->makeTextValue($phone, 'hello again', 'o2'), $this->account->id);
+        $job->handle($agent, app(FaqMatcher::class));
+
+        $this->assertNull($convo->refresh()->opted_out_at);
+    }
+
+    public function test_escalation_outside_business_hours_sends_after_hours_message(): void
+    {
+        \App\Models\Setting::set('business_hours_enabled', true, 'bot');
+        \App\Models\Setting::set('business_hours_timezone', 'UTC', 'bot');
+        \App\Models\Setting::set('business_hours_start', '09:00', 'bot');
+        \App\Models\Setting::set('business_hours_end', '18:00', 'bot');
+        \App\Models\Setting::set('business_hours_days', ['mon', 'tue', 'wed', 'thu', 'fri'], 'bot');
+        \App\Models\Setting::set('bot_escalation_after_hours_message', ['en' => 'We are closed right now.'], 'bot');
+
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-08 22:00:00', 'UTC')); // a Sunday, outside hours
+
+        $phone = '393000000020';
+        Conversation::create([
+            'whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone,
+            'step' => 'IN_SERVICE', 'language' => 'en', 'service' => 'ticket', 'history' => [],
+        ]);
+
+        $job = new HandleIncomingMessage($this->makeTextValue($phone, 'human', 'o3'), $this->account->id);
+        $job->handle($this->createMock(ClaudeAgent::class), app(FaqMatcher::class));
+
+        Http::assertSent(fn ($request) => ($request->data()['text']['body'] ?? null) === 'We are closed right now.');
+    }
+
     public function test_claude_text_reply_logs_a_bot_answer_event_with_none_match_source(): void
     {
         $phone = '393000000007';

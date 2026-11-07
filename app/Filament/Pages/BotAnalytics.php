@@ -51,6 +51,11 @@ class BotAnalytics extends Page
         return __('admin.nav.bot_analytics');
     }
 
+    public function getSubheading(): string
+    {
+        return 'Where bot replies are landing, how customers rate them, and the real questions that went unanswered.';
+    }
+
     public function getViewData(): array
     {
         $since = now()->subDays($this->days);

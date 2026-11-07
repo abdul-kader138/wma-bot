@@ -52,10 +52,13 @@ return [
             'it' => '👎 Non utile',
             'bn' => '👎 সহায়ক নয়',
         ],
+        // Meta caps button/quick-reply titles at 20 characters (WhatsApp interactive
+        // buttons and Messenger/Instagram quick replies alike) — the Bengali label must
+        // stay short enough to fit, unlike the longer phrasing used elsewhere for hints.
         'human_handover_button' => [
             'en' => '🙋 Talk to us',
             'it' => '🙋 Parla con noi',
-            'bn' => '🙋 আমাদের সাথে কথা বলুন',
+            'bn' => '🙋 মানুষ চাই',
         ],
 
         // One-line hint appended under every IN_SERVICE reply so switching service or

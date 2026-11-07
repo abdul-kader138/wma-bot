@@ -11,7 +11,7 @@ class ConversationEscalatedNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private Conversation $conversation) {}
+    public function __construct(private Conversation $conversation, private bool $afterHours = false) {}
 
     public function via(object $notifiable): array
     {
@@ -21,12 +21,21 @@ class ConversationEscalatedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $c = $this->conversation;
+        $subject = "Customer asked for a human — {$c->wa_phone}";
+        if ($this->afterHours) {
+            $subject .= ' (outside business hours)';
+        }
 
-        return (new MailMessage)
-            ->subject("Customer asked for a human — {$c->wa_phone}")
+        $mail = (new MailMessage)
+            ->subject($subject)
             ->line('A customer asked to talk to a human and the bot has paused for this conversation.')
             ->line("Contact: {$c->wa_phone}")
-            ->line('Service: '.($c->service ?? '—'))
-            ->action('Open conversation', url('/admin/conversations/'.$c->id));
+            ->line('Service: '.($c->service ?? '—'));
+
+        if ($this->afterHours) {
+            $mail->line('This came in outside business hours — the customer was told someone will respond when the team is back.');
+        }
+
+        return $mail->action('Open conversation', url('/admin/conversations/'.$c->id));
     }
 }

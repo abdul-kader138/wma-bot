@@ -132,8 +132,10 @@ return [
             'DONE'          => 'Completata',
         ],
         'actions' => [
-            'reset'  => 'Reimposta',
-            'resume' => 'Riattiva il bot',
+            'reset'   => 'Reimposta',
+            'resume'  => 'Riattiva il bot',
+            'claim'   => 'Prendi in carico',
+            'release' => 'Rilascia',
         ],
     ],
 

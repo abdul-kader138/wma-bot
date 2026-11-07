@@ -61,6 +61,11 @@ class KnowledgeSandbox extends Page implements HasForms
         return __('admin.nav.knowledge_sandbox');
     }
 
+    public function getSubheading(): string
+    {
+        return 'Runs the real production matching code against a test question — see every candidate, including ones that score below threshold, without sending a real message.';
+    }
+
     public function mount(): void
     {
         $this->form->fill([

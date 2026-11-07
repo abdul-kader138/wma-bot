@@ -33,10 +33,14 @@ class WhatsAppClient implements MessagingChannel
 
     public function sendTextWithQuickActions(string $to, string $body, string $lang): void
     {
-        $switchLabel = config("services_bot.replies.change_service_button.{$lang}")
-            ?? config('services_bot.replies.change_service_button.en');
-        $closeLabel = config("services_bot.replies.close_conversation_button.{$lang}")
-            ?? config('services_bot.replies.close_conversation_button.en');
+        $upLabel = config("services_bot.replies.rate_up_button.{$lang}")
+            ?? config('services_bot.replies.rate_up_button.en');
+        $downLabel = config("services_bot.replies.rate_down_button.{$lang}")
+            ?? config('services_bot.replies.rate_down_button.en');
+        $humanLabel = config("services_bot.replies.human_handover_button.{$lang}")
+            ?? config('services_bot.replies.human_handover_button.en');
+        $hint = config("services_bot.replies.nav_hint.{$lang}")
+            ?? config('services_bot.replies.nav_hint.en');
 
         $this->post([
             'messaging_product' => 'whatsapp',
@@ -44,14 +48,15 @@ class WhatsAppClient implements MessagingChannel
             'type'              => 'interactive',
             'interactive'       => [
                 'type'   => 'button',
-                'body'   => ['text' => $body],
+                'body'   => ['text' => "{$body}\n\n{$hint}"],
                 'action' => [
-                    // WhatsApp caps interactive button messages at 3 — two used here,
-                    // matching the "service" and "close_chat" keywords already
-                    // handled in HandleIncomingMessage.
+                    // WhatsApp caps interactive button messages at 3 — these match
+                    // the "rate_up"/"rate_down"/"human" ids HandleIncomingMessage
+                    // already checks for.
                     'buttons' => [
-                        ['type' => 'reply', 'reply' => ['id' => 'service', 'title' => $switchLabel]],
-                        ['type' => 'reply', 'reply' => ['id' => 'close_chat', 'title' => $closeLabel]],
+                        ['type' => 'reply', 'reply' => ['id' => 'rate_up', 'title' => $upLabel]],
+                        ['type' => 'reply', 'reply' => ['id' => 'rate_down', 'title' => $downLabel]],
+                        ['type' => 'reply', 'reply' => ['id' => 'human', 'title' => $humanLabel]],
                     ],
                 ],
             ],

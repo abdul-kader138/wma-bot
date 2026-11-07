@@ -155,6 +155,23 @@ class SystemSettings extends Page implements HasForms
                 'it' => 'Hai raggiunto il limite di messaggi di oggi. Contatta il nostro supporto o riprova domani.',
                 'bn' => 'আপনি আজকের মেসেজ সীমায় পৌঁছেছেন। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন, অথবা আগামীকাল আবার চেষ্টা করুন।',
             ]),
+            'bot_escalation_message' => Setting::get('bot_escalation_message', [
+                'en' => "We've let our team know you'd like to speak with a person. Someone will be with you shortly.",
+                'it' => 'Abbiamo avvisato il nostro team che vorresti parlare con una persona. Qualcuno ti risponderà a breve.',
+                'bn' => 'আমরা আমাদের টিমকে জানিয়েছি যে আপনি একজন মানুষের সাথে কথা বলতে চান। শীঘ্রই কেউ আপনার সাথে যোগাযোগ করবে।',
+            ]),
+            'bot_rating_thanks_message' => Setting::get('bot_rating_thanks_message', [
+                'en' => 'Thanks for the feedback!',
+                'it' => 'Grazie per il tuo feedback!',
+                'bn' => 'ফিডব্যাকের জন্য ধন্যবাদ!',
+            ]),
+            'bot_idle_follow_up_message' => Setting::get('bot_idle_follow_up_message', [
+                'en' => 'Still there? Let us know if you need anything else, or type "menu" to start over.',
+                'it' => 'Ci sei ancora? Fammi sapere se hai bisogno di altro, oppure scrivi "menu" per ricominciare.',
+                'bn' => 'আপনি কি এখনও আছেন? আর কিছু লাগলে জানান, অথবা নতুন করে শুরু করতে "menu" লিখুন।',
+            ]),
+            'bot_idle_follow_up_hours' => Setting::get('bot_idle_follow_up_hours', 4),
+            'knowledge_stale_after_months' => Setting::get('knowledge_stale_after_months', 6),
 
             // Email
             'mail_from_name' => Setting::get('mail_from_name', config('mail.from.name', '')),
@@ -657,7 +674,67 @@ class SystemSettings extends Page implements HasForms
                                             )->values()->toArray()
                                     )
                                     ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+
+                                Section::make('Escalation Message')
+                                    ->description('Sent when a customer asks to talk to a human (button tap or typed keyword), in their chosen language. The bot then stays paused for that conversation until staff resume it.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) => Textarea::make("bot_escalation_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+
+                                Section::make('Rating Thanks Message')
+                                    ->description('Sent when a customer taps 👍 or 👎 after a bot reply, in their chosen language.')
+                                    ->schema(
+                                        collect(config('services_bot.languages', ['en' => 'English']))
+                                            ->map(fn ($name, $code) => Textarea::make("bot_rating_thanks_message.{$code}")
+                                                ->label($name)
+                                                ->rows(2)
+                                                ->maxLength(1000)
+                                                ->required($code === 'en')
+                                            )->values()->toArray()
+                                    )
+                                    ->columns(count(config('services_bot.languages', ['en' => 'English']))),
                             ]),
+
+                            Section::make('Idle Follow-up')
+                                ->description('A gentle nudge sent when a customer goes quiet mid-way through a service.')
+                                ->schema([
+                                    TextInput::make('bot_idle_follow_up_hours')
+                                        ->label('Hours of inactivity before nudging')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->required()
+                                        ->helperText('A customer who stops replying mid-service gets one nudge after this many hours of silence. 0 disables it. Never sent once WhatsApp\'s 24-hour customer-service window has already closed.'),
+
+                                    Section::make('Idle Follow-up Message')
+                                        ->schema(
+                                            collect(config('services_bot.languages', ['en' => 'English']))
+                                                ->map(fn ($name, $code) => Textarea::make("bot_idle_follow_up_message.{$code}")
+                                                    ->label($name)
+                                                    ->rows(2)
+                                                    ->maxLength(1000)
+                                                    ->required($code === 'en')
+                                                )->values()->toArray()
+                                        )
+                                        ->columns(count(config('services_bot.languages', ['en' => 'English']))),
+                                ]),
+
+                            Section::make('Knowledge Base Staleness')
+                                ->description('Flags knowledge entries that have gone too long without a review — useful for rules (visa, immigration, pricing) that change over time.')
+                                ->schema([
+                                    TextInput::make('knowledge_stale_after_months')
+                                        ->label('Flag as stale after (months)')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->required()
+                                        ->helperText('A knowledge entry is flagged "needs review" once this many months pass since it was last created or edited. 0 disables staleness flags.'),
+                                ]),
                         ]),
 
                     // ── Email ─────────────────────────────────────────────────
@@ -778,6 +855,11 @@ class SystemSettings extends Page implements HasForms
             'bot_close_conversation_message' => 'bot',
             'claude_session_limit_message' => 'bot',
             'claude_daily_limit_message' => 'bot',
+            'bot_escalation_message' => 'bot',
+            'bot_rating_thanks_message' => 'bot',
+            'bot_idle_follow_up_message' => 'bot',
+            'bot_idle_follow_up_hours' => 'bot',
+            'knowledge_stale_after_months' => 'bot',
             'mail_from_name' => 'email',
             'mail_from_address' => 'email',
             'mail_host' => 'email',

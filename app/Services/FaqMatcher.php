@@ -50,9 +50,24 @@ class FaqMatcher
 
     public function match(string $text, ?string $service, ?int $whatsappAccountId = null): ?Faq
     {
+        return $this->explain($text, $service, $whatsappAccountId)['matched'];
+    }
+
+    /**
+     * Same matching logic as match(), but returns full diagnostics instead of just the
+     * winner — every candidate's score, even below threshold, and which match type (if
+     * any) fired. Used by the admin "test this knowledge" sandbox so staff can see why
+     * a question didn't match, not just that it didn't.
+     *
+     * @return array{matched: ?Faq, match_type: ?string, threshold: float, candidates: array}
+     */
+    public function explain(string $text, ?string $service, ?int $whatsappAccountId = null): array
+    {
+        $threshold = (float) (Setting::get('faq_confidence_threshold') ?? self::FUZZY_THRESHOLD);
+
         $normalized = $this->normalize($text);
         if ($normalized === '') {
-            return null;
+            return ['matched' => null, 'match_type' => null, 'threshold' => $threshold, 'candidates' => []];
         }
 
         $candidates = $this->candidates($service, $whatsappAccountId);
@@ -64,32 +79,34 @@ class FaqMatcher
                     continue;
                 }
 
-                if (str_contains($normalized, $needle)) {
-                    return $faq;
-                }
+                $isExact = str_contains($normalized, $needle)
+                    || (mb_strlen($normalized) >= self::MIN_LENGTH_FOR_REVERSE_CONTAINS && str_contains($needle, $normalized));
 
-                if (mb_strlen($normalized) >= self::MIN_LENGTH_FOR_REVERSE_CONTAINS
-                    && str_contains($needle, $normalized)) {
-                    return $faq;
+                if ($isExact) {
+                    return [
+                        'matched' => $faq,
+                        'match_type' => 'exact',
+                        'threshold' => $threshold,
+                        'candidates' => [['faq' => $faq, 'score' => 1.0, 'trigger' => $trigger]],
+                    ];
                 }
             }
         }
 
         $words = $this->words($normalized);
-        $best = null;
-        $bestScore = 0.0;
+        $scored = $candidates
+            ->map(fn (Faq $faq) => ['faq' => $faq, 'score' => $this->overlapScore($words, $faq), 'trigger' => null])
+            ->sortByDesc('score')
+            ->values();
 
-        foreach ($candidates as $faq) {
-            $score = $this->overlapScore($words, $faq);
-            if ($score > $bestScore) {
-                $bestScore = $score;
-                $best = $faq;
-            }
-        }
+        $best = $scored->first();
 
-        $threshold = (float) (Setting::get('faq_confidence_threshold') ?? self::FUZZY_THRESHOLD);
-
-        return $bestScore >= $threshold ? $best : null;
+        return [
+            'matched' => $best && $best['score'] >= $threshold ? $best['faq'] : null,
+            'match_type' => $best ? 'fuzzy' : null,
+            'threshold' => $threshold,
+            'candidates' => $scored->all(),
+        ];
     }
 
     /** Question text (all languages) plus trigger phrases — anything the user might literally type. */

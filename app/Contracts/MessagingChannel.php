@@ -14,10 +14,11 @@ interface MessagingChannel
     public function sendText(string $to, string $body): void;
 
     /**
-     * Same as sendText, but with persistent "change service" and "close conversation"
-     * quick replies/buttons attached — so a customer mid-way through one service can
-     * switch to another, or end the chat, with a single tap in any language, without
-     * needing to type a keyword.
+     * Same as sendText, but with the 3 quick-reply buttons WhatsApp's cap allows
+     * attached: 👍 Helpful / 👎 Not helpful / 🙋 Talk to us (ids rate_up/rate_down/
+     * human). "Change service" and "close conversation" no longer get their own
+     * buttons — a one-line typed-keyword hint is appended to the body instead, so
+     * that functionality survives without needing a 4th button.
      */
     public function sendTextWithQuickActions(string $to, string $body, string $lang): void;
 

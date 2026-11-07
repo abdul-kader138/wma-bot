@@ -28,6 +28,8 @@ return [
         'roles'            => 'Ruoli',
         'system_settings'  => 'Impostazioni di Sistema',
         'whatsapp_accounts' => 'Account di Messaggistica',
+        'bot_analytics'    => 'Analisi del Bot',
+        'knowledge_sandbox' => 'Test Conoscenza',
         'groups' => [
             'administration' => 'Amministrazione',
         ],
@@ -126,10 +128,12 @@ return [
             'AWAIT_LANG'    => 'In attesa di lingua',
             'AWAIT_SERVICE' => 'In attesa di servizio',
             'IN_SERVICE'    => 'In servizio',
+            'HUMAN'         => 'Passata a un operatore',
             'DONE'          => 'Completata',
         ],
         'actions' => [
-            'reset' => 'Reimposta',
+            'reset'  => 'Reimposta',
+            'resume' => 'Riattiva il bot',
         ],
     ],
 
@@ -171,6 +175,13 @@ return [
             'upload'       => 'Oppure carica un documento',
             'upload_help'  => 'PDF, DOCX o testo semplice. Il testo viene estratto automaticamente e suddiviso/indicizzato come il contenuto incollato — può richiedere un minuto per file più grandi.',
             'chunks'       => 'Blocchi',
+            'staleness'    => 'Stato revisione',
+            'stale'        => 'Da rivedere',
+            'fresh'        => 'Aggiornato',
+            'needs_review' => 'Da rivedere',
+        ],
+        'actions' => [
+            'mark_reviewed' => 'Segna come rivisto',
         ],
     ],
 

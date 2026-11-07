@@ -23,9 +23,9 @@ class ClaudeAgent
         $service      = Service::toConfig($convo->whatsapp_account_id)[$convo->service] ?? null;
         $languageName = config("services_bot.languages.{$convo->language}", 'English');
 
-        $tool      = $this->buildTool($service);
-        $reference = $this->retrieveReference($convo);
-        $system    = $this->buildSystemPrompt($service, $languageName, $reference);
+        $tool       = $this->buildTool($service);
+        $retrieval  = $this->retrieveReference($convo);
+        $system     = $this->buildSystemPrompt($service, $languageName, $retrieval['text']);
         $messages  = $this->buildMessages($convo);
 
         try {
@@ -72,7 +72,12 @@ class ClaudeAgent
             $text      = $fallbacks[$convo->language ?? 'en'] ?? $fallbacks['en'] ?? '…';
         }
 
-        return ['type' => 'text', 'text' => $text];
+        return [
+            'type' => 'text',
+            'text' => $text,
+            'chunk_count' => $retrieval['chunk_count'],
+            'top_distance' => $retrieval['top_distance'],
+        ];
     }
 
     private function buildTool(array $service): array
@@ -142,14 +147,22 @@ class ClaudeAgent
         return $prompt;
     }
 
-    /** Semantic fallback for whatever the customer's latest message asks that isn't a field value. */
-    private function retrieveReference(Conversation $convo): string
+    /**
+     * Semantic fallback for whatever the customer's latest message asks that isn't a
+     * field value. Also reports chunk_count/top_distance so the caller can log an
+     * accurate bot_answer_events row without running the search a second time.
+     *
+     * @return array{text: string, chunk_count: int, top_distance: ?float}
+     */
+    private function retrieveReference(Conversation $convo): array
     {
+        $empty = ['text' => '', 'chunk_count' => 0, 'top_distance' => null];
+
         $history = $convo->history ?? [];
         $latestUser = collect($history)->last(fn ($turn) => $turn['role'] === 'user');
 
         if (! $latestUser) {
-            return '';
+            return $empty;
         }
 
         // A Voyage outage/timeout must degrade to the existing field-collection-only
@@ -159,12 +172,14 @@ class ClaudeAgent
         } catch (\Throwable $e) {
             Log::warning('Knowledge retrieval failed; continuing without reference info', ['error' => $e->getMessage()]);
 
-            return '';
+            return $empty;
         }
 
-        return $chunks
-            ->map(fn ($chunk) => '- '.$chunk->content)
-            ->implode("\n");
+        return [
+            'text' => $chunks->map(fn ($chunk) => '- '.$chunk->content)->implode("\n"),
+            'chunk_count' => $chunks->count(),
+            'top_distance' => $chunks->min('neighbor_distance'),
+        ];
     }
 
     private function buildMessages(Conversation $convo): array

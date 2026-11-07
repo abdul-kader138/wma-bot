@@ -77,9 +77,16 @@ class ConversationResource extends Resource
                             'NEW' => 'gray',
                             'AWAIT_LANG' => 'warning',
                             'IN_SERVICE' => 'primary',
+                            'HUMAN' => 'danger',
                             'DONE' => 'success',
                             default => 'gray',
                         }),
+
+                    TextEntry::make('escalation_status')
+                        ->label('Escalation')
+                        ->visible(fn (Conversation $record) => filled($record->escalation_status))
+                        ->badge()
+                        ->color(fn (?string $state) => $state === 'pending' ? 'danger' : 'gray'),
 
                     TextEntry::make('language')
                         ->label(__('admin.conversation.fields.language')),
@@ -153,6 +160,7 @@ class ConversationResource extends Resource
                         'gray' => 'NEW',
                         'warning' => 'AWAIT_LANG',
                         'primary' => 'IN_SERVICE',
+                        'danger' => 'HUMAN',
                         'success' => 'DONE',
                     ])
                     ->sortable(),
@@ -182,6 +190,7 @@ class ConversationResource extends Resource
                         'AWAIT_LANG' => __('admin.conversation.steps.AWAIT_LANG'),
                         'AWAIT_SERVICE' => __('admin.conversation.steps.AWAIT_SERVICE'),
                         'IN_SERVICE' => __('admin.conversation.steps.IN_SERVICE'),
+                        'HUMAN' => __('admin.conversation.steps.HUMAN'),
                         'DONE' => __('admin.conversation.steps.DONE'),
                     ]),
 
@@ -200,12 +209,26 @@ class ConversationResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
 
+                Tables\Actions\Action::make('resume')
+                    ->label(__('admin.conversation.actions.resume'))
+                    ->icon('heroicon-o-play')
+                    ->color('success')
+                    ->visible(fn (Conversation $c) => $c->step === 'HUMAN')
+                    ->requiresConfirmation()
+                    ->action(fn (Conversation $c) => $c->update([
+                        'step' => $c->service ? 'IN_SERVICE' : 'AWAIT_SERVICE',
+                        'escalation_status' => 'resolved',
+                    ])),
+
                 Tables\Actions\Action::make('reset')
                     ->label(__('admin.conversation.actions.reset'))
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->action(fn (Conversation $c) => $c->update(['step' => 'NEW', 'service' => null, 'history' => []])),
+                    ->action(fn (Conversation $c) => $c->update([
+                        'step' => 'NEW', 'service' => null, 'history' => [],
+                        'escalation_status' => null, 'escalated_at' => null,
+                    ])),
             ]);
     }
 

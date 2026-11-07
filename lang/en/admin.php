@@ -28,6 +28,8 @@ return [
         'roles'            => 'Roles',
         'system_settings'  => 'System Settings',
         'whatsapp_accounts' => 'Messaging Accounts',
+        'bot_analytics'    => 'Bot Analytics',
+        'knowledge_sandbox' => 'Test Knowledge',
         'groups' => [
             'administration' => 'Administration',
         ],
@@ -126,10 +128,12 @@ return [
             'AWAIT_LANG'    => 'Awaiting Language',
             'AWAIT_SERVICE' => 'Awaiting Service',
             'IN_SERVICE'    => 'In Service',
+            'HUMAN'         => 'Escalated to human',
             'DONE'          => 'Done',
         ],
         'actions' => [
-            'reset' => 'Reset',
+            'reset'  => 'Reset',
+            'resume' => 'Resume bot',
         ],
     ],
 
@@ -171,6 +175,13 @@ return [
             'upload'       => 'Or upload a document',
             'upload_help'  => 'PDF, DOCX, or plain text. Text is extracted automatically and chunked/embedded the same way as pasted content — this can take a minute for larger files.',
             'chunks'       => 'Chunks',
+            'staleness'    => 'Review status',
+            'stale'        => 'Needs review',
+            'fresh'        => 'Up to date',
+            'needs_review' => 'Needs review',
+        ],
+        'actions' => [
+            'mark_reviewed' => 'Mark reviewed',
         ],
     ],
 

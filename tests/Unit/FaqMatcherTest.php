@@ -117,4 +117,46 @@ class FaqMatcherTest extends TestCase
 
         $this->assertNull($result);
     }
+
+    public function test_explain_reports_exact_match_type_and_candidate(): void
+    {
+        $matcher = $this->matcher([[
+            'question' => 'What is the price?',
+            'keywords' => ['price', 'cost', 'how much'],
+        ]]);
+
+        $result = $matcher->explain('how much does it cost?', null);
+
+        $this->assertNotNull($result['matched']);
+        $this->assertSame('exact', $result['match_type']);
+        $this->assertCount(1, $result['candidates']);
+        $this->assertSame(1.0, $result['candidates'][0]['score']);
+    }
+
+    public function test_explain_reports_below_threshold_candidates_even_when_unmatched(): void
+    {
+        $matcher = $this->matcher([[
+            'question' => 'What is the price?',
+            'keywords' => ['price', 'cost'],
+        ]]);
+
+        $result = $matcher->explain('hello, I need to book a ticket', null);
+
+        $this->assertNull($result['matched']);
+        $this->assertNotEmpty($result['candidates']);
+        $this->assertLessThan($result['threshold'], $result['candidates'][0]['score']);
+    }
+
+    public function test_explain_on_empty_input_returns_no_candidates(): void
+    {
+        $matcher = $this->matcher([[
+            'question' => 'What is the price?',
+            'keywords' => ['price'],
+        ]]);
+
+        $result = $matcher->explain('   ', null);
+
+        $this->assertNull($result['matched']);
+        $this->assertSame([], $result['candidates']);
+    }
 }

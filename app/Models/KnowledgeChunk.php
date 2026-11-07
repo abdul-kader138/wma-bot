@@ -15,7 +15,7 @@ class KnowledgeChunk extends Model
 
     protected $fillable = [
         'knowledge_document_id', 'whatsapp_account_id', 'service',
-        'language', 'chunk_index', 'content', 'embedding',
+        'language', 'chunk_index', 'content', 'content_hash', 'embedding',
     ];
 
     protected $casts = [

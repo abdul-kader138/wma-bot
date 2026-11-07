@@ -24,7 +24,10 @@ return [
         // services or end the chat with one tap instead of needing to type a
         // keyword in the right language. Their ids/payloads are literally "service"
         // and "close_chat", matching the typed keywords HandleIncomingMessage
-        // already checks for.
+        // already checks for. No longer sent as buttons (see rate_up_button/
+        // rate_down_button/human_handover_button below, which replaced them within
+        // WhatsApp's 3-button cap) — kept only as the wording for 'nav_hint' below,
+        // so the labels and the typed keywords stay in sync in one place.
         'change_service_button' => [
             'en' => 'Change service',
             'it' => 'Cambia servizio',
@@ -34,6 +37,33 @@ return [
             'en' => 'Close conversation',
             'it' => 'Chiudi conversazione',
             'bn' => 'কথোপকথন শেষ করুন',
+        ],
+
+        // The 3 buttons WhatsApp's cap allows on every IN_SERVICE reply (see
+        // MessagingChannel::sendTextWithQuickActions()). change_service/close_chat
+        // were demoted to the typed-keyword hint below to make room for these.
+        'rate_up_button' => [
+            'en' => '👍 Helpful',
+            'it' => '👍 Utile',
+            'bn' => '👍 সহায়ক',
+        ],
+        'rate_down_button' => [
+            'en' => '👎 Not helpful',
+            'it' => '👎 Non utile',
+            'bn' => '👎 সহায়ক নয়',
+        ],
+        'human_handover_button' => [
+            'en' => '🙋 Talk to us',
+            'it' => '🙋 Parla con noi',
+            'bn' => '🙋 আমাদের সাথে কথা বলুন',
+        ],
+
+        // One-line hint appended under every IN_SERVICE reply so switching service or
+        // closing the chat still works by typing, even though they're no longer buttons.
+        'nav_hint' => [
+            'en' => 'Type "service" to change service, or "close" to end the chat.',
+            'it' => 'Scrivi "cambia servizio" per cambiare servizio, o "chiudi" per terminare la chat.',
+            'bn' => 'সেবা পরিবর্তন করতে "সেবা পরিবর্তন" লিখুন, অথবা কথোপকথন শেষ করতে "শেষ" লিখুন।',
         ],
     ],
 

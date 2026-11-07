@@ -8,9 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Conversation extends Model
 {
-    protected $fillable = ['whatsapp_account_id', 'wa_phone', 'platform', 'step', 'language', 'service', 'history', 'claude_message_count'];
+    protected $fillable = [
+        'whatsapp_account_id', 'wa_phone', 'platform', 'step', 'language', 'service', 'history', 'claude_message_count',
+        'escalated_at', 'escalation_status', 'last_customer_message_at', 'idle_nudged_at',
+    ];
 
-    protected $casts = ['history' => 'array'];
+    protected $casts = [
+        'history' => 'array',
+        'escalated_at' => 'datetime',
+        'last_customer_message_at' => 'datetime',
+        'idle_nudged_at' => 'datetime',
+    ];
 
     public function whatsAppAccount(): BelongsTo
     {

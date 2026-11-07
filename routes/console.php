@@ -11,6 +11,7 @@ use App\Jobs\Maria\PrepareUpcomingMeetings;
 use App\Jobs\Maria\ReconcileStuckActions;
 use App\Jobs\Maria\ReviewAgverseOpportunities;
 use App\Jobs\Maria\TriageGoogleInbox;
+use App\Jobs\SendIdleFollowUps;
 use App\Models\AcmProductionPlan;
 use App\Models\AssistantProfile;
 use App\Models\ConnectorAccount;
@@ -133,3 +134,5 @@ Schedule::call(function () {
 })->everyMinute()->name('maria-quality-report')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
 
 Schedule::job(new ReconcileStuckActions)->everyTenMinutes()->name('maria-reconcile-stuck-actions')->withoutOverlapping()->onOneServer()->when(fn () => MariaAccess::enabled());
+
+Schedule::job(new SendIdleFollowUps)->everyFifteenMinutes()->name('bot-idle-follow-ups')->withoutOverlapping()->onOneServer();

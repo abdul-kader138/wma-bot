@@ -42,21 +42,26 @@ abstract class MetaMessagingClient implements MessagingChannel
 
     public function sendTextWithQuickActions(string $to, string $body, string $lang): void
     {
-        $switchLabel = config("services_bot.replies.change_service_button.{$lang}")
-            ?? config('services_bot.replies.change_service_button.en');
-        $closeLabel = config("services_bot.replies.close_conversation_button.{$lang}")
-            ?? config('services_bot.replies.close_conversation_button.en');
+        $upLabel = config("services_bot.replies.rate_up_button.{$lang}")
+            ?? config('services_bot.replies.rate_up_button.en');
+        $downLabel = config("services_bot.replies.rate_down_button.{$lang}")
+            ?? config('services_bot.replies.rate_down_button.en');
+        $humanLabel = config("services_bot.replies.human_handover_button.{$lang}")
+            ?? config('services_bot.replies.human_handover_button.en');
+        $hint = config("services_bot.replies.nav_hint.{$lang}")
+            ?? config('services_bot.replies.nav_hint.en');
 
         $this->post([
             'recipient' => ['id' => $to],
             'messaging_type' => 'RESPONSE',
             'message' => [
-                'text' => $body,
-                // Matches the "service" and "close_chat" keywords HandleIncomingMessage
+                'text' => "{$body}\n\n{$hint}",
+                // Matches the "rate_up"/"rate_down"/"human" ids HandleIncomingMessage
                 // already checks for.
                 'quick_replies' => [
-                    ['content_type' => 'text', 'title' => $switchLabel, 'payload' => 'service'],
-                    ['content_type' => 'text', 'title' => $closeLabel, 'payload' => 'close_chat'],
+                    ['content_type' => 'text', 'title' => $upLabel, 'payload' => 'rate_up'],
+                    ['content_type' => 'text', 'title' => $downLabel, 'payload' => 'rate_down'],
+                    ['content_type' => 'text', 'title' => $humanLabel, 'payload' => 'human'],
                 ],
             ],
         ]);

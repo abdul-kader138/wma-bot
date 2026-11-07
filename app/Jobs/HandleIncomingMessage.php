@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Contracts\MessagingChannel;
+use App\Models\BotAnswerEvent;
 use App\Models\ClaudeDailyUsage;
 use App\Models\Conversation;
 use App\Models\Service;
@@ -11,6 +12,7 @@ use App\Models\Setting;
 use App\Models\WhatsAppAccount;
 use App\Notifications\BotJobFailedNotification;
 use App\Notifications\ClaudeBudgetExhaustedNotification;
+use App\Notifications\ConversationEscalatedNotification;
 use App\Notifications\NewServiceRequestNotification;
 use App\Services\ClaudeAgent;
 use App\Services\FaqMatcher;
@@ -38,6 +40,15 @@ class HandleIncomingMessage implements ShouldQueue
     // key (Setting::get('claude_api_key')) for the whole app, so the budget protecting
     // it has to be shared too, not per-conversation.
     private const CLAUDE_RATE_LIMIT_KEY = 'claude-api-calls';
+
+    // Button id ('human', tapped from the 🙋 quick action) plus typed phrases, en/it/bn.
+    // Checked before the reset-keyword check below so it works from any step, and so
+    // being in the HUMAN step doesn't get accidentally cleared by e.g. "hi".
+    private const ESCALATION_KEYWORDS = [
+        'human', 'agent', 'talk to a human', 'talk to an agent', 'operator', 'representative', 'staff',
+        'operatore', 'un operatore', 'parlare con un operatore', 'assistenza umana', 'rappresentante',
+        'প্রতিনিধি', 'মানুষ', 'এজেন্ট', 'মানুষের সাথে কথা বলতে চাই',
+    ];
 
     public int $tries = 3;
 
@@ -161,6 +172,35 @@ class HandleIncomingMessage implements ShouldQueue
             ['step' => 'NEW', 'history' => [], 'platform' => $this->platform]
         );
 
+        // Bumped on every genuine inbound customer message (this is the only place
+        // that happens), independent of step — SendIdleFollowUps reads this to know
+        // when a customer last said anything, and WhatsApp's 24h messaging window
+        // is measured from it.
+        $convo->update(['last_customer_message_at' => now()]);
+
+        // While escalated, the bot stays silent and just keeps the transcript for
+        // staff to read — no reply, no step/history-resetting logic below applies.
+        if ($convo->step === 'HUMAN') {
+            $this->appendHistory($convo, 'user', $input);
+
+            return;
+        }
+
+        // A thumbs tap rates the latest unrated bot_answer_events row for this
+        // conversation. Must return immediately without touching history, the
+        // claude_message_count budget, or the state machine below.
+        if (in_array($input, ['rate_up', 'rate_down'], true)) {
+            $this->handleRating($convo, $wa, $phone, $input);
+
+            return;
+        }
+
+        if (in_array(mb_strtolower($input), self::ESCALATION_KEYWORDS, true)) {
+            $this->escalateToHuman($convo, $wa, $phone);
+
+            return;
+        }
+
         // Reset keywords, covering all supported languages (en/it/bn) so any customer
         // can restart the conversation in their own language.
         if (in_array(mb_strtolower($input), ['menu', 'start', 'restart', 'hi', 'hello', 'ciao', 'হ্যালো', 'শুরু'])) {
@@ -240,13 +280,14 @@ class HandleIncomingMessage implements ShouldQueue
                     break;
                 }
 
-                $this->runAgent($wa, $agent, $convo, $phone);
+                $this->runAgent($wa, $agent, $convo, $phone, $account);
                 break;
 
             case 'IN_SERVICE':
                 if ($faq = $faqs->match($input, $convo->service, $account->id)) {
                     $this->appendHistory($convo, 'user', $input);
                     $answer = $faq->answerFor($convo->language ?? 'en');
+                    $this->logAnswerEvent($convo, $account, 'faq', $input, $answer, faqId: $faq->id);
                     $wa->sendTextWithQuickActions($phone, $answer, $convo->language ?? 'en');
                     $this->appendHistory($convo, 'assistant', $answer);
                     break;
@@ -270,7 +311,7 @@ class HandleIncomingMessage implements ShouldQueue
                 }
 
                 $this->appendHistory($convo, 'user', $input);
-                $this->runAgent($wa, $agent, $convo, $phone);
+                $this->runAgent($wa, $agent, $convo, $phone, $account, $input);
                 break;
 
             case 'DONE':
@@ -445,7 +486,11 @@ class HandleIncomingMessage implements ShouldQueue
         }
     }
 
-    private function runAgent(MessagingChannel $wa, ClaudeAgent $agent, Conversation $convo, string $phone): void
+    // $question is the customer's actual question text — passed only from the
+    // IN_SERVICE case, where a bot_answer_events row should be logged. The
+    // AWAIT_SERVICE case's first agent call (the initial welcome-into-agent flow)
+    // passes no question and logs nothing, since there's no customer question yet.
+    private function runAgent(MessagingChannel $wa, ClaudeAgent $agent, Conversation $convo, string $phone, WhatsAppAccount $account, ?string $question = null): void
     {
         // The service the customer picked may have been deactivated or deleted since
         // (Service::toConfig() only returns active ones) — recover instead of letting
@@ -495,7 +540,83 @@ class HandleIncomingMessage implements ShouldQueue
         }
 
         $this->appendHistory($convo, 'assistant', $reply['text']);
+
+        if ($question !== null) {
+            $matchSource = ($reply['chunk_count'] ?? 0) > 0 ? 'knowledge' : 'none';
+            $this->logAnswerEvent($convo, $account, $matchSource, $question, $reply['text'],
+                chunkCount: $reply['chunk_count'] ?? 0, topDistance: $reply['top_distance'] ?? null);
+        }
+
         $wa->sendTextWithQuickActions($phone, $reply['text'], $convo->language ?? 'en');
+    }
+
+    private function logAnswerEvent(
+        Conversation $convo,
+        WhatsAppAccount $account,
+        string $matchSource,
+        string $question,
+        string $answer,
+        ?int $faqId = null,
+        int $chunkCount = 0,
+        ?float $topDistance = null,
+    ): void {
+        BotAnswerEvent::create([
+            'whatsapp_account_id' => $account->id,
+            'conversation_id' => $convo->id,
+            'wa_phone' => $convo->wa_phone,
+            'platform' => $this->platform,
+            'service' => $convo->service,
+            'language' => $convo->language,
+            'question' => $question,
+            'answer' => $answer,
+            'match_source' => $matchSource,
+            'faq_id' => $faqId,
+            'chunk_count' => $chunkCount,
+            'top_distance' => $topDistance,
+        ]);
+    }
+
+    // Rates the latest unrated bot_answer_events row for this conversation — button
+    // ids are fixed strings (rate_up/rate_down), not per-message, so "latest unrated"
+    // is how a tap gets tied back to the answer it's reacting to.
+    private function handleRating(Conversation $convo, MessagingChannel $wa, string $phone, string $input): void
+    {
+        $event = BotAnswerEvent::where('conversation_id', $convo->id)->whereNull('rating')->latest('id')->first();
+
+        if ($event) {
+            $event->update(['rating' => $input === 'rate_up' ? 1 : -1, 'rated_at' => now()]);
+        }
+
+        if ($message = $this->localizedMessage('bot_rating_thanks_message', $convo->language)) {
+            $wa->sendText($phone, $message);
+        }
+    }
+
+    // Pauses the bot for this conversation and notifies staff. The only way out is
+    // the "Resume bot" action in ConversationResource.
+    private function escalateToHuman(Conversation $convo, MessagingChannel $wa, string $phone): void
+    {
+        $convo->update([
+            'step' => 'HUMAN',
+            'escalated_at' => now(),
+            'escalation_status' => 'pending',
+        ]);
+
+        if ($message = $this->localizedMessage('bot_escalation_message', $convo->language)) {
+            $wa->sendText($phone, $message);
+        }
+
+        $email = Setting::get('staff_notification_email');
+        if (! $email) {
+            return;
+        }
+
+        try {
+            Notification::route('mail', $email)
+                ->notify(new ConversationEscalatedNotification($convo));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send escalation notification', ['error' => $e->getMessage()]);
+        }
     }
 
     private function sendWelcome(MessagingChannel $wa, Conversation $convo, string $phone): void

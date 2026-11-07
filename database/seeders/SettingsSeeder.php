@@ -55,6 +55,23 @@ class SettingsSeeder extends Seeder
                 'it' => 'Grazie per la chat! Se hai bisogno di altro, scrivici di nuovo in qualsiasi momento.',
                 'bn' => 'চ্যাট করার জন্য ধন্যবাদ! আরও কিছু লাগলে যেকোনো সময় আবার মেসেজ করুন।',
             ]), 'type' => 'json', 'label' => 'Close Conversation Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_escalation_message', 'value' => json_encode([
+                'en' => "We've let our team know you'd like to speak with a person. Someone will be with you shortly.",
+                'it' => 'Abbiamo avvisato il nostro team che vorresti parlare con una persona. Qualcuno ti risponderà a breve.',
+                'bn' => 'আমরা আমাদের টিমকে জানিয়েছি যে আপনি একজন মানুষের সাথে কথা বলতে চান। শীঘ্রই কেউ আপনার সাথে যোগাযোগ করবে।',
+            ]), 'type' => 'json', 'label' => 'Escalation Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_rating_thanks_message', 'value' => json_encode([
+                'en' => 'Thanks for the feedback!',
+                'it' => 'Grazie per il tuo feedback!',
+                'bn' => 'ফিডব্যাকের জন্য ধন্যবাদ!',
+            ]), 'type' => 'json', 'label' => 'Rating Thanks Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_idle_follow_up_message', 'value' => json_encode([
+                'en' => 'Still there? Let us know if you need anything else, or type "menu" to start over.',
+                'it' => 'Ci sei ancora? Fammi sapere se hai bisogno di altro, oppure scrivi "menu" per ricominciare.',
+                'bn' => 'আপনি কি এখনও আছেন? আর কিছু লাগলে জানান, অথবা নতুন করে শুরু করতে "menu" লিখুন।',
+            ]), 'type' => 'json', 'label' => 'Idle Follow-up Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_idle_follow_up_hours', 'value' => '4', 'type' => 'integer', 'label' => 'Idle Follow-up Hours', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'knowledge_stale_after_months', 'value' => '6', 'type' => 'integer', 'label' => 'Knowledge Staleness (months)', 'is_public' => false],
 
             // Email
             ['group' => 'email', 'key' => 'mail_from_name',    'value' => 'WMA Bot',          'type' => 'string', 'label' => 'From Name'],

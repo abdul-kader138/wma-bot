@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Maria Assistant — Detailed User Manual</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Maria Assistant — Detailed User Manual</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#maria-assistant" id="toc-maria-assistant">Maria
+Assistant</a>
+<ul>
+<li><a href="#detailed-user-manual-and-operating-guide"
+id="toc-detailed-user-manual-and-operating-guide">Detailed user manual
+and operating guide</a></li>
+</ul></li>
+<li><a href="#part-i-setup-and-daily-operation"
+id="toc-part-i-setup-and-daily-operation">Part I — Setup and daily
+operation</a>
+<ul>
+<li><a href="#purpose-of-this-manual" id="toc-purpose-of-this-manual">1.
+Purpose of this manual</a></li>
+<li><a href="#before-you-begin" id="toc-before-you-begin">2. Before you
+begin</a></li>
+<li><a href="#configuration-overview" id="toc-configuration-overview">3.
+Configuration overview</a></li>
+<li><a href="#administrator-setup" id="toc-administrator-setup">4.
+Administrator setup</a></li>
+<li><a href="#google-workspace-configuration"
+id="toc-google-workspace-configuration">5. Google Workspace
+configuration</a></li>
+<li><a href="#private-messaging-identity-setup"
+id="toc-private-messaging-identity-setup">6. Private messaging identity
+setup</a></li>
+<li><a href="#prepare-marias-source-data"
+id="toc-prepare-marias-source-data">7. Prepare Maria’s source
+data</a></li>
+<li><a href="#daily-use" id="toc-daily-use">8. Daily use</a></li>
+<li><a href="#safety-controls" id="toc-safety-controls">9. Safety
+controls</a></li>
+<li><a href="#first-run-guided-acceptance-test"
+id="toc-first-run-guided-acceptance-test">10. First-run guided
+acceptance test</a></li>
+<li><a href="#setup-verification-checklist"
+id="toc-setup-verification-checklist">11. Setup verification
+checklist</a></li>
+<li><a href="#troubleshooting" id="toc-troubleshooting">12.
+Troubleshooting</a></li>
+<li><a href="#good-operating-practices"
+id="toc-good-operating-practices">13. Good operating practices</a></li>
+<li><a href="#support-information-to-collect"
+id="toc-support-information-to-collect">14. Support information to
+collect</a></li>
+</ul></li>
+<li><a href="#part-ii-detailed-screen-by-screen-procedures"
+id="toc-part-ii-detailed-screen-by-screen-procedures">Part II — Detailed
+screen-by-screen procedures</a>
+<ul>
+<li><a href="#your-first-session-sign-in-and-create-useful-work"
+id="toc-your-first-session-sign-in-and-create-useful-work">15. Your
+first session: sign in and create useful work</a></li>
+<li><a href="#navigation-and-screen-reference"
+id="toc-navigation-and-screen-reference">16. Navigation and screen
+reference</a></li>
+<li><a href="#projects-and-tasks-in-detail"
+id="toc-projects-and-tasks-in-detail">17. Projects and tasks in
+detail</a></li>
+<li><a href="#contacts-and-daily-five"
+id="toc-contacts-and-daily-five">18. Contacts and Daily Five</a></li>
+<li><a href="#claims-and-content-packages"
+id="toc-claims-and-content-packages">19. Claims and content
+packages</a></li>
+<li><a href="#book-portfolio-and-agverse-opportunities"
+id="toc-book-portfolio-and-agverse-opportunities">20. Book Portfolio and
+Agverse Opportunities</a></li>
+<li><a href="#acm-weekly-production" id="toc-acm-weekly-production">21.
+ACM weekly production</a></li>
+<li><a href="#email-and-meeting-walkthroughs"
+id="toc-email-and-meeting-walkthroughs">22. Email and meeting
+walkthroughs</a></li>
+<li><a href="#approvals-execution-and-reconciliation"
+id="toc-approvals-execution-and-reconciliation">23. Approvals, execution
+and reconciliation</a></li>
+<li><a href="#private-whatsapp-conversation"
+id="toc-private-whatsapp-conversation">24. Private WhatsApp
+conversation</a></li>
+<li><a href="#documents-account-security-and-adjacent-app-functions"
+id="toc-documents-account-security-and-adjacent-app-functions">25.
+Documents, account security and adjacent app functions</a></li>
+<li><a href="#quality-metrics-and-administrator-maintenance"
+id="toc-quality-metrics-and-administrator-maintenance">26. Quality,
+metrics and administrator maintenance</a></li>
+<li><a href="#practical-daily-and-weekly-checklists"
+id="toc-practical-daily-and-weekly-checklists">27. Practical daily and
+weekly checklists</a></li>
+<li><a href="#troubleshooting-decision-table"
+id="toc-troubleshooting-decision-table">28. Troubleshooting decision
+table</a></li>
+<li><a href="#first-use-acceptance-worksheet"
+id="toc-first-use-acceptance-worksheet">29. First-use acceptance
+worksheet</a></li>
+</ul></li>
+<li><a href="#part-iii-analysis-notes-and-evidence"
+id="toc-part-iii-analysis-notes-and-evidence">Part III — Analysis notes
+and evidence</a>
+<ul>
+<li><a href="#functional-analysis-and-current-limits"
+id="toc-functional-analysis-and-current-limits">30. Functional analysis
+and current limits</a></li>
+<li><a href="#source-traceability-and-document-maintenance"
+id="toc-source-traceability-and-document-maintenance">31. Source
+traceability and document maintenance</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="maria-assistant">Maria Assistant</h1>
+<h2 id="detailed-user-manual-and-operating-guide">Detailed user manual
+and operating guide</h2>
+<p><strong>Edition 3.0 · 18 October 2026 · English</strong></p>
+<p>For everyday users, reviewers, administrators, and support staff.</p>
+<p>This guide explains how to configure Maria, maintain its working
+records, use each Maria screen, review generated work, and operate
+controlled Google actions. It combines the existing operating guide with
+a source-code review of the current application.</p>
+<p><strong>Verification boundary:</strong> Screen definitions, action
+handlers, tools, scheduler logic, and existing operating documents were
+inspected in this repository. No production login, Google authorization,
+live send, deployment, or end-to-end acceptance test was performed for
+this document. Menu visibility depends on role, global settings, and the
+deployed revision. Examples are training data, not real claims or
+commitments.</p>
+<p><strong>Read first:</strong> Use chapter 15 for a first-session
+walkthrough, chapter 16 for the screen map, and chapters 17–25 for
+detailed procedures. Administrators should complete Part I before
+handing the system to users. The printed contents and PDF bookmarks
+provide navigation.</p>
+<p><strong>How Maria works</strong></p>
+<p>Source records and Google reads → scheduled or requested processing →
+internal drafts, briefs, tasks and recommendations → human review →
+separate approval and execution for supported Google writes → provider
+confirmation or reconciliation.</p>
+<p>An empty dashboard usually means source records or completed
+workflows are missing. A successful workflow does not prove that its
+facts are correct, and an approval does not mean an action was
+executed.</p>
+<h1 id="part-i-setup-and-daily-operation">Part I — Setup and daily
+operation</h1>
+<h2 id="purpose-of-this-manual">1. Purpose of this manual</h2>
+<p>This manual explains how an administrator can enable and configure
+Maria Assistant, how an authorized user can connect Google Workspace,
+and how users should operate Maria safely each day.</p>
+<p>Maria is a private executive-assistant workspace inside the
+application. It can organize projects and tasks, prepare briefs, triage
+email, prepare meetings, monitor deadlines, maintain contacts and
+verified claims, and prepare draft content. Maria does not treat a draft
+as sent or published. External actions require the correct Google
+permission, enabled safety switches, and a separate exact-content
+approval.</p>
+<h2 id="before-you-begin">2. Before you begin</h2>
+<p>Ask the system administrator to confirm the following infrastructure
+is running:</p>
+<ul>
+<li>The application is deployed and migrations are current.</li>
+<li>MySQL is available.</li>
+<li>Redis and the Laravel queue worker/Horizon are running.</li>
+<li>The Laravel scheduler runs every minute.</li>
+<li>HTTPS works on the production domain.</li>
+<li>The AI provider configuration is valid.</li>
+<li>A Google Cloud OAuth client is available if Gmail, Calendar, or
+Drive will be used.</li>
+</ul>
+<p>Normal users do not need server or database access.</p>
+<h3 id="who-should-use-each-part">2.1 Who should use each part</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Reader</th>
+<th>Read these sections</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>System administrator</td>
+<td>Sections 2–6, 9–11 and 14</td>
+</tr>
+<tr class="even">
+<td>Maria user</td>
+<td>Sections 7–10, 12 and 13</td>
+</tr>
+<tr class="odd">
+<td>Approver/reviewer</td>
+<td>Sections 8.4, 9, 10.5 and 12</td>
+</tr>
+<tr class="even">
+<td>Technical support</td>
+<td>Sections 11, 12 and 14</td>
+</tr>
+</tbody>
+</table>
+<h3 id="information-to-collect-before-configuration">2.2 Information to
+collect before configuration</h3>
+<p>Prepare these values before opening the settings screen:</p>
+<ul>
+<li>Production application URL, for example
+<code>https://assistant.example.com</code>.</li>
+<li>User’s application account and assigned role.</li>
+<li>User’s timezone, language, normal working hours, morning-brief time,
+and evening-review time.</li>
+<li>Workflows the user wants enabled.</li>
+<li>Google Workspace email address to connect.</li>
+<li>Google Cloud project administrator, Client ID, Client Secret, and
+exact redirect URI.</li>
+<li>Whether the organization authorizes Gmail sending or Calendar event
+creation.</li>
+<li>Private channel identity, if applicable.</li>
+<li>At least one real project, task, contact, and verified claim for
+testing.</li>
+</ul>
+<h3 id="meaning-of-common-terms">2.3 Meaning of common terms</h3>
+<ul>
+<li><strong>Global Maria switch:</strong> enables or disables the entire
+Maria module.</li>
+<li><strong>Role permission:</strong> determines whether a user is
+authorized to see and access Maria.</li>
+<li><strong>Maria profile:</strong> stores one user’s timezone,
+schedule, workflow, and action preferences.</li>
+<li><strong>Connector:</strong> the user’s authorized Google Workspace
+connection.</li>
+<li><strong>Workflow:</strong> scheduled background work such as email
+triage or a morning brief.</li>
+<li><strong>Draft:</strong> prepared content that has not been sent or
+published.</li>
+<li><strong>Approval:</strong> a time-limited decision covering one
+exact external action.</li>
+<li><strong>Reconciliation:</strong> human confirmation of an external
+action when the provider result is uncertain.</li>
+<li><strong>Owner:</strong> the user whose Maria data and workflows are
+being processed.</li>
+</ul>
+<h2 id="configuration-overview">3. Configuration overview</h2>
+<p>Complete the setup in this order:</p>
+<ol type="1">
+<li>Enable Maria globally.</li>
+<li>Set the application timezone and date formats.</li>
+<li>Grant the user’s role access to Maria.</li>
+<li>Create or edit the user’s Maria Settings profile.</li>
+<li>Configure Google OAuth credentials, if Google Workspace is
+required.</li>
+<li>Connect the user’s Google account.</li>
+<li>Optionally enable approved Google writes.</li>
+<li>Add and verify private channel identities, if private messaging
+access is required.</li>
+<li>Enter projects, tasks, contacts, claims, books, or other source
+records.</li>
+<li>Confirm the queue, scheduler, Command Center, and workflow
+results.</li>
+</ol>
+<p>Do not skip the role-permission or Maria-profile steps. Enabling
+Maria globally does not automatically authorize every user.</p>
+<h2 id="administrator-setup">4. Administrator setup</h2>
+<h3 id="enable-maria-assistant-globally">4.1 Enable Maria Assistant
+globally</h3>
+<ol type="1">
+<li>Sign in using a super-admin or administrator account.</li>
+<li>Open <strong>System Settings</strong>.</li>
+<li>Select the <strong>General</strong> tab.</li>
+<li>Turn on <strong>Enable Maria Assistant</strong>.</li>
+<li>Save the settings.</li>
+<li>Refresh the page.</li>
+<li>Confirm that the <strong>Maria Assistant</strong> navigation group
+is visible.</li>
+</ol>
+<p>Expected result: administrators and already-authorized users can see
+Maria pages after refresh. Users without the role permission still
+cannot access them.</p>
+<p>When this switch is off, Maria menus, pages, private assistant
+routing, connectors, and scheduled Maria workflows are unavailable.
+Existing data and role assignments are retained; they become available
+again after Maria is re-enabled.</p>
+<h3 id="configure-timezone-and-date-formats">4.2 Configure timezone and
+date formats</h3>
+<p>In <strong>System Settings → General</strong>, configure:</p>
+<ul>
+<li><strong>Application timezone:</strong> the general timezone used by
+the application.</li>
+<li><strong>Date format:</strong> how calendar-only dates appear, for
+example <code>d/m/Y</code> for <code>31/12/2026</code>.</li>
+<li><strong>Date &amp; time format:</strong> how timestamps appear, for
+example <code>d/m/Y H:i</code> for <code>31/12/2026 14:30</code>.</li>
+</ul>
+<p>Save the settings and refresh the browser. Maria profile timezones,
+described later, control each owner’s automated workflow times.</p>
+<p>Calendar dates such as task due dates and project deadlines do not
+show a time. Real moments such as meetings, approvals, sync history, and
+audit records show both date and time.</p>
+<p>Example for a Berlin-based user:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Example value</th>
+<th>Display/result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Application timezone</td>
+<td><code>Europe/Berlin</code></td>
+<td>General application timestamps use Berlin time</td>
+</tr>
+<tr class="even">
+<td>Date format</td>
+<td><code>d/m/Y</code></td>
+<td><code>05/09/2026</code></td>
+</tr>
+<tr class="odd">
+<td>Date &amp; time format</td>
+<td><code>d/m/Y H:i</code></td>
+<td><code>05/09/2026 14:30</code></td>
+</tr>
+</tbody>
+</table>
+<p>After saving, open a task and a meeting. The task due field should
+show only a date; the meeting should show date and time.</p>
+<h3 id="grant-role-permission">4.3 Grant role permission</h3>
+<p>Maria uses two access gates: the global switch and the user’s role
+permission.</p>
+<ol type="1">
+<li>Ensure <strong>Enable Maria Assistant</strong> is on.</li>
+<li>Open the role/permission management screen.</li>
+<li>Edit the role assigned to the intended user.</li>
+<li>Enable <strong>Access Maria Assistant</strong>.</li>
+<li>Grant only the Maria resource and page permissions needed by that
+role.</li>
+<li>Save the role.</li>
+<li>Confirm the user has that role under <strong>Users</strong>.</li>
+<li>Ask the user to sign out and sign in again if the menu does not
+update immediately.</li>
+</ol>
+<p>Super-admins retain administrative access. When Maria is globally
+disabled, Maria permissions are hidden from the role editor but are not
+deleted.</p>
+<p>Recommended permission approach:</p>
+<ul>
+<li>Administrators: Maria access plus administrative resources, safety
+controls, identities, prompts, and workflow history.</li>
+<li>Executive user: Maria access plus their own operational resources
+and connections.</li>
+<li>Support/reviewer: only the specific read or review permissions
+required.</li>
+<li>Public or customer-service users: no Maria permission.</li>
+</ul>
+<h4 id="permission-verification-test">Permission verification test</h4>
+<ol type="1">
+<li>Sign in as the target non-admin user in a separate/private browser
+window.</li>
+<li>Confirm <strong>Maria Assistant</strong> is visible.</li>
+<li>Open <strong>Command Center</strong>.</li>
+<li>Open one resource the role should access.</li>
+<li>Confirm an administrative-only page, such as External Action
+Control, is not available to an ordinary user.</li>
+<li>If access is incorrect, adjust the role rather than making the user
+a super-admin.</li>
+</ol>
+<h3 id="create-the-users-maria-settings-profile">4.4 Create the user’s
+Maria Settings profile</h3>
+<ol type="1">
+<li>Open <strong>Maria Assistant → Maria Settings</strong>.</li>
+<li>Select an existing profile or choose <strong>Create</strong>.</li>
+<li>For an administrator-created profile, select the correct user.</li>
+<li>Complete the fields below.</li>
+</ol>
+<h4 id="profile-fields">Profile fields</h4>
+<ul>
+<li><strong>Timezone:</strong> the user’s local timezone. This controls
+the local execution time of briefs and scheduled workflows.</li>
+<li><strong>Language:</strong> the user’s preferred working
+language.</li>
+<li><strong>Working hours start/end:</strong> email triage runs only
+within this window.</li>
+<li><strong>Morning brief at:</strong> local time for the Morning
+Command Brief.</li>
+<li><strong>Evening review at:</strong> local time for the Evening
+Review.</li>
+<li><strong>Weekly production day/time:</strong> when eligible All
+Catholic Media weekly plans are processed.</li>
+<li><strong>Enabled workflows:</strong> select only the workflows the
+user wants to run.</li>
+<li><strong>Voice preferences:</strong> describe preferred tone,
+brevity, priorities, naming conventions, or formatting.</li>
+<li><strong>Active:</strong> must be on for scheduled work.</li>
+<li><strong>Allow approved external actions:</strong> per-user emergency
+switch for approved Google writes.</li>
+</ul>
+<p>Save the profile. Use a valid timezone such as
+<code>Europe/Berlin</code>, not a manually typed UTC offset.</p>
+<h4 id="recommended-first-profile">Recommended first profile</h4>
+<p>Use conservative settings during the first week:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Suggested starting value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Timezone</td>
+<td>User’s actual IANA timezone, such as <code>Europe/Berlin</code></td>
+</tr>
+<tr class="even">
+<td>Working hours</td>
+<td><code>08:00</code> to <code>18:00</code></td>
+</tr>
+<tr class="odd">
+<td>Morning brief</td>
+<td><code>07:30</code></td>
+</tr>
+<tr class="even">
+<td>Evening review</td>
+<td><code>18:00</code></td>
+</tr>
+<tr class="odd">
+<td>Enabled workflows</td>
+<td>Morning Brief, Evening Review, Email Triage, Meeting Preparation,
+Deadline Monitor</td>
+</tr>
+<tr class="even">
+<td>Active</td>
+<td>On</td>
+</tr>
+<tr class="odd">
+<td>Allow approved external actions</td>
+<td>Off until read-only testing is complete</td>
+</tr>
+</tbody>
+</table>
+<p>Example voice preferences:</p>
+<blockquote>
+<p>Lead with the decision. Show no more than three priorities. Use short
+paragraphs and British English. Preserve exact book titles and names.
+Flag uncertainty clearly and never infer dates.</p>
+</blockquote>
+<p>Avoid placing secrets, passwords, OAuth tokens, or unnecessary
+confidential content in voice preferences.</p>
+<h4 id="workflow-choices">Workflow choices</h4>
+<ul>
+<li><strong>Morning Brief:</strong> daily command summary at the
+configured morning time.</li>
+<li><strong>Evening Review:</strong> daily closeout at the configured
+evening time.</li>
+<li><strong>Email Triage:</strong> Gmail review every 30 minutes during
+working hours.</li>
+<li><strong>Meeting Preparation:</strong> hourly check for upcoming
+meetings.</li>
+<li><strong>Deadline Monitor:</strong> hourly monitoring of due dates
+and waiting items.</li>
+<li><strong>Daily Five Relationships:</strong> weekday relationship
+recommendations, 30 minutes after the morning brief time.</li>
+<li><strong>Weekly Book Portfolio Review:</strong> Monday, one hour
+after the morning brief time.</li>
+<li><strong>Thursday Agverse Opportunity Review:</strong> Thursday, 90
+minutes after the morning brief time.</li>
+<li><strong>All Catholic Media Weekly Production:</strong> configured
+weekday and time.</li>
+<li><strong>Weekly Maria Quality Report:</strong> Monday, two hours
+after the morning brief time.</li>
+</ul>
+<p>The profile must be active and Maria must be globally enabled for
+schedules to dispatch.</p>
+<h4 id="how-schedule-times-are-calculated">How schedule times are
+calculated</h4>
+<p>Maria uses the profile timezone, not the browser timezone. For
+example, if the profile timezone is <code>Europe/Berlin</code> and
+Morning Brief is <code>07:30</code>, the brief is dispatched when Berlin
+local time reaches 07:30, including daylight-saving changes.</p>
+<p>Some workflows derive their time from Morning Brief:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Workflow</th>
+<th>Scheduled local time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Morning Brief</td>
+<td>Configured Morning Brief time</td>
+</tr>
+<tr class="even">
+<td>Daily Five</td>
+<td>Morning Brief + 30 minutes, weekdays</td>
+</tr>
+<tr class="odd">
+<td>Book Portfolio Review</td>
+<td>Morning Brief + 1 hour, Monday</td>
+</tr>
+<tr class="even">
+<td>Agverse Review</td>
+<td>Morning Brief + 90 minutes, Thursday</td>
+</tr>
+<tr class="odd">
+<td>Quality Report</td>
+<td>Morning Brief + 2 hours, Monday</td>
+</tr>
+<tr class="even">
+<td>Evening Review</td>
+<td>Configured Evening Review time</td>
+</tr>
+<tr class="odd">
+<td>Email Triage</td>
+<td>Every 30 minutes inside working hours</td>
+</tr>
+<tr class="even">
+<td>Meeting Preparation</td>
+<td>Hourly</td>
+</tr>
+<tr class="odd">
+<td>Deadline Monitor</td>
+<td>Hourly</td>
+</tr>
+</tbody>
+</table>
+<h2 id="google-workspace-configuration">5. Google Workspace
+configuration</h2>
+<p>This section has two parts: an administrator registers the
+application in Google Cloud, then each user connects their own Google
+account.</p>
+<h3 id="create-or-verify-the-google-cloud-oauth-client">5.1 Create or
+verify the Google Cloud OAuth client</h3>
+<p>In Google Cloud Console:</p>
+<ol type="1">
+<li>Select or create the correct Google Cloud project.</li>
+<li>Enable the Gmail API, Google Calendar API, and Google Drive
+API.</li>
+<li>Configure the OAuth consent screen.</li>
+<li>Add the users or organization allowed to authorize the
+application.</li>
+<li>Create an OAuth client of type <strong>Web
+application</strong>.</li>
+<li>Keep the Google Cloud page open while completing the application
+settings below.</li>
+</ol>
+<p>Google may require verification before external production users can
+grant sensitive scopes. This is controlled by Google, not by Maria.</p>
+<h4 id="detailed-google-cloud-steps">Detailed Google Cloud steps</h4>
+<p>Google changes its console labels occasionally, but the required
+configuration remains the same:</p>
+<ol type="1">
+<li>Open Google Cloud Console and choose the production project.</li>
+<li>Open <strong>APIs &amp; Services → Library</strong>.</li>
+<li>Search for and enable <strong>Gmail API</strong>.</li>
+<li>Search for and enable <strong>Google Calendar API</strong>.</li>
+<li>Search for and enable <strong>Google Drive API</strong>.</li>
+<li>Open the Google authentication/consent section.</li>
+<li>Set the application name and authorized support/contact email.</li>
+<li>Choose the correct audience:
+<ul>
+<li>use Internal only when all authorized users are inside the same
+eligible Google Workspace organization;</li>
+<li>use External when approved accounts outside that organization must
+connect.</li>
+</ul></li>
+<li>If the application remains in testing mode, add every intended
+Google account as a test user.</li>
+<li>Create <strong>OAuth client ID → Web application</strong>.</li>
+<li>Give it a recognizable production name.</li>
+<li>Add the application’s exact redirect URI under <strong>Authorized
+redirect URIs</strong>, not JavaScript origins.</li>
+<li>Save and securely copy the Client ID and Client Secret into System
+Settings.</li>
+</ol>
+<p>Do not use a Desktop, Android, iOS, or service-account credential.
+Maria’s interactive user connection requires a Web application OAuth
+client.</p>
+<h3 id="enter-google-credentials-in-the-application">5.2 Enter Google
+credentials in the application</h3>
+<ol type="1">
+<li>Open <strong>System Settings → Google Workspace</strong>.</li>
+<li>Enter the Google OAuth <strong>Client ID</strong>.</li>
+<li>Enter the <strong>Client Secret</strong>.</li>
+<li>Copy the application’s <strong>Redirect URI</strong> exactly as
+displayed.</li>
+<li>Add that exact URI to <strong>Authorized redirect URIs</strong> in
+the Google Cloud OAuth client.</li>
+<li>Save Google Cloud configuration.</li>
+<li>Save the application settings.</li>
+</ol>
+<p>Important rules:</p>
+<ul>
+<li>The redirect URI must match exactly, including <code>https</code>,
+domain, path, and trailing slash behavior.</li>
+<li>The saved client secret is encrypted and is not displayed
+again.</li>
+<li>Leaving the client-secret field empty later preserves the stored
+secret.</li>
+<li>Environment variables remain fallback values for recovery.</li>
+<li>Never place the client secret in a manual, screenshot, ticket, or
+source-control commit.</li>
+</ul>
+<h3 id="connect-a-users-google-account-with-read-access">5.3 Connect a
+user’s Google account with read access</h3>
+<p>The user must perform this step while signed in to their own
+application account.</p>
+<ol type="1">
+<li>Open <strong>Maria Assistant → Connections</strong>.</li>
+<li>Select <strong>Connect Google Workspace</strong>.</li>
+<li>Sign in to the correct Google account.</li>
+<li>Review Google’s consent screen carefully.</li>
+<li>Approve the requested read permissions.</li>
+<li>Return to the application.</li>
+<li>Confirm the connection row shows:
+<ul>
+<li>provider <code>google</code>;</li>
+<li>the correct email address;</li>
+<li>status <code>active</code>;</li>
+<li>a permission count;</li>
+<li>no current error.</li>
+</ul></li>
+</ol>
+<p>Read access supports Gmail triage, Calendar synchronization and
+meeting preparation, and Drive lookup. It does not authorize Maria to
+send email or create calendar events.</p>
+<h4 id="confirm-the-correct-google-account-was-connected">Confirm the
+correct Google account was connected</h4>
+<p>Many users have multiple Google accounts open in the same browser.
+Compare the email shown in <strong>Connections</strong> with the
+intended Workspace address. If the wrong account was selected, stop and
+revoke/disconnect it before reconnecting the correct account. Do not
+continue merely because the status says active.</p>
+<h4 id="read-only-acceptance-test">Read-only acceptance test</h4>
+<ol type="1">
+<li>Create a harmless Calendar event in the connected Google Calendar
+for the next day.</li>
+<li>Send a harmless test email to the connected Gmail inbox.</li>
+<li>Wait for the next scheduled synchronization/triage cycle.</li>
+<li>Confirm the event appears in <strong>Meetings</strong>.</li>
+<li>Confirm the test email appears in <strong>Email Triage</strong> with
+a summary/classification.</li>
+<li>Confirm no email was sent and no Calendar event was created by
+Maria.</li>
+<li>Review <strong>Workflow Runs</strong> for successful Gmail and
+meeting workflows.</li>
+</ol>
+<h3 id="optionally-enable-approved-google-writes">5.4 Optionally enable
+approved Google writes</h3>
+<p>Only do this when the organization has approved Gmail sending or
+Calendar creation.</p>
+<ol type="1">
+<li>Open <strong>Maria Assistant → Connections</strong>.</li>
+<li>Select <strong>Enable approved writes</strong>.</li>
+<li>Read the warning and confirm.</li>
+<li>Complete Google authorization for the additional scopes.</li>
+<li>Return to Connections and confirm the account remains active.</li>
+<li>In <strong>Maria Assistant → Maria Settings</strong>, turn on
+<strong>Allow approved external actions</strong> for the user.</li>
+<li>As an administrator, open <strong>Maria Assistant → External Action
+Control</strong> and confirm global external actions are enabled.</li>
+</ol>
+<p>These permissions do not permit autonomous writes. Each external
+action still needs a separate approval for the exact recipients,
+content, attachments, and event details. If those details change or the
+approval expires, a new approval is required.</p>
+<h3 id="disconnecting-or-revoking-google-access">5.5 Disconnecting or
+revoking Google access</h3>
+<p>Disconnect or revoke access when a user leaves, selects the wrong
+account, suspects compromise, or no longer needs Google workflows.</p>
+<ol type="1">
+<li>Stop external actions for the profile.</li>
+<li>Revoke the application’s access from the Google Account security
+page or use the available connection removal flow.</li>
+<li>Confirm scheduled workflows no longer use that account.</li>
+<li>Review pending approvals and reconciliations.</li>
+<li>Reconnect only after confirming the intended account and
+scopes.</li>
+</ol>
+<p>Revoking Google access does not delete Maria’s internal projects,
+tasks, briefs, or audit history.</p>
+<h2 id="private-messaging-identity-setup">6. Private messaging identity
+setup</h2>
+<p>Use this only when Maria should be accessible from a supported
+private messaging channel.</p>
+<ol type="1">
+<li>Sign in as an administrator.</li>
+<li>Open <strong>Maria Assistant → Channel Identities</strong>.</li>
+<li>Create an identity for the intended internal user.</li>
+<li>Select the channel/provider and enter the provider’s exact identity
+value.</li>
+<li>Mark the identity active.</li>
+<li>Set <strong>Verified at</strong> only after independently confirming
+ownership of the channel account.</li>
+<li>Save the record.</li>
+<li>Send a harmless test request from that exact account.</li>
+<li>Confirm it enters the private Maria flow, not the public
+customer-service flow.</li>
+</ol>
+<p>Never map an unverified or shared public identity to a private Maria
+user. Disabling Maria globally also disables private Maria routing.</p>
+<p>Expected result: the verified identity reaches Maria only for its
+mapped internal user. A different or unverified identity remains outside
+private Maria mode.</p>
+<h2 id="prepare-marias-source-data">7. Prepare Maria’s source data</h2>
+<p>Maria’s output quality depends on current, structured source records.
+Begin with a small, accurate dataset.</p>
+<h3 id="projects">7.1 Projects</h3>
+<p>Open <strong>Maria Assistant → Projects</strong> and create each
+active project with:</p>
+<ul>
+<li>one primary domain;</li>
+<li>desired outcome;</li>
+<li>stage and priority;</li>
+<li>owner;</li>
+<li>next action and next-action date;</li>
+<li>deadline, when applicable;</li>
+<li>status, blocker, and confidentiality.</li>
+</ul>
+<p>Every active project should have an owner, next action, and date.</p>
+<p>Example project:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Domain</td>
+<td>Books and Publishing (<code>BKS</code>)</td>
+</tr>
+<tr class="even">
+<td>Name</td>
+<td>Autumn book launch</td>
+</tr>
+<tr class="odd">
+<td>Desired outcome</td>
+<td>Final manuscript and launch plan approved</td>
+</tr>
+<tr class="even">
+<td>Stage</td>
+<td>Active</td>
+</tr>
+<tr class="odd">
+<td>Priority</td>
+<td>High</td>
+</tr>
+<tr class="even">
+<td>Owner</td>
+<td>Fr. Morson Livingston</td>
+</tr>
+<tr class="odd">
+<td>Next action</td>
+<td>Review editor’s marked manuscript</td>
+</tr>
+<tr class="even">
+<td>Next-action date</td>
+<td><code>18/08/2026</code></td>
+</tr>
+<tr class="odd">
+<td>Deadline</td>
+<td><code>30/09/2026</code></td>
+</tr>
+<tr class="even">
+<td>Status</td>
+<td>Scheduled</td>
+</tr>
+<tr class="odd">
+<td>Confidentiality</td>
+<td>Confidential</td>
+</tr>
+</tbody>
+</table>
+<p>Do not create the same project in multiple domains. Choose one
+primary domain and link related records.</p>
+<h3 id="tasks">7.2 Tasks</h3>
+<p>Open <strong>Maria Assistant → Tasks</strong> and enter:</p>
+<ul>
+<li>a clear task description;</li>
+<li>owner and source;</li>
+<li>due date and optional follow-up date;</li>
+<li>status;</li>
+<li>project link and supporting evidence when available.</li>
+</ul>
+<p>A task due today remains current for the whole local calendar day and
+becomes overdue the following day.</p>
+<p>Use one observable action per task. “Launch book” is too broad;
+“Approve final cover proof” is suitable. When responsibility changes,
+update the owner. When work is finished, set status to Completed instead
+of deleting the task, so history remains understandable.</p>
+<p>Task status guidance:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Status</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Open</td>
+<td>Work is ready to be done</td>
+</tr>
+<tr class="even">
+<td>Scheduled</td>
+<td>Work is planned for a known date or slot</td>
+</tr>
+<tr class="odd">
+<td>Waiting</td>
+<td>Another person or external response is required</td>
+</tr>
+<tr class="even">
+<td>Blocked</td>
+<td>Work cannot proceed because of a specific blocker</td>
+</tr>
+<tr class="odd">
+<td>Possible Duplicate</td>
+<td>Maria detected a potentially repeated commitment; human review is
+required</td>
+</tr>
+<tr class="even">
+<td>Completed</td>
+<td>The action is genuinely finished</td>
+</tr>
+</tbody>
+</table>
+<h3 id="contacts-and-relationships">7.3 Contacts and relationships</h3>
+<p>Open <strong>Contacts</strong> and maintain verified name, email,
+organization, role, relationship tier/stage, source, warm path, next
+action, and follow-up date. Avoid duplicate contacts and do not invent
+missing details.</p>
+<p>Daily Five recommendations are drafts for human review. Maria does
+not automate LinkedIn connections, messages, comments, likes, or
+scraping.</p>
+<p>When two records may refer to the same person, verify name, email,
+organization, and source before merging or deleting anything. Maria is
+designed to stop on ambiguous contact matches.</p>
+<h3 id="claims-registry">7.4 Claims Registry</h3>
+<p>Before content workflows use factual claims:</p>
+<ol type="1">
+<li>Open <strong>Claims Registry</strong>.</li>
+<li>Enter the exact claim text and subject.</li>
+<li>Add a reliable evidence URL.</li>
+<li>Set verification and recheck dates.</li>
+<li>Select the brands permitted to use the claim.</li>
+<li>Set the status to <strong>Verified</strong> only after human
+verification.</li>
+</ol>
+<p>A claim is usable through its entire recheck date. Unverified,
+expired, rejected, differently worded, or wrong-brand claims are blocked
+rather than guessed.</p>
+<p>Example:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Claim text</td>
+<td>Agverse has a verified UAE pilot.</td>
+</tr>
+<tr class="even">
+<td>Subject</td>
+<td>Agverse</td>
+</tr>
+<tr class="odd">
+<td>Category</td>
+<td>Partnership</td>
+</tr>
+<tr class="even">
+<td>Evidence source</td>
+<td>Link to the authoritative evidence</td>
+</tr>
+<tr class="odd">
+<td>Verified date</td>
+<td>Date a human checked the source</td>
+</tr>
+<tr class="even">
+<td>Recheck date</td>
+<td>Date by which it must be checked again</td>
+</tr>
+<tr class="odd">
+<td>Permitted brand</td>
+<td>Agverse AI UAE</td>
+</tr>
+<tr class="even">
+<td>Status</td>
+<td>Verified</td>
+</tr>
+</tbody>
+</table>
+<p>The wording used by a content workflow should match the verified
+claim. Similar meaning is not permission to invent a stronger
+statement.</p>
+<h3 id="books-agverse-and-all-catholic-media">7.5 Books, Agverse, and
+All Catholic Media</h3>
+<ul>
+<li>Enter exact book titles, credits, editions, milestones, owners,
+blockers, and publication targets before enabling the Book Portfolio
+workflow.</li>
+<li>Enter verified facts separately from hypotheses, scoring inputs,
+next step, owner, and date before enabling Agverse reviews.</li>
+<li>Create the weekly ACM production-plan record, sources, owner, theme,
+claims, assets, and approval deadline before its scheduled production
+time.</li>
+</ul>
+<h3 id="minimum-data-required-by-workflow">7.6 Minimum data required by
+workflow</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Workflow</th>
+<th>Minimum useful source data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Morning Brief</td>
+<td>Active profile, projects/tasks, Google connection when
+email/calendar sections are expected</td>
+</tr>
+<tr class="even">
+<td>Evening Review</td>
+<td>Today’s tasks, workflow activity, decisions and pending items</td>
+</tr>
+<tr class="odd">
+<td>Email Triage</td>
+<td>Active read-enabled Google connection and working-hours window</td>
+</tr>
+<tr class="even">
+<td>Meeting Preparation</td>
+<td>Active Calendar connection and upcoming Calendar events</td>
+</tr>
+<tr class="odd">
+<td>Deadline Monitor</td>
+<td>Open tasks/project deadlines with dates and owners</td>
+</tr>
+<tr class="even">
+<td>Daily Five</td>
+<td>Verified contacts, relationship metadata and follow-up
+information</td>
+</tr>
+<tr class="odd">
+<td>Book Review</td>
+<td>Active book records with exact identifiers and milestones</td>
+</tr>
+<tr class="even">
+<td>Agverse Review</td>
+<td>Active opportunities with valid scores, evidence, owner and next
+step</td>
+</tr>
+<tr class="odd">
+<td>ACM Production</td>
+<td>Weekly production record plus Claims Registry evidence</td>
+</tr>
+<tr class="even">
+<td>Quality Report</td>
+<td>Workflow history and recorded quality/correction events</td>
+</tr>
+</tbody>
+</table>
+<h2 id="daily-use">8. Daily use</h2>
+<h3 id="start-at-the-command-center">8.1 Start at the Command
+Center</h3>
+<p>Open <strong>Maria Assistant → Command Center</strong>. Review:</p>
+<ul>
+<li>active projects;</li>
+<li>open and due tasks;</li>
+<li>pending approvals;</li>
+<li>recent workflow failures;</li>
+<li>Daily Five pending recommendations;</li>
+<li>latest Morning Brief and Evening Review;</li>
+<li>latest Book, Agverse, and Quality reports.</li>
+</ul>
+<p>Resolve stale source data before relying on a generated brief.</p>
+<p>Recommended daily order:</p>
+<ol type="1">
+<li>Read the latest Morning Brief.</li>
+<li>Review overdue/due tasks and active alerts.</li>
+<li>Correct owners, dates, or statuses that are stale.</li>
+<li>Review email drafts and meeting preparations.</li>
+<li>Process pending approvals carefully.</li>
+<li>At the end of the day, review the Evening Review and update
+unfinished work.</li>
+</ol>
+<h3 id="review-email-triage">8.2 Review email triage</h3>
+<p>Open <strong>Email Triage</strong> to review classifications,
+summaries, sensitivity, commitments, follow-up dates, provider links,
+and draft replies.</p>
+<p>Maria’s reply text is a draft. Check recipients, facts, attachments,
+tone, confidentiality, and brand before requesting or granting approval.
+A draft displayed in Maria has not been sent. Saving the draft does not
+create an approval or execute an external action.</p>
+<p>Email-review checklist:</p>
+<ul>
+<li>Is the sender/thread the intended one?</li>
+<li>Does the summary accurately represent the source email?</li>
+<li>Are commitments assigned to the correct person?</li>
+<li>Is the follow-up date realistic?</li>
+<li>Does the reply use the correct brand and signature?</li>
+<li>Are factual claims supported?</li>
+<li>Is sensitive information necessary and properly handled?</li>
+<li>Are recipient, CC/BCC, subject, body, and attachments exact?</li>
+</ul>
+<h3 id="review-meetings">8.3 Review meetings</h3>
+<p>Open <strong>Meetings</strong> to inspect synchronized Calendar
+events and preparation briefs. Meeting times use the user’s configured
+timezone.</p>
+<p>After a meeting, add or supply reliable notes for closeout. Review
+extracted decisions, tasks, owners, dates, and the thank-you draft.
+Confirm ambiguous commitments manually.</p>
+<p>Before the meeting, verify title, time, timezone, attendees,
+objective, and source links. After the meeting, distinguish a confirmed
+decision from a suggestion. Do not mark an action completed merely
+because it was discussed.</p>
+<h3 id="work-with-approvals">8.4 Work with approvals</h3>
+<p>Open <strong>Approvals</strong> and review the full action
+preview:</p>
+<ul>
+<li>exact action type;</li>
+<li>recipient or calendar participants;</li>
+<li>exact content or event details;</li>
+<li>attachments;</li>
+<li>risk and expiration time.</li>
+</ul>
+<p>Approve only if every detail is correct. Reject anything unclear.
+Silence is never approval. Editing approved content, recipients, dates,
+attachments, or channel invalidates the approval.</p>
+<p>Approval decisions:</p>
+<ul>
+<li><strong>Approve:</strong> exact preview is correct and
+authorized.</li>
+<li><strong>Reject:</strong> action must not occur or the preview is
+materially wrong.</li>
+<li><strong>Leave pending:</strong> more information is required; this
+does not authorize execution.</li>
+<li><strong>Expired:</strong> approval can no longer be used; generate a
+fresh action and review it again.</li>
+</ul>
+<h3 id="review-alerts-and-workflow-history">8.5 Review alerts and
+workflow history</h3>
+<ul>
+<li>Use <strong>Alerts</strong> for overdue deadlines and waiting-item
+follow-ups. Acknowledge after reviewing; resolve the underlying task or
+project record.</li>
+<li>Use <strong>Workflow Runs</strong> to see whether automation
+completed, failed, or is still processing.</li>
+<li>Use <strong>Action Reconciliation</strong> when a provider result is
+uncertain. Do not blindly retry an ambiguous Gmail or Calendar
+action.</li>
+<li>Use <strong>Quality &amp; Corrections</strong> to record incorrect
+output, recurring corrections, or safety incidents.</li>
+</ul>
+<h3 id="example-safely-sending-an-email-draft">8.6 Example: safely
+sending an email draft</h3>
+<p><strong>Interface limitation:</strong> Email Triage only edits the
+draft and follow-up date. It has no request-approval or send button.
+Steps below require an approval prepared through the application’s
+Google action service by an authorized technical operator. Approval
+alone does not send: use <strong>Execute approved action</strong> on the
+approved row. The current sender supports plain text, not file
+attachments.</p>
+<ol type="1">
+<li>Email triage creates an unsent draft.</li>
+<li>User opens the communication and checks it against the source thread
+in Gmail.</li>
+<li>User corrects the draft if necessary.</li>
+<li>An authorized technical operator prepares an approval for the final
+exact recipient, CC/BCC, subject, plain-text body, and optional thread.
+File attachments are not supported by the current sender.</li>
+<li>Approver reviews the exact preview and approves it before
+expiry.</li>
+<li>Maria’s execution layer checks global control, profile control,
+scopes, approval hash, and idempotency.</li>
+<li>User selects <strong>Execute approved action</strong> and confirms;
+Maria calls Gmail. If the outcome is uncertain, follow reconciliation
+instead of assuming a retry is safe.</li>
+<li>Provider confirmation is recorded.</li>
+<li>User verifies the completed state. If the provider result is
+ambiguous, the action moves to reconciliation and must not be retried
+blindly.</li>
+</ol>
+<h3 id="example-creating-a-calendar-event">8.7 Example: creating a
+Calendar event</h3>
+<p><strong>Interface limitation:</strong> Meetings has no Create event
+button. An authorized technical operator must prepare the exact Calendar
+approval through the application service. Users can then review,
+approve, and explicitly execute it from Approvals.</p>
+<ol type="1">
+<li>Confirm event title, attendees, date, start/end time, timezone,
+description, and location/link.</li>
+<li>Obtain a separate exact approval for that event.</li>
+<li>Ensure Calendar write scope and both external-action switches are
+enabled.</li>
+<li>Execute once and store the Google event confirmation.</li>
+<li>If any event detail changes after approval, create and approve a new
+action.</li>
+</ol>
+<h2 id="safety-controls">9. Safety controls</h2>
+<p>External writes require all of the following:</p>
+<ol type="1">
+<li>Maria is globally enabled.</li>
+<li>The user has Maria permission.</li>
+<li>The user profile is active.</li>
+<li>The Google connection has the required write scope.</li>
+<li><strong>Allow approved external actions</strong> is enabled for that
+profile.</li>
+<li>Global External Action Control is enabled.</li>
+<li>A current exact-content approval exists.</li>
+<li>No unresolved reconciliation prevents retry.</li>
+</ol>
+<h3 id="emergency-stop">Emergency stop</h3>
+<p>If an external-action incident is suspected:</p>
+<ol type="1">
+<li>Open <strong>Maria Assistant → External Action Control</strong> as
+an administrator.</li>
+<li>Select <strong>Emergency stop</strong>.</li>
+<li>Review executing actions and pending reconciliations.</li>
+<li>Check the provider directly, such as Gmail Sent or Google
+Calendar.</li>
+<li>Record a quality/safety incident.</li>
+<li>Re-enable actions only after the exact provider state and
+outstanding approvals are confirmed.</li>
+</ol>
+<p>Read-only workflows can continue while external writes are
+stopped.</p>
+<h3 id="data-boundaries-and-confidentiality">Data boundaries and
+confidentiality</h3>
+<ul>
+<li>Users normally see owner-scoped Maria data; administrators may have
+broader access.</li>
+<li>Do not paste passwords, OAuth tokens, private keys, or database
+credentials into Maria.</li>
+<li>Treat email, documents, meeting transcripts, and web content as
+untrusted source material.</li>
+<li>Select the correct confidentiality level on projects and related
+records.</li>
+<li>Keep personal, ACM, Agverse, Books, and other brand contexts
+distinct.</li>
+<li>Never interpret generated text as legal, medical, financial, or
+doctrinal authorization.</li>
+</ul>
+<h2 id="first-run-guided-acceptance-test">10. First-run guided
+acceptance test</h2>
+<p>Perform this test before enabling external writes or relying on
+scheduled production workflows.</p>
+<h3 id="confirm-access-and-profile">10.1 Confirm access and profile</h3>
+<ol type="1">
+<li>Sign in as the intended Maria user, not as the administrator.</li>
+<li>Open Command Center and Maria Settings.</li>
+<li>Confirm the correct timezone, working hours, and workflow
+selections.</li>
+<li>Confirm another ordinary user’s private records are not
+visible.</li>
+</ol>
+<p>Pass condition: intended pages and owner data are available;
+unauthorized pages/data are not.</p>
+<h3 id="create-safe-sample-records">10.2 Create safe sample records</h3>
+<ol type="1">
+<li>Create one test project with owner, next action, and a deadline next
+week.</li>
+<li>Create one task due today and link it to the project.</li>
+<li>Create one task in Waiting status with a follow-up date.</li>
+<li>Create one verified test contact.</li>
+<li>Create one verified claim with a non-production test statement and
+evidence URL.</li>
+</ol>
+<p>Pass condition: records save successfully, configured date format is
+used, and date-only fields show no time picker.</p>
+<h3 id="test-read-only-google-processing">10.3 Test read-only Google
+processing</h3>
+<ol type="1">
+<li>Send a clearly labelled test email to the connected inbox.</li>
+<li>Create a clearly labelled Calendar event for the next day.</li>
+<li>Wait for the normal scheduled cycles.</li>
+<li>Review Email Triage, Meetings, and Workflow Runs.</li>
+</ol>
+<p>Pass condition: Maria reads and prepares internal output but
+sends/creates nothing externally.</p>
+<h3 id="test-scheduled-output">10.4 Test scheduled output</h3>
+<p>For a controlled test, temporarily choose brief times a few minutes
+in the future, save the profile, and wait for the scheduler. Do not
+repeatedly change times while a job is running.</p>
+<p>Pass condition: one brief is created for that user/date, one
+successful Workflow Run is visible, and rerunning does not create
+uncontrolled duplicates.</p>
+<p>Restore the user’s intended brief times after the test.</p>
+<h3 id="test-approval-without-a-real-send">10.5 Test approval without a
+real send</h3>
+<p>Keep profile external actions off. Create or inspect a test approval
+and confirm the preview, expiry, and decision controls are
+understandable. Do not use a real recipient.</p>
+<p>Pass condition: no external write occurs while the per-profile switch
+is off.</p>
+<h3 id="record-acceptance">10.6 Record acceptance</h3>
+<p>Record tester name, date/time, connected Google account, selected
+workflows, passed checks, known limitations, and follow-up owner. Do not
+record secrets or tokens.</p>
+<h2 id="setup-verification-checklist">11. Setup verification
+checklist</h2>
+<p>After configuration, confirm each item:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Maria is enabled in System
+Settings.</label></li>
+<li><label><input type="checkbox" />Application timezone and date
+formats are correct.</label></li>
+<li><label><input type="checkbox" />The user has <strong>Access Maria
+Assistant</strong> and required resource permissions.</label></li>
+<li><label><input type="checkbox" />The user can see the Maria Assistant
+menu after signing in.</label></li>
+<li><label><input type="checkbox" />The user’s Maria Settings profile is
+active.</label></li>
+<li><label><input type="checkbox" />Profile timezone and working hours
+are correct.</label></li>
+<li><label><input type="checkbox" />Morning and evening times are
+correct.</label></li>
+<li><label><input type="checkbox" />Only intended workflows are
+selected.</label></li>
+<li><label><input type="checkbox" />Google OAuth settings are saved, if
+required.</label></li>
+<li><label><input type="checkbox" />Google redirect URI exactly matches
+Google Cloud.</label></li>
+<li><label><input type="checkbox" />The correct Google account appears
+as active in Connections.</label></li>
+<li><label><input type="checkbox" />Read-only Gmail, Calendar, and Drive
+behavior has been tested.</label></li>
+<li><label><input type="checkbox" />Write scopes are enabled only if
+approved.</label></li>
+<li><label><input type="checkbox" />Global and per-profile write
+controls are set intentionally.</label></li>
+<li><label><input type="checkbox" />Projects, tasks, contacts, and
+claims contain accurate sample records.</label></li>
+<li><label><input
+type="checkbox" /><code>php artisan schedule:list</code> shows Maria
+schedules.</label></li>
+<li><label><input type="checkbox" />Horizon/queue workers are
+running.</label></li>
+<li><label><input type="checkbox" />A scheduled workflow produces a
+Workflow Run and expected output.</label></li>
+<li><label><input type="checkbox" />No unexpected workflow failures or
+connection errors remain.</label></li>
+</ul>
+<h3 id="server-administrator-checks">Server administrator checks</h3>
+<p>Run these from the deployed application directory:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> artisan schedule:list</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> artisan horizon:status</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">php</span> artisan queue:failed</span></code></pre></div>
+<p>Expected results:</p>
+<ul>
+<li>Maria schedules are listed.</li>
+<li>Horizon reports a running state.</li>
+<li>Failed jobs are empty or each failure has an understood resolution
+owner.</li>
+<li>The server cron invokes <code>php artisan schedule:run</code> every
+minute.</li>
+</ul>
+<p>After deployment, use the repository’s <code>deploy.sh</code>; it
+installs/verifies the scheduler entry, rebuilds caches, restarts Horizon
+safely, and checks services.</p>
+<h2 id="troubleshooting">12. Troubleshooting</h2>
+<h3 id="maria-menu-is-missing">Maria menu is missing</h3>
+<p>Check, in order:</p>
+<ol type="1">
+<li><strong>System Settings → General → Enable Maria Assistant</strong>
+is on.</li>
+<li>The user’s role has <strong>Access Maria Assistant</strong>.</li>
+<li>The role has permission for the required Maria page/resource.</li>
+<li>The user has the expected role.</li>
+<li>Sign out and sign back in.</li>
+</ol>
+<h3 id="google-reports-a-redirect-uri-mismatch">Google reports a
+redirect URI mismatch</h3>
+<p>Copy the Redirect URI again from <strong>System Settings → Google
+Workspace</strong>. Ensure the Google Cloud authorized redirect URI
+matches character for character and uses the production HTTPS
+domain.</p>
+<h3 id="google-connection-is-inactive-or-shows-an-error">Google
+connection is inactive or shows an error</h3>
+<p>Confirm the correct APIs are enabled, the OAuth client and consent
+screen are valid, the user is allowed by the consent configuration, and
+the OAuth secret has not been rotated. Reconnect only after correcting
+the underlying cause.</p>
+<h3 id="briefs-or-scheduled-workflows-do-not-run">Briefs or scheduled
+workflows do not run</h3>
+<p>Check:</p>
+<ol type="1">
+<li>Maria is globally enabled.</li>
+<li>The profile is active.</li>
+<li>The workflow is selected in Enabled Workflows.</li>
+<li>The profile timezone and scheduled time are correct.</li>
+<li>The server scheduler runs every minute.</li>
+<li>Horizon/queue workers are running.</li>
+<li>Failed jobs and Workflow Runs show no unresolved error.</li>
+</ol>
+<h3 id="email-triage-does-not-run">Email triage does not run</h3>
+<p>Confirm Email Triage is selected, Google is active, the profile is
+active, and the current local time is inside the configured
+working-hours window. Triage is scheduled every 30 minutes, not
+continuously.</p>
+<h3 id="a-task-due-today-appears-in-the-due-list">A task due today
+appears in the due list</h3>
+<p>This is expected. It is due today but is not overdue until the next
+local calendar day.</p>
+<h3 id="maria-cannot-send-email-or-create-an-event">Maria cannot send
+email or create an event</h3>
+<p>Review all eight safety requirements in Section 9. The most common
+causes are read-only Google scopes, disabled per-profile external
+actions, the global emergency stop, or missing/expired exact-content
+approval.</p>
+<h3
+id="a-write-may-have-completed-but-maria-shows-an-uncertain-result">A
+write may have completed but Maria shows an uncertain result</h3>
+<p>Do not retry. Check the provider directly, then use <strong>Action
+Reconciliation</strong> to confirm completed or confirm not executed
+with evidence.</p>
+<h3 id="dates-or-times-look-wrong">Dates or times look wrong</h3>
+<p>Check both the global application timezone/date formats and the
+user’s Maria Settings timezone. Calendar-only fields use the configured
+date format; meetings, approvals, and audit timestamps include time.</p>
+<h3 id="a-workflow-appears-twice">A workflow appears twice</h3>
+<p>Do not delete audit or action records. Check whether multiple
+scheduler entries exist, whether the same job was manually dispatched,
+and whether queue workers are processing the same environment. The
+production cron should contain only one Laravel scheduler entry,
+protected against overlap.</p>
+<h3 id="horizon-is-not-running">Horizon is not running</h3>
+<p>Ask the server administrator to check Supervisor and the Horizon log.
+After deployment, <code>php artisan horizon:terminate</code> should
+allow Supervisor to start a fresh process. Do not run long-lived ad-hoc
+workers alongside the managed Horizon service unless the deployment
+design explicitly requires them.</p>
+<h3 id="a-claim-is-unexpectedly-blocked">A claim is unexpectedly
+blocked</h3>
+<p>Compare the exact claim wording, status, permitted brand, evidence,
+and recheck date. A similar statement, different brand, expired claim,
+or unverified status is intentionally blocked.</p>
+<h3 id="user-sees-another-persons-records">User sees another person’s
+records</h3>
+<p>Stop using the affected account and report a privacy incident
+immediately. Record the page, record type, user, time, and screenshot
+with sensitive details minimized. Do not change or delete evidence
+before an administrator investigates permissions and ownership.</p>
+<h2 id="good-operating-practices">13. Good operating practices</h2>
+<ul>
+<li>Start with read-only Google access and a small set of
+workflows.</li>
+<li>Keep project owners, next actions, deadlines, and blockers
+current.</li>
+<li>Verify claims and evidence before generating public content.</li>
+<li>Treat all drafts as unsent until the provider confirms
+completion.</li>
+<li>Use the approval queue for consequential actions, never informal
+chat consent.</li>
+<li>Review Workflow Runs and connection errors regularly.</li>
+<li>Record recurring corrections so quality reports can identify
+patterns.</li>
+<li>Keep personal, All Catholic Media, Agverse, and book brands
+separate.</li>
+<li>Never place OAuth tokens, passwords, private contact details, or
+confidential email bodies in support tickets.</li>
+</ul>
+<h3 id="suggested-operating-rhythm">Suggested operating rhythm</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Frequency</th>
+<th>Review</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Daily morning</td>
+<td>Morning Brief, due tasks, alerts, meetings and email triage</td>
+</tr>
+<tr class="even">
+<td>During the day</td>
+<td>Approval queue, waiting items and connector errors</td>
+</tr>
+<tr class="odd">
+<td>Daily evening</td>
+<td>Evening Review and unfinished commitments</td>
+</tr>
+<tr class="even">
+<td>Weekly</td>
+<td>Book/Agverse/ACM outputs as applicable, Quality Report and recurring
+corrections</td>
+</tr>
+<tr class="odd">
+<td>Monthly</td>
+<td>Role access, connected accounts, enabled workflows, external-action
+authorization and stale claims</td>
+</tr>
+</tbody>
+</table>
+<h2 id="support-information-to-collect">14. Support information to
+collect</h2>
+<p>When requesting technical support, provide:</p>
+<ul>
+<li>the affected user’s email address (never their password);</li>
+<li>the approximate local date and time;</li>
+<li>the page or workflow name;</li>
+<li>the Workflow Run ID, Approval ID, or reconciliation ID when
+available;</li>
+<li>the visible error message;</li>
+<li>whether the issue affects read-only work or an external write;</li>
+<li>a screenshot with confidential data and tokens removed.</li>
+</ul>
+<p>Never provide OAuth access tokens, refresh tokens, the Google client
+secret, database passwords, or unrestricted confidential content.</p>
+<h1 id="part-ii-detailed-screen-by-screen-procedures">Part II — Detailed
+screen-by-screen procedures</h1>
+<h2 id="your-first-session-sign-in-and-create-useful-work">15. Your
+first session: sign in and create useful work</h2>
+<h3 id="sign-in">15.1 Sign in</h3>
+<ol type="1">
+<li>Obtain the deployed application address and your assigned account
+from the administrator. This repository configures the administration
+panel; the operating documents identify <code>/admin/login</code> as the
+sign-in path.</li>
+<li>Open the supplied HTTPS address in your browser and enter your email
+and password.</li>
+<li>If prompted for two-factor authentication, enter the code from your
+authenticator or use an available recovery code. Do not share either
+with support.</li>
+<li>Expand <strong>Maria Assistant</strong> in the navigation and open
+<strong>Command Center</strong>.</li>
+<li>If the group is missing, follow chapter 12 before requesting a new
+account. Global enablement and role access are separate
+requirements.</li>
+<li>Confirm that the displayed records belong to your work.
+Administrators may see records across owners.</li>
+</ol>
+<p><strong>Expected result:</strong> The Command Center loads. Empty
+cards are normal before you create records and workflows finish.</p>
+<h3 id="set-your-working-preferences">15.2 Set your working
+preferences</h3>
+<ol type="1">
+<li>Open <strong>Maria Settings</strong>, then edit your profile. If no
+profile exists and Create is unavailable, ask the administrator to
+create it for your account.</li>
+<li>Set timezone, language, working hours, morning and evening
+times.</li>
+<li>Select the workflows you need and enable
+<strong>Active</strong>.</li>
+<li>Enter short voice preferences, such as “Use English; show three
+priorities; flag missing evidence.”</li>
+<li>Leave approved external actions off during initial testing and
+save.</li>
+<li>Reopen the profile to confirm your saved values.</li>
+</ol>
+<h3 id="complete-one-practice-project">15.3 Complete one practice
+project</h3>
+<ol type="1">
+<li>Open the projects list and select its Create action.</li>
+<li>Choose <strong>Books and Publishing</strong>, name the project
+“Training: cover review,” and enter the desired outcome “Approve a final
+cover proof.”</li>
+<li>Set stage <strong>active</strong>, priority <strong>Normal</strong>,
+confidentiality <strong>Internal</strong>, and your name as owner.</li>
+<li>Enter next action “Compare the two cover proofs,” a future
+next-action date, and a future deadline.</li>
+<li>Choose status <strong>Scheduled</strong> and save.</li>
+<li>Open Tasks, create “Review the training cover proof,” link the
+project, enter your owner name, choose source <strong>User</strong>, and
+set a due date and <strong>Open</strong> status.</li>
+<li>Save, return to Command Center, and check the counts and task
+list.</li>
+<li>After completing the practice, edit the task to
+<strong>Completed</strong>. Set the project’s stage to
+<strong>complete</strong> and status to <strong>Completed</strong> when
+its outcome is achieved.</li>
+</ol>
+<p><strong>Expected result:</strong> Both records save, the task links
+to the project, and completed work no longer counts as open. Task
+completion does not automatically close the project.</p>
+<h2 id="navigation-and-screen-reference">16. Navigation and screen
+reference</h2>
+<p>The labels below are the Maria navigation labels or underlying
+resource names. Generated labels for projects and tasks may include
+“Maria.” Use your assigned sidebar permissions; unavailable buttons
+generally require administrator review.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Screen</th>
+<th>Main purpose</th>
+<th>Normal operation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Command Center</td>
+<td>Latest briefs, priorities and counts</td>
+<td>Read and follow linked records</td>
+</tr>
+<tr class="even">
+<td>Projects / Maria Projects</td>
+<td>Outcomes and next actions</td>
+<td>Create, edit, delete</td>
+</tr>
+<tr class="odd">
+<td>Tasks / Maria Tasks</td>
+<td>Individual commitments</td>
+<td>Create, edit, complete</td>
+</tr>
+<tr class="even">
+<td>Maria Settings</td>
+<td>Personal schedule and controls</td>
+<td>Create/edit profile</td>
+</tr>
+<tr class="odd">
+<td>Approvals</td>
+<td>Exact-action decisions</td>
+<td>View, Approve, Reject; execute supported approved Google
+actions</td>
+</tr>
+<tr class="even">
+<td>Connections</td>
+<td>Google account state</td>
+<td>Connect Google Workspace; Enable approved writes</td>
+</tr>
+<tr class="odd">
+<td>Email Triage</td>
+<td>Email summaries and unsent replies</td>
+<td>Edit draft and follow-up date</td>
+</tr>
+<tr class="even">
+<td>Meetings</td>
+<td>Synced meetings and preparation</td>
+<td>Edit objective/tier/domain; Process notes</td>
+</tr>
+<tr class="odd">
+<td>Contacts</td>
+<td>Relationship source records</td>
+<td>Create and edit</td>
+</tr>
+<tr class="even">
+<td>Daily Five</td>
+<td>Relationship suggestions</td>
+<td>View, Accept, Reject</td>
+</tr>
+<tr class="odd">
+<td>Claims Registry</td>
+<td>Evidence-backed factual statements</td>
+<td>Create, verify, recheck</td>
+</tr>
+<tr class="even">
+<td>Alerts</td>
+<td>Deadline and follow-up warnings</td>
+<td>Review and acknowledge where available</td>
+</tr>
+<tr class="odd">
+<td>Verified Identities</td>
+<td>Private messaging identity mapping</td>
+<td>Authorized administrator maintenance</td>
+</tr>
+<tr class="even">
+<td>Workflow Runs</td>
+<td>Processing history</td>
+<td>View; Verify time saved</td>
+</tr>
+<tr class="odd">
+<td>Prompt Versions</td>
+<td>Workflow instructions and schemas</td>
+<td>Authorized prompt maintenance</td>
+</tr>
+<tr class="even">
+<td>Content Packages</td>
+<td>Brand-specific content drafts</td>
+<td>Create idea; Generate package; review</td>
+</tr>
+<tr class="odd">
+<td>Book Portfolio</td>
+<td>Books and milestones</td>
+<td>Create and update</td>
+</tr>
+<tr class="even">
+<td>Agverse Opportunities</td>
+<td>Evidence and opportunity ranking</td>
+<td>Create, score, update</td>
+</tr>
+<tr class="odd">
+<td>ACM Production</td>
+<td>Weekly editorial planning</td>
+<td>Create; Generate plan; review</td>
+</tr>
+<tr class="even">
+<td>Quality &amp; Corrections</td>
+<td>Feedback and incident records</td>
+<td>Create, investigate, resolve</td>
+</tr>
+<tr class="odd">
+<td>Acceptance Dashboard</td>
+<td>Measured adoption and quality</td>
+<td>Review; Save 30-day snapshot</td>
+</tr>
+<tr class="even">
+<td>Action Reconciliation</td>
+<td>Uncertain external outcomes</td>
+<td>Confirm completed / not executed with evidence</td>
+</tr>
+<tr class="odd">
+<td>External Action Control</td>
+<td>Global external-write switch</td>
+<td>Administrator emergency stop or enable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="using-lists-and-forms">16.1 Using lists and forms</h3>
+<ol type="1">
+<li>Open the required list from the sidebar.</li>
+<li>Use search on searchable fields such as project name, task text,
+contact name, or workflow ID. Sorting is available on columns configured
+as sortable.</li>
+<li>Select <strong>Edit</strong> to change an editable record, or
+<strong>View</strong> for read-only detail.</li>
+<li>Complete required fields, save, and confirm the value in the list or
+reopened form.</li>
+<li>If validation appears, correct the indicated field and save again. A
+disabled field is generated or protected.</li>
+<li>Use Delete only when removing a record is intended. Completing or
+archiving work usually preserves better history. No universal restore
+procedure is established by this review.</li>
+</ol>
+<p>Search, filters and bulk operations vary by screen. Do not assume
+every list includes export, import, merge, or a manual Run workflow
+button.</p>
+<h2 id="projects-and-tasks-in-detail">17. Projects and tasks in
+detail</h2>
+<h3 id="understand-stage-versus-status">17.1 Understand stage versus
+status</h3>
+<p>Project <strong>stage</strong> describes the lifecycle: idea,
+defined, active, waiting, review, complete, paused or archived. Project
+<strong>status</strong> describes its operational condition: Completed,
+Awaiting Approval, Waiting on Another Person, Scheduled or Blocked.
+Update both consistently.</p>
+<p><strong>Owner name</strong> records responsibility; it does not
+transfer the account ownership used for access control. Typing a
+colleague’s name does not grant that colleague access.</p>
+<h3 id="project-field-guide">17.2 Project field guide</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>What to enter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Domain</td>
+<td>Primary work area: Personal Executive, ACM, Agverse, Books,
+Relationships, Communications, Meetings, Legal Administration or
+Cross-Portfolio</td>
+</tr>
+<tr class="even">
+<td>Name / desired outcome</td>
+<td>A recognizable title and observable finished result</td>
+</tr>
+<tr class="odd">
+<td>Stage / priority</td>
+<td>Lifecycle and real urgency</td>
+</tr>
+<tr class="even">
+<td>Confidentiality</td>
+<td>Public, Internal, Confidential or Restricted as appropriate</td>
+</tr>
+<tr class="odd">
+<td>Owner name</td>
+<td>Person responsible for delivery</td>
+</tr>
+<tr class="even">
+<td>Next action / next-action date</td>
+<td>Specific next move and its calendar date</td>
+</tr>
+<tr class="odd">
+<td>Deadline</td>
+<td>Final delivery date if known</td>
+</tr>
+<tr class="even">
+<td>Status / blocker</td>
+<td>Current condition and what prevents progress</td>
+</tr>
+</tbody>
+</table>
+<h3 id="track-a-waiting-task">17.3 Track a waiting task</h3>
+<ol type="1">
+<li>Create or edit the task and choose its project if relevant.</li>
+<li>Describe the action, for example “Receive the corrected cover proof
+from the designer.”</li>
+<li>Enter the responsible person and source.</li>
+<li>Set status <strong>Waiting</strong> and a follow-up date. Add a due
+date only when there is a real delivery commitment.</li>
+<li>Explain the reason or dependency in <strong>Priority
+reason</strong>. The numeric priority score is disabled in the
+form.</li>
+<li>Save. Review deadline-monitor alerts after its next hourly
+cycle.</li>
+<li>When the response arrives, update the next task or mark this one
+Completed. Review existing follow-up warnings separately.</li>
+</ol>
+<p>A due date is a calendar date. Use the configured display format and
+date picker; avoid ambiguous dates in free text. Possible Duplicate
+requires human comparison of task, source, project, owner and date
+before removal.</p>
+<h2 id="contacts-and-daily-five">18. Contacts and Daily Five</h2>
+<h3 id="create-a-reliable-contact">18.1 Create a reliable contact</h3>
+<ol type="1">
+<li>Open <strong>Contacts → Create</strong> and enter the verified full
+name.</li>
+<li>Enter the known email, role and organization. Leave unknown values
+empty.</li>
+<li>Choose tier A, B or C according to your organization’s relationship
+policy and select the actual relationship stage.</li>
+<li>Explain <strong>Why matters</strong> and record <strong>Verification
+source</strong>.</li>
+<li>Add a real warm path, next action and follow-up date when
+known.</li>
+<li>Record consent preferences. Put private details only in the intended
+private fields and only when needed.</li>
+<li>Save and search for the contact to ensure you did not create an
+obvious duplicate.</li>
+</ol>
+<p>There is no contact merge action in the inspected Contacts table. Ask
+support to handle a verified merge if required.</p>
+<h3 id="review-the-daily-five">18.2 Review the Daily Five</h3>
+<ol type="1">
+<li>Enable the workflow in your active profile and maintain useful
+contact records.</li>
+<li>After the weekday cycle, open <strong>Daily Five</strong>. Use the
+status filter to select <strong>Pending review</strong>.</li>
+<li>Select <strong>View</strong> and read relevance, warm path,
+suggested comment, connection note and follow-up.</li>
+<li>Compare the recommendation with the contact’s facts and consent
+preferences.</li>
+<li>Choose <strong>Accept</strong> or <strong>Reject</strong> on the
+pending row and confirm.</li>
+<li>Perform any intended outreach yourself through an authorized
+channel, then update the contact’s stage and next action.</li>
+</ol>
+<p><strong>Expected result:</strong> The recommendation records accepted
+or rejected status. Accepting does not contact the person or trigger
+LinkedIn activity. The detail form is read-only.</p>
+<h2 id="claims-and-content-packages">19. Claims and content
+packages</h2>
+<h3 id="verify-a-claim-before-using-it">19.1 Verify a claim before using
+it</h3>
+<ol type="1">
+<li>Open <strong>Claims Registry → Create</strong>.</li>
+<li>Enter the exact statement, subject and category.</li>
+<li>Add the authoritative evidence URL and inspect that evidence
+yourself.</li>
+<li>Enter verification and recheck dates; add each permitted brand using
+its exact label.</li>
+<li>Set <strong>Verified</strong> only after verification and save.</li>
+<li>Reopen the record to compare the exact wording and brand with the
+planned content.</li>
+</ol>
+<p>Training example: use a harmless fictional statement only in an
+isolated training environment. Do not mark an invented business
+statement Verified in production.</p>
+<h3 id="generate-a-content-package">19.2 Generate a content package</h3>
+<ol type="1">
+<li>Open <strong>Content Packages → Create</strong>.</li>
+<li>Select one brand: Fr. Morson, All Catholic Media, Agverse AI UAE or
+Books.</li>
+<li>Enter a content pillar, audience, required <strong>Source
+idea</strong>, and source URL when available.</li>
+<li>Add factual statements under <strong>Core claims</strong>, matching
+current permitted Claims Registry entries exactly.</li>
+<li>Save and return to the list.</li>
+<li>Select <strong>Generate package</strong> and confirm. This action is
+offered for idea, blocked_claims or failed records.</li>
+<li>Reopen the record. Read <strong>Master draft</strong>,
+<strong>Derivatives</strong>, status and review notes. Generated output
+fields are disabled; derivatives may appear as structured JSON.</li>
+<li>Check facts, brand voice, sources, names, links and suitability.
+Record corrections in Review notes and Quality &amp; Corrections when
+appropriate.</li>
+<li>Use your authorized editorial process to finalize and publish
+outside this screen.</li>
+</ol>
+<p><strong>Expected result:</strong> An internal draft package is
+produced, or the status reports a block/failure. Generation does not
+publish to social media. Review notes are feedback, not an automatic
+rewrite command. A generated record may no longer offer Generate
+package; ask support for a deliberate revision path rather than deleting
+history.</p>
+<h3 id="fix-a-claims-block">19.3 Fix a claims block</h3>
+<ol type="1">
+<li>Open each claim used in the package.</li>
+<li>Compare exact wording, verification status, source, recheck date and
+permitted brand.</li>
+<li>Correct the source record after checking evidence; correct the
+package’s Core claims if necessary.</li>
+<li>Save both records.</li>
+<li>Retry <strong>Generate package</strong> when the blocked record
+offers the action.</li>
+<li>If it remains blocked, report the package ID and relevant claim IDs
+without confidential source content.</li>
+</ol>
+<h2 id="book-portfolio-and-agverse-opportunities">20. Book Portfolio and
+Agverse Opportunities</h2>
+<h3 id="maintain-a-book">20.1 Maintain a book</h3>
+<ol type="1">
+<li>Open <strong>Book Portfolio → Create</strong>.</li>
+<li>Enter <strong>Exact title</strong>, subtitle, credits and edition
+precisely.</li>
+<li>Choose the actual stage: idea, outline, drafting, editing, design,
+proofing, publishing or published.</li>
+<li>Add the manuscript URL, current milestone, milestone owner,
+milestone due date and publication target.</li>
+<li>Record blocker, contributor/status pairs and marketing status where
+known.</li>
+<li>Set record status Active, On hold, Completed or Archived; enter next
+action and date; save.</li>
+<li>Enable Weekly Book Portfolio Review in the profile.</li>
+<li>After Monday’s scheduled review, open Command Center’s
+<strong>Weekly Book Portfolio Review</strong>. Review high-value actions
+and missing-data warnings.</li>
+<li>Update the actual book and task records to reflect decisions. A
+review does not publish a book.</li>
+</ol>
+<h3 id="maintain-and-rank-an-opportunity">20.2 Maintain and rank an
+opportunity</h3>
+<ol type="1">
+<li>Open <strong>Agverse Opportunities → Create</strong> and enter name,
+organization and summary.</li>
+<li>Enter expected value if known and choose AED, USD, EUR or GBP.</li>
+<li>Assign each required score from 1 to 5: expected value, strategic
+fit, urgency, evidence strength, effort and risk.</li>
+<li>Separate <strong>Verified facts</strong> from
+<strong>Hypotheses</strong> and add evidence/URL pairs.</li>
+<li>Enter next step, owner and date, and select Approval required when
+appropriate.</li>
+<li>Choose stage research, qualifying, proposal, negotiation, won or
+lost; choose record status; save.</li>
+<li>Review the list’s computed priority and the Thursday review in
+Command Center.</li>
+</ol>
+<p>The implemented score is <strong>value + strategic fit + urgency +
+evidence − effort − risk</strong>. Larger effort and risk scores reduce
+priority. The weekly review flags approval when the record requires it
+or risk is 4 or 5. This flag does not create a contract, send a proposal
+or authorize spending.</p>
+<h2 id="acm-weekly-production">21. ACM weekly production</h2>
+<ol type="1">
+<li>Open <strong>ACM Production → Create</strong> before the planned
+weekly run.</li>
+<li>Select the week-start date, enter the theme and supporting source
+notes.</li>
+<li>Add exact core claims currently verified for <strong>All Catholic
+Media</strong>.</li>
+<li>Enter required owner name and approval deadline with the correct
+time.</li>
+<li>Save. Select <strong>Generate plan</strong> and confirm when
+offered; alternatively enable ACM weekly production and configure its
+weekday/time in the active profile.</li>
+<li>For scheduled processing, ensure the plan belongs to the current
+week and has planned or blocked_claims status.</li>
+<li>Reopen the record and review <strong>Production package</strong>,
+generated status and timestamp. The package may be displayed as
+JSON.</li>
+<li>Enter review notes and assign the necessary editorial work through
+your normal project/task process.</li>
+<li>Resolve claims blocks using chapter 19 before generating again.</li>
+</ol>
+<p><strong>Expected result:</strong> A draft weekly production plan is
+saved. Neither the approval deadline nor a generated plan automatically
+publishes content or approves it.</p>
+<h2 id="email-and-meeting-walkthroughs">22. Email and meeting
+walkthroughs</h2>
+<h3 id="triage-an-email">22.1 Triage an email</h3>
+<ol type="1">
+<li>Connect Google and enable Email Triage in the profile.</li>
+<li>Wait for the next half-hour cycle inside working hours. Allow
+additional time for the queue.</li>
+<li>Open <strong>Email Triage</strong> and find the Subject/From
+row.</li>
+<li>Select <strong>Edit</strong>. Review classification, sensitivity,
+summary and commitments; these are disabled source/generated
+fields.</li>
+<li>Open the real Gmail thread separately to verify source context.</li>
+<li>Edit <strong>Draft reply (not sent)</strong> and Follow up at, then
+save.</li>
+<li>If the summary or classification is wrong, record the correction
+under Quality &amp; Corrections; those fields cannot be edited in this
+form.</li>
+<li>If a send is required, follow the controlled approval procedure in
+chapter 23 or use the organization’s normal Gmail process.</li>
+</ol>
+<p>This is an email-review screen, not a full Gmail client. It does not
+expose a compose, attachment upload, request-approval or send
+action.</p>
+<h3 id="prepare-for-a-meeting">22.2 Prepare for a meeting</h3>
+<ol type="1">
+<li>Enable Meeting Preparation and connect the correct Google Calendar
+account.</li>
+<li>After the hourly cycle, open <strong>Meetings</strong> and locate
+the event.</li>
+<li>Select <strong>Edit</strong> and check title, start/end times,
+preparation status and brief.</li>
+<li>Enter or correct objective, tier and domain, then save.</li>
+<li>Correct the event’s schedule or attendee information in the source
+Calendar when necessary. The synced title and times are disabled in
+Maria’s form.</li>
+<li>Review missing source information before relying on a generated
+brief.</li>
+</ol>
+<h3 id="process-meeting-notes">22.3 Process meeting notes</h3>
+<ol type="1">
+<li>After the meeting, prepare accurate notes with decisions, actions,
+owners, dates and unresolved questions.</li>
+<li>On the meeting row select <strong>Process notes</strong>.</li>
+<li>Paste the notes into the required Notes field and submit.</li>
+<li>Wait for <strong>Meeting closeout prepared</strong> or inspect the
+reported error.</li>
+<li>Review resulting tasks and any approval or draft records produced.
+Check whether an action duplicates an existing commitment.</li>
+<li>Confirm ambiguous owners/dates with the people involved and correct
+the task records.</li>
+</ol>
+<p>A thank-you draft is unsent. Processing notes does not replace a
+human check of what was agreed, and repeated processing should be
+reviewed for duplicate records.</p>
+<h2 id="approvals-execution-and-reconciliation">23. Approvals, execution
+and reconciliation</h2>
+<h3 id="important-interface-boundaries">23.1 Important interface
+boundaries</h3>
+<p>The inspected code implements service methods to request Gmail-send
+and Calendar-create approvals. Email Triage and Meetings do not expose
+request buttons, and the conversational tool registry does not include
+these write tools. If no approval exists, an authorized technical
+operator must prepare it through the application’s supported service
+integration. Do not look for a documented self-service composer that is
+absent from this revision.</p>
+<p>The current Gmail sender builds plain-text messages with To, optional
+CC/BCC, Subject, Body and optional thread ID. It does not construct file
+attachments. The email approval preview includes To, Subject and Body
+but does not explicitly print CC/BCC. Calendar approval previews show
+title, times, timezone and attendees, while description/location are not
+explicitly included. Obtain verification of all exact proposed fields
+from an authorized operator before approving when the visible preview is
+incomplete.</p>
+<h3 id="review-and-execute-an-existing-action">23.2 Review and execute
+an existing action</h3>
+<ol type="1">
+<li>Open <strong>Approvals → View</strong> on the intended row.</li>
+<li>Check action type, proposed action, channel/recipient, risk,
+preview, attachments information if shown, decision and expiration.</li>
+<li>For a Google action, verify the connected owner/account and all
+recipients or event fields. Resolve any incomplete preview before
+proceeding.</li>
+<li>Return to the list. On a current pending row choose
+<strong>Approve</strong> or <strong>Reject</strong> and confirm.</li>
+<li>An approved action is still not executed. For supported Google
+actions, use <strong>Execute approved action</strong> and confirm the
+external-action warning.</li>
+<li>Wait for the completion notification. Verify the provider directly
+if necessary; do not infer completion from the approval decision.</li>
+<li>If execution fails or is uncertain, stop retries and inspect Action
+Reconciliation.</li>
+</ol>
+<p>The Execute button is offered for approved
+Google-send/Calendar-create types without a recorded completed action. A
+visible button does not bypass runtime expiry, permissions, safety
+controls or reconciliation checks.</p>
+<h3 id="resolve-an-uncertain-outcome">23.3 Resolve an uncertain
+outcome</h3>
+<ol type="1">
+<li>Open <strong>Action Reconciliation</strong> and identify the pending
+row by action, provider, reason and time.</li>
+<li>Check the connected owner’s Gmail Sent folder or Google Calendar
+directly.</li>
+<li>Match recipient/attendees, exact content, date/time and provider
+identifiers. If evidence is inconclusive, keep the reconciliation
+pending and ask support.</li>
+<li>If definitely completed, choose <strong>Confirm completed</strong>,
+enter the actual provider confirmation ID when available, evidence and
+required Resolution notes, then confirm.</li>
+<li>If definitely not executed, choose <strong>Confirm not
+executed</strong>, enter evidence and required Resolution notes, then
+confirm.</li>
+<li>Confirm the reconciliation status changed. The completed path marks
+the action completed; the not-executed path marks it failed.</li>
+<li>Ask support to validate the retry path and approval validity before
+another attempt. Reconciliation itself does not resend anything.</li>
+</ol>
+<h3 id="emergency-stop-1">23.4 Emergency stop</h3>
+<ol type="1">
+<li>An administrator opens <strong>External Action
+Control</strong>.</li>
+<li>Select <strong>Emergency stop</strong> and inspect executing-action
+and pending-reconciliation counts.</li>
+<li>Verify any in-flight action at its provider; a stop cannot recall an
+already sent email or cancel an already completed event.</li>
+<li>Record a safety incident and preserve IDs and timestamps.</li>
+<li>Enable global external actions only after investigation and a
+deliberate review of outstanding approvals.</li>
+</ol>
+<p>Read-only work can continue. A full processing pause requires
+infrastructure support.</p>
+<h2 id="private-whatsapp-conversation">24. Private WhatsApp
+conversation</h2>
+<h3 id="administrator-identity-setup">24.1 Administrator identity
+setup</h3>
+<ol type="1">
+<li>Confirm the messaging account and inbound webhook are configured
+using the repository’s channel setup guide.</li>
+<li>Open <strong>Verified Identities → Create</strong> using an
+authorized role.</li>
+<li>Select the intended Maria profile and the channel account where
+required.</li>
+<li>Select platform <strong>WhatsApp</strong> and enter the exact
+external identifier used by that channel.</li>
+<li>Verify the person’s identity outside the chat. Only then set
+Verified at and Active, add a descriptive label and save.</li>
+<li>Test from the intended number and confirm it resolves to the right
+owner before using private information.</li>
+</ol>
+<p>Only WhatsApp is offered in this Maria identity form. Generic
+Messenger or Instagram support elsewhere in the app does not establish
+private Maria support for those platforms.</p>
+<h3 id="example-requests">24.2 Example requests</h3>
+<p>Send one clear request at a time to the configured WhatsApp business
+number from the verified identity:</p>
+<ul>
+<li>“Show my open tasks.”</li>
+<li>“Create a task: review the cover proof. Owner: me. Due date: 22
+October 2026.”</li>
+<li>“List my upcoming Calendar meetings.”</li>
+<li>“Show my priority emails.”</li>
+<li>“Search Drive metadata for the autumn launch plan.”</li>
+</ul>
+<p>These are natural-language examples, not guaranteed slash commands.
+Ask for clarification when a response uses an unexpected date or owner.
+Verify a created task in Tasks.</p>
+<p>The registered chat tools can list tasks, create internal tasks, list
+priority emails, list Calendar events and search Drive files when
+available. They do not implement general project editing, Google
+sending, Calendar creation, file-content retrieval or social publishing.
+Drive access is metadata read-only; finding a filename does not mean
+Maria read the document body.</p>
+<p>If private mode fails, stop sharing private context and ask the
+administrator to inspect the profile, global gate, user permission,
+active/verified identity and channel-account match.</p>
+<h2 id="documents-account-security-and-adjacent-app-functions">25.
+Documents, account security and adjacent app functions</h2>
+<h3 id="manage-local-documents">25.1 Manage local documents</h3>
+<ol type="1">
+<li>Open <strong>Documents</strong> from the main application
+sidebar.</li>
+<li>Administrators should confirm <strong>Viewing documents for</strong>
+before making changes. Ordinary users are restricted to their own
+documents.</li>
+<li>Open the destination folder in the file manager.</li>
+<li>Use the offered file-manager controls to create a folder or upload a
+file, then confirm it appears.</li>
+<li>Use file actions to rename, move/copy, download or delete when
+available. Confirm the destination before moving or copying.</li>
+<li>If loading fails, record “Could not load documents for this user”
+and contact support with the owner context.</li>
+<li>If storage limits reject an upload, check the displayed drive
+information and ask the administrator about quota; do not repeatedly
+upload duplicates.</li>
+</ol>
+<p>Local Documents and Google Drive are separate stores. Uploading a
+local document does not automatically put it in Google Drive or make its
+contents available to Maria’s Drive-metadata tool. File-manager labels
+can vary with the installed component version and locale.</p>
+<h3 id="protect-your-account">25.2 Protect your account</h3>
+<ol type="1">
+<li>Open your account/profile menu and edit your profile.</li>
+<li>Maintain your name, email, avatar and password through the available
+profile fields.</li>
+<li>If two-factor setup is enabled globally, use the profile’s enable
+action, add the supplied setup secret to your authenticator and confirm
+with its current code.</li>
+<li>View and securely store recovery codes through the offered
+action.</li>
+<li>Regenerating recovery codes replaces the previous set. Store the new
+set securely.</li>
+<li>Sign out when finished on a shared device.</li>
+</ol>
+<h3 id="other-application-areas">25.3 Other application areas</h3>
+<p>The wider application includes Conversations, Services, FAQs, Service
+Requests, messaging accounts, Users, role permissions, System Settings
+and audit logs. These support customer messaging and administration
+around Maria. They are separate workflows: an ordinary customer-service
+conversation is not automatically a verified private Maria session.
+Channel-provider setup details belong in the existing WhatsApp and
+Messenger/Instagram setup guides rather than being inferred from Maria’s
+Google connection.</p>
+<h2 id="quality-metrics-and-administrator-maintenance">26. Quality,
+metrics and administrator maintenance</h2>
+<h3 id="report-a-correction">26.1 Report a correction</h3>
+<ol type="1">
+<li>Open <strong>Quality &amp; Corrections → Create</strong>.</li>
+<li>Select Human correction, Safety incident or Feedback.</li>
+<li>Choose the category and a realistic severity.</li>
+<li>Link the relevant Workflow Run if available.</li>
+<li>Enter a concise description, expected result, actual result and
+occurrence time.</li>
+<li>Set status Open or Investigating and save.</li>
+<li>After fixing the source or process, enter Resolution, Resolved at
+and status Resolved.</li>
+</ol>
+<p>A quality event records feedback. It does not automatically edit the
+original email, task, prompt or generated draft.</p>
+<h3 id="inspect-a-workflow-and-verify-time-saved">26.2 Inspect a
+workflow and verify time saved</h3>
+<ol type="1">
+<li>Open <strong>Workflow Runs</strong> and search for its run ID or
+workflow type.</li>
+<li>Select <strong>View</strong>. Review status, prompt version, input
+references, source gaps and error.</li>
+<li>Compare start/finish times with the expected cycle. A queued or
+running job may require infrastructure investigation if it remains
+stuck.</li>
+<li>When you have measured actual human review time, select
+<strong>Verify time saved</strong> on the row.</li>
+<li>Enter non-negative actual human minutes and submit.</li>
+<li>The application records a verified saving of the estimated manual
+minutes minus human minutes, with a minimum of zero.</li>
+</ol>
+<p>Do not count unreviewed output as verified time saved. The displayed
+cost is estimated USD cost, not an invoice.</p>
+<h3 id="save-an-acceptance-snapshot">26.3 Save an acceptance
+snapshot</h3>
+<ol type="1">
+<li>Open <strong>Acceptance Dashboard</strong>.</li>
+<li>Review its 30-day report and the quality/source records behind
+it.</li>
+<li>Select <strong>Save 30-day snapshot</strong>.</li>
+<li>Confirm the “Auditable 30-day snapshot saved” notification.</li>
+<li>Use the snapshot in a handover review together with unresolved
+issues and observed user outcomes.</li>
+</ol>
+<p>Saving a snapshot records evidence; it does not certify that every
+feature is production-ready.</p>
+<h3 id="change-a-prompt-version">26.4 Change a prompt version</h3>
+<ol type="1">
+<li>An authorized administrator opens <strong>Prompt
+Versions</strong>.</li>
+<li>Record the current active version for the target prompt type.</li>
+<li>Create a new version with the exact prompt type, distinct version,
+content, expected output schema and change notes.</li>
+<li>Validate it in a controlled environment using representative source
+records before activation.</li>
+<li>Set Active and save when ready. Activating a version disables other
+versions of that same prompt type.</li>
+<li>Review subsequent runs and quality events. If needed, reactivate the
+known-good version deliberately.</li>
+</ol>
+<p>Prompts and identities are shared administrative resources rather
+than ordinary owner-scoped records. Grant their editing permissions
+carefully. A malformed output schema can break a workflow.</p>
+<h2 id="practical-daily-and-weekly-checklists">27. Practical daily and
+weekly checklists</h2>
+<h3 id="morning-approximately-ten-minutes">27.1 Morning: approximately
+ten minutes</h3>
+<ol type="1">
+<li>Open Command Center and confirm the latest brief’s date.</li>
+<li>Read its top outcomes and any <strong>Sources not checked</strong>
+warning.</li>
+<li>Review due tasks; inspect the full Tasks list for work outside the
+small dashboard list.</li>
+<li>Review the next meetings and email drafts.</li>
+<li>Resolve or escalate pending approvals and alerts.</li>
+<li>Update actual owners, dates and next actions before acting on
+recommendations.</li>
+</ol>
+<p>The dashboard’s due-task list is limited to seven non-completed dated
+tasks ordered by due date; it is not a complete “today” filter. Its Open
+tasks count includes non-completed waiting, blocked and duplicate-review
+items. The failure count covers the recent week. Administrators may see
+mixed-owner data.</p>
+<h3 id="evening-approximately-five-minutes">27.2 Evening: approximately
+five minutes</h3>
+<ol type="1">
+<li>Mark genuinely completed tasks Completed.</li>
+<li>Update waiting items and follow-up dates.</li>
+<li>Read the latest Evening Review and compare it with the day’s actual
+work.</li>
+<li>Review tomorrow’s top actions and unresolved approvals.</li>
+<li>Record material corrections and assign a follow-up owner.</li>
+</ol>
+<h3 id="weekly-review">27.3 Weekly review</h3>
+<ol type="1">
+<li>Check Book Portfolio and Agverse review actions.</li>
+<li>Prepare the next ACM weekly record before its scheduled run.</li>
+<li>Recheck expiring claims and weak evidence.</li>
+<li>Review recurring quality corrections, failed workflows and pending
+reconciliations.</li>
+<li>Measure actual human time on a sample of completed workflows.</li>
+<li>Review Acceptance Dashboard and save a snapshot when required by
+your handover process.</li>
+</ol>
+<h2 id="troubleshooting-decision-table">28. Troubleshooting decision
+table</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>First user check</th>
+<th>Administrator/support check</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cannot sign in</td>
+<td>Correct address, email, password, authenticator clock/code</td>
+<td>Account access, two-factor recovery and rate limits</td>
+</tr>
+<tr class="even">
+<td>Maria missing</td>
+<td>Refresh or sign in again</td>
+<td>Global switch, access permission, role/resource permissions</td>
+</tr>
+<tr class="odd">
+<td>No brief</td>
+<td>Active profile, selected workflow, local scheduled time</td>
+<td>Scheduler, queue, failed jobs, source data</td>
+</tr>
+<tr class="even">
+<td>No emails</td>
+<td>Correct connected account and working hours</td>
+<td>Read scope, half-hour cycle, triage error</td>
+</tr>
+<tr class="odd">
+<td>No meeting</td>
+<td>Correct Calendar/account, upcoming event, hourly cycle</td>
+<td>Calendar scope, preparation workflow and source window</td>
+</tr>
+<tr class="even">
+<td>Draft saved but no email sent</td>
+<td>Expected: draft editing only</td>
+<td>Prepare an exact-action approval through service integration</td>
+</tr>
+<tr class="odd">
+<td>Approved but not sent</td>
+<td>Check Execute approved action and expiry</td>
+<td>Safety gates, scopes, action/reconciliation state</td>
+</tr>
+<tr class="even">
+<td>Content Generate button missing</td>
+<td>Check status; generated records may be ineligible</td>
+<td>Intended revision/retry path</td>
+</tr>
+<tr class="odd">
+<td>Claims blocked</td>
+<td>Exact claim and permitted brand</td>
+<td>Verification/evidence/recheck logic</td>
+</tr>
+<tr class="even">
+<td>Wrong owner in a task</td>
+<td>Edit responsible owner name</td>
+<td>Account ownership is separate from the name field</td>
+</tr>
+<tr class="odd">
+<td>Wrong times</td>
+<td>Profile timezone versus global display timezone</td>
+<td>Stored values and server configuration</td>
+</tr>
+<tr class="even">
+<td>No disconnect button</td>
+<td>Expected in this revision</td>
+<td>Use supported disconnect endpoint or provider-side revocation and
+cleanup</td>
+</tr>
+<tr class="odd">
+<td>Unknown send outcome</td>
+<td>Inspect provider; do not retry</td>
+<td>Action Reconciliation with evidence</td>
+</tr>
+<tr class="even">
+<td>Contact duplicate</td>
+<td>Compare exact identity and sources</td>
+<td>No built-in merge action; controlled cleanup</td>
+</tr>
+<tr class="odd">
+<td>Documents fail to load</td>
+<td>Refresh and confirm intended owner</td>
+<td>Storage, access, quota and API error</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Disconnect limitation:</strong> The backend has a protected
+Google disconnect route, but Connections currently offers only the two
+connect/upgrade header actions and no row disconnect action. Ask an
+authorized operator to use the supported disconnect route or revoke
+access from the Google account and reconcile the connector state. Do not
+expect a visible Disconnect button.</p>
+<p><strong>Schedule note:</strong> Profile timezone controls the local
+time of daily/weekly workflows. Half-hour and hourly jobs follow the
+application’s scheduler cadence; the queue adds processing delay. Keep
+ordinary daytime working hours unless overnight-window behavior has been
+explicitly verified. Schedules derived from the morning time should
+remain within the intended day.</p>
+<h2 id="first-use-acceptance-worksheet">29. First-use acceptance
+worksheet</h2>
+<p>Complete this in a controlled test with harmless data and writes
+initially disabled.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Check</th>
+<th>Expected evidence</th>
+<th>Result / owner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sign-in and Maria access</td>
+<td>Intended account can open Command Center</td>
+<td>__________________</td>
+</tr>
+<tr class="even">
+<td>Ownership</td>
+<td>Ordinary user cannot access another owner’s records</td>
+<td>__________________</td>
+</tr>
+<tr class="odd">
+<td>Profile</td>
+<td>Saved timezone, times, workflow selections and Active</td>
+<td>__________________</td>
+</tr>
+<tr class="even">
+<td>Practice project/task</td>
+<td>Record IDs and correct link/status</td>
+<td>__________________</td>
+</tr>
+<tr class="odd">
+<td>Google reads</td>
+<td>Correct active account; test email and Calendar item processed</td>
+<td>__________________</td>
+</tr>
+<tr class="even">
+<td>Scheduled brief</td>
+<td>Correct local date and successful run ID</td>
+<td>__________________</td>
+</tr>
+<tr class="odd">
+<td>Meeting notes</td>
+<td>Closeout notification and reviewed tasks</td>
+<td>__________________</td>
+</tr>
+<tr class="even">
+<td>Claims/content</td>
+<td>Verified evidence, draft output or explained block</td>
+<td>__________________</td>
+</tr>
+<tr class="odd">
+<td>Approval review</td>
+<td>Preview inspected; no accidental execution</td>
+<td>__________________</td>
+</tr>
+<tr class="even">
+<td>Emergency control</td>
+<td>Administrator can identify stop and reconciliation page</td>
+<td>__________________</td>
+</tr>
+<tr class="odd">
+<td>Quality/metrics</td>
+<td>Correction saved and time verification understood</td>
+<td>__________________</td>
+</tr>
+<tr class="even">
+<td>Handover</td>
+<td>Known issues, support contact and responsible owner recorded</td>
+<td>__________________</td>
+</tr>
+</tbody>
+</table>
+<p>Tester: __________________ Date/time/timezone: __________________</p>
+<p>Application address/revision: __________________ Administrator:
+__________________</p>
+<p>Known limitations and next actions:
+__________________________________________________</p>
+<p>Only perform a real external-write acceptance test with an explicitly
+authorized recipient/event, a complete exact preview, both safety
+controls intentionally enabled, and an operator prepared to reconcile
+uncertain outcomes.</p>
+<h1 id="part-iii-analysis-notes-and-evidence">Part III — Analysis notes
+and evidence</h1>
+<h2 id="functional-analysis-and-current-limits">30. Functional analysis
+and current limits</h2>
+<p>Maria combines a private messaging assistant, structured records,
+scheduled workflows, and a controlled external-action layer. Its
+usefulness depends on accurate source records and active background
+processing. It is not a single chat interface that automatically
+performs every sidebar operation.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Implemented function</th>
+<th>Operating implication</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Access</td>
+<td>Global Maria gate, user authorization, owner-scoped operational
+records</td>
+<td>Global enablement does not grant every user access</td>
+</tr>
+<tr class="even">
+<td>Working memory</td>
+<td>Projects, tasks, contacts, claims, books, opportunities and content
+records</td>
+<td>Keep records current; account ownership differs from owner-name
+text</td>
+</tr>
+<tr class="odd">
+<td>Conversation</td>
+<td>Five registered task/Google-read tools</td>
+<td>Natural language has a narrower capability set than the sidebar</td>
+</tr>
+<tr class="even">
+<td>Automation</td>
+<td>Ten user workflows plus stuck-action reconciliation</td>
+<td>Scheduling and queues must both work</td>
+</tr>
+<tr class="odd">
+<td>Review</td>
+<td>Draft forms, recommendations, approvals and quality events</td>
+<td>Human review remains a distinct operating step</td>
+</tr>
+<tr class="even">
+<td>External actions</td>
+<td>Gmail plain-text send and Calendar event creation services</td>
+<td>Approval creation currently needs a service
+integration/operator</td>
+</tr>
+<tr class="odd">
+<td>Execution safety</td>
+<td>Exact-content approval checks, action ledger and reconciliation</td>
+<td>Never retry an uncertain external result blindly</td>
+</tr>
+<tr class="even">
+<td>Measurement</td>
+<td>Workflow time verification, quality reporting and snapshots</td>
+<td>Measure human effort rather than treating estimates as proof</td>
+</tr>
+</tbody>
+</table>
+<h3 id="findings-that-affect-user-training">30.1 Findings that affect
+user training</h3>
+<ul>
+<li><strong>Separate approval from execution.</strong> A user must
+deliberately use Execute approved action for supported Google
+approvals.</li>
+<li><strong>Incomplete self-service write initiation.</strong> No
+request-send or create-event controls were found in Email Triage or
+Meetings; the registered chat tools also exclude these writes.</li>
+<li><strong>Preview completeness needs attention.</strong> Some accepted
+fields are not explicitly printed by the request-service previews.
+Verify them through an authorized operator before approving.</li>
+<li><strong>No attachment sending in the current sender.</strong> An
+attachments field in approval data does not establish MIME
+file-attachment support.</li>
+<li><strong>No visible Google disconnect action.</strong> Backend
+revocation support exists, but the current Connections screen does not
+expose it.</li>
+<li><strong>No automatic social publishing.</strong> Content generation
+and Daily Five acceptance produce internal work/review state.</li>
+<li><strong>Some outputs are technical to read.</strong> Derivatives and
+ACM production packages are displayed as JSON in disabled text
+areas.</li>
+<li><strong>Dashboard is a summary.</strong> It limits visible
+tasks/recommendations and latest outputs; full lists and run records are
+needed for investigation.</li>
+</ul>
+<p>These are source observations and usability boundaries, not results
+of a production penetration test or live acceptance certification.</p>
+<h3 id="recommended-application-improvements">30.2 Recommended
+application improvements</h3>
+<p>The following are recommendations, not instructions for existing
+buttons: add self-service Google action request forms; show every
+approved field in the preview; expose a safe disconnect control; display
+structured content in readable sections; provide a deliberate draft
+revision path; and make dashboard owner/date context and list limits
+explicit. No application behavior was changed while preparing this
+manual.</p>
+<h2 id="source-traceability-and-document-maintenance">31. Source
+traceability and document maintenance</h2>
+<p>This edition was prepared on 18 October 2026 from the checked-out
+repository. The earlier manual and operating documents were used as
+context, then compared with code for the detailed workflows. No secrets
+or real email content were needed.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Topic</th>
+<th>Primary repository evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Setup and operating baseline</td>
+<td>docs/MARIA_USER_MANUAL.md; docs/MARIA_OPERATIONS_RUNBOOK.md</td>
+</tr>
+<tr class="even">
+<td>Google setup</td>
+<td>docs/MARIA_GOOGLE_WORKSPACE_SETUP.md; Google connector controller;
+routes/web.php</td>
+</tr>
+<tr class="odd">
+<td>Screen actions and fields</td>
+<td>app/Filament/Resources/*Resource.php and their Pages classes</td>
+</tr>
+<tr class="even">
+<td>Dashboard behavior</td>
+<td>app/Filament/Pages/MariaDashboard.php and its Blade view</td>
+</tr>
+<tr class="odd">
+<td>Personal scheduling</td>
+<td>routes/console.php; app/Jobs/Maria; AssistantProfileResource</td>
+</tr>
+<tr class="even">
+<td>Chat capabilities</td>
+<td>app/Services/Maria/ToolRegistry.php; Tools directory</td>
+</tr>
+<tr class="odd">
+<td>Private identity</td>
+<td>AssistantChannelIdentityResource; AssistantIdentityResolver</td>
+</tr>
+<tr class="even">
+<td>Google execution</td>
+<td>ApprovedGoogleActionService; ApprovalResource;
+Google/GmailWriteClient</td>
+</tr>
+<tr class="odd">
+<td>Reconciliation and stop</td>
+<td>ActionReconciliationResource; ExternalActionControl</td>
+</tr>
+<tr class="even">
+<td>Documents</td>
+<td>DocumentController; resources/js document-manager component</td>
+</tr>
+<tr class="odd">
+<td>Authentication</td>
+<td>app/Filament/Auth/Login.php; EditProfile.php</td>
+</tr>
+<tr class="even">
+<td>Metrics and prompts</td>
+<td>WorkflowRunResource; MariaAcceptanceDashboard;
+PromptVersionResource</td>
+</tr>
+</tbody>
+</table>
+<p>Existing automated test files provide additional implementation
+examples but were not executed as part of this documentation-only task.
+Production operators must run their own first-use acceptance checks
+against the deployed version.</p>
+<p>Update this manual whenever navigation, available actions, workflow
+timing, approval payloads, connector scopes or permissions change.
+Preserve the distinction between available user controls, administrator
+procedures and future recommendations.</p>
+</body>
+</html>

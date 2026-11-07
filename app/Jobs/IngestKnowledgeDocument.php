@@ -42,6 +42,15 @@ class IngestKnowledgeDocument implements ShouldQueue
 
     public function handle(EmbeddingProvider $embeddings): void
     {
+        // Captured before the delete below: chunks whose content is unchanged between
+        // the old and new chunk sets get their existing embedding reused instead of
+        // paying for another Voyage call — this is what makes editing a large document
+        // (fixing a typo, say) fast and cheap instead of re-embedding from scratch.
+        $existingByHash = $this->document->chunks()
+            ->whereNotNull('content_hash')
+            ->get(['content_hash', 'embedding'])
+            ->keyBy('content_hash');
+
         $this->document->chunks()->delete();
 
         if (! $this->document->is_active || trim($this->document->content) === '') {
@@ -53,19 +62,37 @@ class IngestKnowledgeDocument implements ShouldQueue
             return;
         }
 
-        try {
-            $vectors = [];
-            foreach (array_chunk($chunks, self::EMBED_BATCH_SIZE) as $batch) {
-                $vectors = [...$vectors, ...$embeddings->embedMany($batch, 'document')];
-            }
-        } catch (\Throwable $e) {
-            Log::error('Knowledge document ingestion failed to embed chunks', [
-                'document_id' => $this->document->id,
-                'chunk_count' => count($chunks),
-                'error' => $e->getMessage(),
-            ]);
+        $hashes = array_map(fn ($content) => hash('sha256', $content), $chunks);
 
-            throw $e;
+        $vectors = [];
+        $toEmbed = [];
+        foreach ($chunks as $index => $content) {
+            $reused = $existingByHash->get($hashes[$index])?->embedding;
+            if ($reused) {
+                $vectors[$index] = $reused;
+            } else {
+                $toEmbed[$index] = $content;
+            }
+        }
+
+        if (! empty($toEmbed)) {
+            try {
+                $newVectors = [];
+                foreach (array_chunk($toEmbed, self::EMBED_BATCH_SIZE, true) as $batch) {
+                    $embedded = $embeddings->embedMany(array_values($batch), 'document');
+                    $newVectors = $newVectors + array_combine(array_keys($batch), $embedded);
+                }
+            } catch (\Throwable $e) {
+                Log::error('Knowledge document ingestion failed to embed chunks', [
+                    'document_id' => $this->document->id,
+                    'chunk_count' => count($toEmbed),
+                    'error' => $e->getMessage(),
+                ]);
+
+                throw $e;
+            }
+
+            $vectors = $vectors + $newVectors;
         }
 
         // A document with no account scoping at all is treated as global (null),
@@ -86,6 +113,7 @@ class IngestKnowledgeDocument implements ShouldQueue
                     'language' => $this->document->language,
                     'chunk_index' => $index,
                     'content' => $content,
+                    'content_hash' => $hashes[$index],
                     'embedding' => $vectors[$index],
                 ]);
             }

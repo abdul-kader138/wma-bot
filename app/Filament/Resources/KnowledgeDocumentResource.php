@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -146,6 +147,16 @@ class KnowledgeDocumentResource extends Resource
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label(__('admin.knowledge_document.fields.active')),
 
+                Tables\Columns\TextColumn::make('reviewed_at')
+                    ->label(__('admin.knowledge_document.fields.staleness'))
+                    ->state(fn (KnowledgeDocument $record) => $record->isStale()
+                        ? __('admin.knowledge_document.fields.stale')
+                        : __('admin.knowledge_document.fields.fresh'))
+                    ->badge()
+                    ->color(fn (KnowledgeDocument $record) => $record->isStale() ? 'warning' : 'success')
+                    ->tooltip(fn (KnowledgeDocument $record) => 'Last reviewed: '
+                        .($record->reviewed_at ?? $record->created_at)?->format(config('app.display_datetime_format', 'd/m/Y H:i'))),
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime(config('app.display_datetime_format', 'd/m/Y H:i'))
                     ->sortable()
@@ -176,9 +187,21 @@ class KnowledgeDocumentResource extends Resource
                     ),
                 TernaryFilter::make('is_active')
                     ->label(__('admin.knowledge_document.fields.active')),
+
+                Filter::make('stale')
+                    ->label(__('admin.knowledge_document.fields.needs_review'))
+                    ->query(fn ($query) => $query->stale()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+
+                Tables\Actions\Action::make('mark_reviewed')
+                    ->label(__('admin.knowledge_document.actions.mark_reviewed'))
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (KnowledgeDocument $record) => $record->isStale())
+                    ->action(fn (KnowledgeDocument $record) => $record->update(['reviewed_at' => now()])),
+
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

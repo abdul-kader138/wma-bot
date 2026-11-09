@@ -68,6 +68,32 @@ return [
             'it' => 'Scrivi "cambia servizio" per cambiare servizio, o "chiudi" per terminare la chat.',
             'bn' => 'সেবা পরিবর্তন করতে "সেবা পরিবর্তন" লিখুন, অথবা কথোপকথন শেষ করতে "শেষ" লিখুন।',
         ],
+
+        // Appended to the welcome message only for services with catalogue_enabled,
+        // and used as the list/quick-reply prompt when "menu" is typed (see
+        // HandleIncomingMessage::CATALOGUE_KEYWORDS).
+        'view_catalogue_hint' => [
+            'en' => 'Type "menu" any time to browse our full list.',
+            'it' => 'Scrivi "menu" in qualsiasi momento per vedere la lista completa.',
+            'bn' => 'সম্পূর্ণ তালিকা দেখতে যেকোনো সময় "মেনু" লিখুন।',
+        ],
+        'catalogue_prompt' => [
+            'en' => 'Here\'s what we offer — tap an item for details:',
+            'it' => 'Ecco cosa offriamo: tocca un elemento per i dettagli:',
+            'bn' => 'আমরা যা অফার করি: বিস্তারিত জানতে একটি আইটেমে ট্যাপ করুন:',
+        ],
+        'catalogue_empty' => [
+            'en' => 'Nothing is listed yet — ask us directly and we\'ll help.',
+            'it' => 'Non c\'è ancora nulla elencato: chiedici direttamente e ti aiuteremo.',
+            'bn' => 'এখনো কিছু তালিকাভুক্ত করা হয়নি—সরাসরি আমাদের জিজ্ঞাসা করুন, আমরা সাহায্য করব।',
+        ],
+        // Shown when a tapped catalogue item was unpublished/removed since the list
+        // was sent — a stale button id must fail safely, not crash the agent call.
+        'catalogue_entry_unavailable' => [
+            'en' => 'Sorry, that item is no longer available. Type "menu" to see the current list.',
+            'it' => 'Spiacenti, questo elemento non è più disponibile. Scrivi "menu" per la lista aggiornata.',
+            'bn' => 'দুঃখিত, এই আইটেমটি আর উপলব্ধ নেই। বর্তমান তালিকা দেখতে "মেনু" লিখুন।',
+        ],
     ],
 
     'services' => [

@@ -27,6 +27,14 @@ interface MessagingChannel
     public function sendServiceButtons(string $to, string $lang): void;
 
     /**
+     * Lists active CatalogueEntry rows visible under one service (see
+     * CatalogueEntry::listForService()) as a tappable list/quick-reply message.
+     * Selecting one returns reply_id "cat_{entry id}", which HandleIncomingMessage
+     * resolves back to that entry rather than passing it to Claude.
+     */
+    public function sendCatalogueList(string $to, string $lang, int $serviceId): void;
+
+    /**
      * Parse one platform-native webhook payload into the canonical shape the rest of
      * the app understands: ['message_id' => ?string, 'phone' => string, 'text' => ?string,
      * 'reply_id' => ?string]. Returns null when the payload carries no actionable message

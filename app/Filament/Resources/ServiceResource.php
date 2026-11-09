@@ -156,6 +156,11 @@ class ServiceResource extends Resource
                                 ->maxLength(500)
                                 ->helperText('Tells Claude when to call this tool and what it does.')
                                 ->columnSpanFull(),
+
+                            Toggle::make('catalogue_enabled')
+                                ->label('Enable catalogue / menu')
+                                ->helperText('Lets customers type "menu" to browse Catalogue Entries linked to this service (e.g. a restaurant menu, room list, or doctor list).')
+                                ->columnSpanFull(),
                         ])->columns(2),
                 ]),
 

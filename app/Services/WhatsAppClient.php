@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\MessagingChannel;
+use App\Models\CatalogueEntry;
 use App\Models\Service;
 use App\Models\WhatsAppAccount;
 use Illuminate\Support\Facades\Http;
@@ -108,6 +109,50 @@ class WhatsAppClient implements MessagingChannel
                     // WhatsApp list messages support up to 10 rows — take the slice here
                     // only to stay within that API limit, not an arbitrary app choice.
                     'sections' => [['title' => 'Services', 'rows' => array_slice($rows, 0, 10)]],
+                ],
+            ],
+        ]);
+    }
+
+    public function sendCatalogueList(string $to, string $lang, int $serviceId): void
+    {
+        $entries = CatalogueEntry::listForService($this->accountId, $serviceId);
+
+        if ($entries->isEmpty()) {
+            $this->sendText($to, config("services_bot.replies.catalogue_empty.{$lang}")
+                ?? config('services_bot.replies.catalogue_empty.en'));
+
+            return;
+        }
+
+        $rows = $entries->map(function (CatalogueEntry $entry) use ($lang) {
+            $title = $entry->getNameForLocale($lang);
+            if ($price = $entry->formattedPrice()) {
+                $title .= " — {$price}";
+            }
+
+            return array_filter([
+                'id' => "cat_{$entry->id}",
+                // WhatsApp caps list row titles at 24 characters.
+                'title' => mb_substr($title, 0, 24),
+                'description' => $entry->getDescriptionForLocale($lang) ? mb_substr($entry->getDescriptionForLocale($lang), 0, 72) : null,
+            ]);
+        });
+
+        $prompt = config("services_bot.replies.catalogue_prompt.{$lang}")
+            ?? config('services_bot.replies.catalogue_prompt.en');
+
+        $this->post([
+            'messaging_product' => 'whatsapp',
+            'to'                => $to,
+            'type'              => 'interactive',
+            'interactive'       => [
+                'type'   => 'list',
+                'body'   => ['text' => $prompt],
+                'action' => [
+                    'button'   => 'View',
+                    // Same WhatsApp 10-row cap as sendServiceButtons() above.
+                    'sections' => [['title' => 'Menu', 'rows' => $rows->take(10)->all()]],
                 ],
             ],
         ]);

@@ -12,12 +12,14 @@ class Service extends Model
     protected $fillable = [
         'whatsapp_account_id', 'slug', 'label', 'prompt_label', 'color', 'icon',
         'is_active', 'sort_order', 'tool_name', 'tool_description', 'tool_fields',
+        'catalogue_enabled',
     ];
 
     protected $casts = [
         'label' => 'array',
         'tool_fields' => 'array',
         'is_active' => 'boolean',
+        'catalogue_enabled' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -60,8 +62,10 @@ class Service extends Model
                 ->get()
                 ->keyBy('slug')
                 ->map(fn (Service $s) => [
+                    'id' => $s->id,
                     'label' => $s->label,
                     'prompt_label' => $s->prompt_label ?? '',
+                    'catalogue_enabled' => $s->catalogue_enabled,
                     'tool' => [
                         'name' => $s->tool_name ?? '',
                         'description' => $s->tool_description ?? '',

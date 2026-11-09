@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Contracts\MessagingChannel;
 use App\Models\BotAnswerEvent;
+use App\Models\CatalogueEntry;
 use App\Models\ClaudeDailyUsage;
 use App\Models\Conversation;
 use App\Models\Service;
@@ -58,6 +59,16 @@ class HandleIncomingMessage implements ShouldQueue
         'stop', 'unsubscribe', 'stop messages', 'opt out',
         'annulla iscrizione', 'basta', 'fermati',
         'বন্ধ', 'বন্ধ করুন',
+    ];
+
+    // Only checked in IN_SERVICE, and only when the active service has
+    // catalogue_enabled — same deterministic-keyword reasoning as the service-switch
+    // check below: which UI to show is a routing decision, not something to hand to
+    // Claude. en/it/bn.
+    private const CATALOGUE_KEYWORDS = [
+        'menu', 'catalogue', 'catalog', 'view menu', 'show menu', 'price list',
+        'menù', 'catalogo', 'listino',
+        'মেনু', 'তালিকা',
     ];
 
     public int $tries = 3;
@@ -264,6 +275,49 @@ class HandleIncomingMessage implements ShouldQueue
             $convo->update(['step' => 'DONE', 'history' => [], 'claude_message_count' => 0]);
 
             return;
+        }
+
+        // Catalogue browsing, same deterministic-keyword/button-id reasoning as the two
+        // blocks above: never handed to Claude, and never shown unless this service has
+        // catalogue_enabled — a disabled capability must reject even a crafted/forged
+        // "cat_*" id, not just hide the button that would normally send one.
+        if ($convo->step === 'IN_SERVICE') {
+            $service = Service::toConfig($account->id)[$convo->service] ?? null;
+
+            if ($service && ($service['catalogue_enabled'] ?? false)) {
+                if (in_array(mb_strtolower($input), self::CATALOGUE_KEYWORDS, true)) {
+                    $wa->sendCatalogueList($phone, $convo->language ?? 'en', $service['id']);
+
+                    return;
+                }
+
+                if (str_starts_with($input, 'cat_')) {
+                    $entryId = (int) substr($input, 4);
+                    $entry = CatalogueEntry::listForService($account->id, $service['id'])
+                        ->firstWhere('id', $entryId);
+
+                    $lang = $convo->language ?? 'en';
+
+                    if (! $entry) {
+                        $wa->sendText($phone, config("services_bot.replies.catalogue_entry_unavailable.{$lang}")
+                            ?? config('services_bot.replies.catalogue_entry_unavailable.en'));
+
+                        return;
+                    }
+
+                    $text = $entry->getNameForLocale($lang);
+                    if ($price = $entry->formattedPrice()) {
+                        $text .= " — {$price}";
+                    }
+                    if ($description = $entry->getDescriptionForLocale($lang)) {
+                        $text .= "\n{$description}";
+                    }
+
+                    $wa->sendTextWithQuickActions($phone, $text, $lang);
+
+                    return;
+                }
+            }
         }
 
         switch ($convo->step) {
@@ -652,10 +706,20 @@ class HandleIncomingMessage implements ShouldQueue
 
     private function sendWelcome(MessagingChannel $wa, Conversation $convo, string $phone): void
     {
-        if ($welcome = $this->localizedMessage('bot_welcome_message', $convo->language)) {
-            $wa->sendText($phone, $welcome);
-            $this->appendHistory($convo, 'assistant', $welcome);
+        $welcome = $this->localizedMessage('bot_welcome_message', $convo->language);
+        if (! $welcome) {
+            return;
         }
+
+        $service = Service::toConfig($convo->whatsapp_account_id)[$convo->service] ?? null;
+        if ($service && ($service['catalogue_enabled'] ?? false)) {
+            $lang = $convo->language ?? 'en';
+            $welcome .= "\n\n".(config("services_bot.replies.view_catalogue_hint.{$lang}")
+                ?? config('services_bot.replies.view_catalogue_hint.en'));
+        }
+
+        $wa->sendText($phone, $welcome);
+        $this->appendHistory($convo, 'assistant', $welcome);
     }
 
     private function appendHistory(Conversation $convo, string $role, string $content): void

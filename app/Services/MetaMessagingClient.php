@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\MessagingChannel;
+use App\Models\CatalogueEntry;
 use App\Models\Service;
 use App\Models\WhatsAppAccount;
 use Illuminate\Support\Facades\Http;
@@ -117,6 +118,41 @@ abstract class MetaMessagingClient implements MessagingChannel
             'message' => [
                 'text' => $prompt,
                 'quick_replies' => array_slice($replies, 0, 13),
+            ],
+        ]);
+    }
+
+    public function sendCatalogueList(string $to, string $lang, int $serviceId): void
+    {
+        $entries = CatalogueEntry::listForService($this->accountId, $serviceId);
+
+        if ($entries->isEmpty()) {
+            $this->sendText($to, config("services_bot.replies.catalogue_empty.{$lang}")
+                ?? config('services_bot.replies.catalogue_empty.en'));
+
+            return;
+        }
+
+        $replies = $entries->map(function (CatalogueEntry $entry) use ($lang) {
+            $title = $entry->getNameForLocale($lang);
+            if ($price = $entry->formattedPrice()) {
+                $title .= " — {$price}";
+            }
+
+            // Meta caps quick-reply titles at 20 characters.
+            return ['content_type' => 'text', 'title' => mb_substr($title, 0, 20), 'payload' => "cat_{$entry->id}"];
+        });
+
+        $prompt = config("services_bot.replies.catalogue_prompt.{$lang}")
+            ?? config('services_bot.replies.catalogue_prompt.en');
+
+        $this->post([
+            'recipient' => ['id' => $to],
+            'messaging_type' => 'RESPONSE',
+            'message' => [
+                'text' => $prompt,
+                // Same Meta 13-item cap as sendServiceButtons() above.
+                'quick_replies' => $replies->take(13)->all(),
             ],
         ]);
     }

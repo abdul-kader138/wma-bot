@@ -58,7 +58,7 @@ return [
         'human_handover_button' => [
             'en' => '🙋 Talk to us',
             'it' => '🙋 Parla con noi',
-            'bn' => '🙋 মানুষ চাই',
+            'bn' => '🙋 কথা বলুন',
         ],
 
         // One-line hint appended under every IN_SERVICE reply so switching service or

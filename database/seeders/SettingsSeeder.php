@@ -77,6 +77,11 @@ class SettingsSeeder extends Seeder
                 'it' => 'Sei stato disiscritto e non riceverai più messaggi da noi. Scrivici in qualsiasi momento per ricominciare.',
                 'bn' => 'আপনি আনসাবস্ক্রাইব করেছেন এবং আর আমাদের থেকে মেসেজ পাবেন না। পুনরায় শুরু করতে যেকোনো সময় আমাদের মেসেজ করুন।',
             ]), 'type' => 'json', 'label' => 'Opt-out Confirmation Message', 'is_public' => false],
+            ['group' => 'bot', 'key' => 'bot_unsupported_message', 'value' => json_encode([
+                'en' => "Sorry, I can't read that type of message yet. Please describe what you need in text, or type \"human\" to talk to our team.",
+                'it' => 'Spiacenti, non posso ancora leggere questo tipo di messaggio. Descrivi cosa ti serve in un messaggio di testo, oppure scrivi "human" per parlare con il nostro team.',
+                'bn' => 'দুঃখিত, আমি এখনও এই ধরনের মেসেজ পড়তে পারি না। অনুগ্রহ করে টেক্সটে বলুন কী প্রয়োজন, অথবা আমাদের টিমের সাথে কথা বলতে "human" লিখুন।',
+            ]), 'type' => 'json', 'label' => 'Unsupported Message Type Reply', 'is_public' => false],
             ['group' => 'bot', 'key' => 'bot_escalation_after_hours_message', 'value' => json_encode([
                 'en' => "We've let our team know you'd like to speak with a person. We're outside business hours right now, but someone will respond as soon as we're back.",
                 'it' => "Abbiamo avvisato il nostro team che vorresti parlare con una persona. Al momento siamo fuori orario, ma qualcuno ti risponderà appena possibile.",

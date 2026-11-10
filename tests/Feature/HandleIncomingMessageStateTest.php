@@ -198,6 +198,33 @@ class HandleIncomingMessageStateTest extends TestCase
         $this->assertSame('ticket', $convo->service);
     }
 
+    // Regression test for F2: an attachment-only message must never reach Claude as
+    // an empty history turn — it must get a useful acknowledgement instead.
+    public function test_attachment_only_message_gets_acknowledgement_and_skips_the_agent(): void
+    {
+        Setting::set('bot_unsupported_message', ['en' => "Sorry, I can't read that."]);
+
+        $phone = '393000000099';
+        Conversation::create(['whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone, 'step' => 'IN_SERVICE', 'language' => 'en', 'service' => 'ticket', 'history' => []]);
+
+        $agent = $this->createMock(ClaudeAgent::class);
+        $agent->expects($this->never())->method('handle');
+
+        $this->handleMessage([
+            'messages' => [[
+                'id'    => 'img1',
+                'from'  => $phone,
+                'type'  => 'image',
+                'image' => ['id' => 'media-id-1'],
+            ]],
+        ], $agent);
+
+        $this->assertSentText($phone, "Sorry, I can't read that.");
+
+        $convo = Conversation::where('wa_phone', $phone)->first();
+        $this->assertSame([], $convo->history);
+    }
+
     public function test_service_selection_sends_language_specific_welcome_message(): void
     {
         Setting::set('bot_welcome_message', [
@@ -289,5 +316,50 @@ class HandleIncomingMessageStateTest extends TestCase
         $this->handleMessage($this->makeTextValue($phone, 'confirm', 'm8'), $agent);
 
         Notification::assertNothingSent();
+    }
+
+    // Regression test for F3: a tool call missing a required field must never reach
+    // a staff-visible ServiceRequest, even though ClaudeAgent's prompt tells the model
+    // to collect it — that instruction is not a server-side guarantee.
+    public function test_tool_call_missing_a_required_field_is_rejected(): void
+    {
+        $phone = '393000000020';
+        Conversation::create(['whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone, 'step' => 'IN_SERVICE', 'language' => 'en', 'service' => 'ticket', 'history' => []]);
+
+        $agent = $this->createMock(ClaudeAgent::class);
+        $agent->method('handle')->willReturn([
+            'type'  => 'tool',
+            'name'  => 'submit_ticket_request',
+            // full_name is required by the 'ticket' service fixture and missing here.
+            'input' => [],
+        ]);
+
+        $this->handleMessage($this->makeTextValue($phone, 'confirm', 'm20'), $agent);
+
+        $this->assertSame(0, \App\Models\ServiceRequest::count());
+        $this->assertSame('IN_SERVICE', Conversation::where('wa_phone', $phone)->first()->step);
+    }
+
+    // Regression test for F3's other half: a job retried after already creating the
+    // ServiceRequest (but crashing before the conversation was moved to DONE) must not
+    // create a second request for the same inbound message.
+    public function test_retried_job_does_not_duplicate_the_service_request(): void
+    {
+        $phone = '393000000021';
+        Conversation::create(['whatsapp_account_id' => $this->account->id, 'wa_phone' => $phone, 'step' => 'IN_SERVICE', 'language' => 'en', 'service' => 'ticket', 'history' => []]);
+
+        $agent = $this->createMock(ClaudeAgent::class);
+        $agent->method('handle')->willReturn([
+            'type'  => 'tool',
+            'name'  => 'submit_ticket_request',
+            'input' => ['full_name' => 'Retry Customer'],
+        ]);
+
+        // Same inbound message_id both times, as a queue retry of the same job would be.
+        $this->handleMessage($this->makeTextValue($phone, 'confirm', 'm21'), $agent);
+        Conversation::where('wa_phone', $phone)->update(['step' => 'IN_SERVICE']);
+        $this->handleMessage($this->makeTextValue($phone, 'confirm', 'm21'), $agent);
+
+        $this->assertSame(1, \App\Models\ServiceRequest::count());
     }
 }

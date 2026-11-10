@@ -171,6 +171,9 @@ abstract class MetaMessagingClient implements MessagingChannel
             return null;
         }
 
+        $text = $message['text'] ?? null;
+        $replyId = $message['quick_reply']['payload'] ?? $postback['payload'] ?? null;
+
         return [
             // 'phone' holds whatever this platform's external contact identifier is —
             // a Messenger PSID / Instagram IGSID here, not an actual phone number. Named
@@ -178,8 +181,12 @@ abstract class MetaMessagingClient implements MessagingChannel
             // callers already expect; see Conversation.wa_phone for the same tradeoff.
             'message_id' => $message['mid'] ?? $postback['mid'] ?? null,
             'phone' => $event['sender']['id'] ?? null,
-            'text' => $message['text'] ?? null,
-            'reply_id' => $message['quick_reply']['payload'] ?? $postback['payload'] ?? null,
+            'text' => $text,
+            'reply_id' => $replyId,
+            // True for an attachment-only message (image/audio/file/sticker/location, ...)
+            // — lets the caller send a useful acknowledgement instead of feeding an
+            // empty turn to Claude.
+            'unsupported' => $text === null && $replyId === null,
         ];
     }
 

@@ -128,6 +128,7 @@ class MessengerIntegrationTest extends TestCase
             'phone' => 'psid-1',
             'text' => 'hello',
             'reply_id' => null,
+            'unsupported' => false,
         ], $result);
     }
 
@@ -161,6 +162,7 @@ class MessengerIntegrationTest extends TestCase
             'phone' => 'psid-1',
             'text' => null,
             'reply_id' => 'GET_STARTED',
+            'unsupported' => false,
         ], $result);
     }
 

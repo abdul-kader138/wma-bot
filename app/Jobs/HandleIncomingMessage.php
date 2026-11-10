@@ -223,6 +223,19 @@ class HandleIncomingMessage implements ShouldQueue
             return;
         }
 
+        // An attachment-only message (image/audio/document/sticker/location, ...) has
+        // no usable text or reply_id — $input above is just ''. Caught here, before any
+        // of the keyword checks or the state machine below, so it can never turn into an
+        // empty history turn that gets sent to Claude (the Anthropic API rejects an
+        // empty content block) and never silently falls through a menu/step unchanged.
+        if ($msg['unsupported'] ?? false) {
+            if ($message = $this->localizedMessage('bot_unsupported_message', $convo->language)) {
+                $wa->sendText($phone, $message);
+            }
+
+            return;
+        }
+
         // A thumbs tap rates the latest unrated bot_answer_events row for this
         // conversation. Must return immediately without touching history, the
         // claude_message_count budget, or the state machine below.
@@ -236,6 +249,55 @@ class HandleIncomingMessage implements ShouldQueue
             $this->escalateToHuman($convo, $wa, $phone);
 
             return;
+        }
+
+        // Catalogue browsing is checked *before* the reset-keyword block below, not
+        // after: "menu" is both a catalogue-browse keyword and a reset keyword, and
+        // a customer mid-way through a catalogue-enabled service typing "menu" means
+        // "show me the menu", not "wipe my conversation and start over". Only once
+        // catalogue handling declines to act (wrong step, service has no catalogue,
+        // or the input isn't a catalogue keyword/id) does the reset check below get
+        // a chance to run. Same reasoning as the service-switch/close-chat blocks
+        // further down: deterministic keyword match, never handed to Claude. A
+        // disabled capability must reject even a crafted/forged "cat_*" id, not just
+        // hide the button that would normally send one.
+        if ($convo->step === 'IN_SERVICE') {
+            $service = Service::toConfig($account->id)[$convo->service] ?? null;
+
+            if ($service && ($service['catalogue_enabled'] ?? false)) {
+                if (in_array(mb_strtolower($input), self::CATALOGUE_KEYWORDS, true)) {
+                    $wa->sendCatalogueList($phone, $convo->language ?? 'en', $service['id']);
+
+                    return;
+                }
+
+                if (str_starts_with($input, 'cat_')) {
+                    $entryId = (int) substr($input, 4);
+                    $entry = CatalogueEntry::listForService($account->id, $service['id'])
+                        ->firstWhere('id', $entryId);
+
+                    $lang = $convo->language ?? 'en';
+
+                    if (! $entry) {
+                        $wa->sendText($phone, config("services_bot.replies.catalogue_entry_unavailable.{$lang}")
+                            ?? config('services_bot.replies.catalogue_entry_unavailable.en'));
+
+                        return;
+                    }
+
+                    $text = $entry->getNameForLocale($lang);
+                    if ($price = $entry->formattedPrice()) {
+                        $text .= " — {$price}";
+                    }
+                    if ($description = $entry->getDescriptionForLocale($lang)) {
+                        $text .= "\n{$description}";
+                    }
+
+                    $wa->sendTextWithQuickActions($phone, $text, $lang);
+
+                    return;
+                }
+            }
         }
 
         // Reset keywords, covering all supported languages (en/it/bn) so any customer
@@ -275,49 +337,6 @@ class HandleIncomingMessage implements ShouldQueue
             $convo->update(['step' => 'DONE', 'history' => [], 'claude_message_count' => 0]);
 
             return;
-        }
-
-        // Catalogue browsing, same deterministic-keyword/button-id reasoning as the two
-        // blocks above: never handed to Claude, and never shown unless this service has
-        // catalogue_enabled — a disabled capability must reject even a crafted/forged
-        // "cat_*" id, not just hide the button that would normally send one.
-        if ($convo->step === 'IN_SERVICE') {
-            $service = Service::toConfig($account->id)[$convo->service] ?? null;
-
-            if ($service && ($service['catalogue_enabled'] ?? false)) {
-                if (in_array(mb_strtolower($input), self::CATALOGUE_KEYWORDS, true)) {
-                    $wa->sendCatalogueList($phone, $convo->language ?? 'en', $service['id']);
-
-                    return;
-                }
-
-                if (str_starts_with($input, 'cat_')) {
-                    $entryId = (int) substr($input, 4);
-                    $entry = CatalogueEntry::listForService($account->id, $service['id'])
-                        ->firstWhere('id', $entryId);
-
-                    $lang = $convo->language ?? 'en';
-
-                    if (! $entry) {
-                        $wa->sendText($phone, config("services_bot.replies.catalogue_entry_unavailable.{$lang}")
-                            ?? config('services_bot.replies.catalogue_entry_unavailable.en'));
-
-                        return;
-                    }
-
-                    $text = $entry->getNameForLocale($lang);
-                    if ($price = $entry->formattedPrice()) {
-                        $text .= " — {$price}";
-                    }
-                    if ($description = $entry->getDescriptionForLocale($lang)) {
-                        $text .= "\n{$description}";
-                    }
-
-                    $wa->sendTextWithQuickActions($phone, $text, $lang);
-
-                    return;
-                }
-            }
         }
 
         switch ($convo->step) {
@@ -360,7 +379,7 @@ class HandleIncomingMessage implements ShouldQueue
                     break;
                 }
 
-                $this->runAgent($wa, $agent, $convo, $phone, $account);
+                $this->runAgent($wa, $agent, $convo, $phone, $account, $msg['message_id'] ?? null);
                 break;
 
             case 'IN_SERVICE':
@@ -391,7 +410,7 @@ class HandleIncomingMessage implements ShouldQueue
                 }
 
                 $this->appendHistory($convo, 'user', $input);
-                $this->runAgent($wa, $agent, $convo, $phone, $account, $input);
+                $this->runAgent($wa, $agent, $convo, $phone, $account, $msg['message_id'] ?? null, $input);
                 break;
 
             case 'DONE':
@@ -570,12 +589,17 @@ class HandleIncomingMessage implements ShouldQueue
     // IN_SERVICE case, where a bot_answer_events row should be logged. The
     // AWAIT_SERVICE case's first agent call (the initial welcome-into-agent flow)
     // passes no question and logs nothing, since there's no customer question yet.
-    private function runAgent(MessagingChannel $wa, ClaudeAgent $agent, Conversation $convo, string $phone, WhatsAppAccount $account, ?string $question = null): void
+    // $messageId is the inbound webhook message that triggered this call, used only
+    // as the ServiceRequest idempotency key below — never for dedup of this method
+    // itself (that already happens earlier, in handle()).
+    private function runAgent(MessagingChannel $wa, ClaudeAgent $agent, Conversation $convo, string $phone, WhatsAppAccount $account, ?string $messageId, ?string $question = null): void
     {
+        $service = Service::toConfig($convo->whatsapp_account_id)[$convo->service] ?? null;
+
         // The service the customer picked may have been deactivated or deleted since
         // (Service::toConfig() only returns active ones) — recover instead of letting
         // ClaudeAgent crash trying to build a tool/prompt for a service that no longer exists.
-        if (! array_key_exists($convo->service, Service::toConfig($convo->whatsapp_account_id))) {
+        if (! $service) {
             Log::warning('Conversation service is no longer available; returning customer to service selection', [
                 'conversation_id' => $convo->id,
                 'service' => $convo->service,
@@ -598,16 +622,49 @@ class HandleIncomingMessage implements ShouldQueue
         $reply = $agent->handle($convo);
 
         if ($reply['type'] === 'tool') {
-            $serviceRequest = ServiceRequest::create([
-                'whatsapp_account_id' => $convo->whatsapp_account_id,
-                'wa_phone' => $phone,
-                'platform' => $this->platform,
-                'service' => $convo->service,
-                'payload' => $reply['input'],
-                'status' => 'new',
-            ]);
+            $validated = $this->validateToolInput($service, $reply['name'], $reply['input']);
 
-            $this->notifyStaff($serviceRequest);
+            // Claude's own confirm-before-calling instruction (ClaudeAgent::buildSystemPrompt())
+            // is a prompt, not a guarantee — a hallucinated tool name or a required field the
+            // model invented/omitted must never reach a staff-visible ServiceRequest. Treat this
+            // the same as an unresolved customer turn: stay IN_SERVICE and let the next message
+            // continue the same collection flow, rather than silently dropping the conversation.
+            if ($validated === null) {
+                Log::warning('Rejected invalid Claude tool call for service request', [
+                    'conversation_id' => $convo->id,
+                    'service' => $convo->service,
+                    'tool_name' => $reply['name'],
+                ]);
+
+                $lang = $convo->language ?? 'en';
+                if ($message = $this->localizedMessage('bot_fallback_message', $lang)) {
+                    $wa->sendText($phone, $message);
+                }
+
+                return;
+            }
+
+            try {
+                $serviceRequest = ServiceRequest::create([
+                    'whatsapp_account_id' => $convo->whatsapp_account_id,
+                    'source_message_id' => $messageId,
+                    'wa_phone' => $phone,
+                    'platform' => $this->platform,
+                    'service' => $convo->service,
+                    'payload' => $validated,
+                    'status' => 'new',
+                ]);
+
+                $this->notifyStaff($serviceRequest);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // A retried/released job already created this exact request (same
+                // account + inbound message) on an earlier attempt — don't notify
+                // staff twice or submit the customer's details again.
+                Log::info('Duplicate service request submission suppressed by idempotency key', [
+                    'conversation_id' => $convo->id,
+                    'source_message_id' => $messageId,
+                ]);
+            }
 
             $lang = $convo->language ?? 'en';
             $confirmation = config("services_bot.replies.confirmation.{$lang}")
@@ -628,6 +685,46 @@ class HandleIncomingMessage implements ShouldQueue
         }
 
         $wa->sendTextWithQuickActions($phone, $reply['text'], $convo->language ?? 'en');
+    }
+
+    // Re-validates a Claude tool_use block against the active service's own schema
+    // (Service::toConfig()[...]['tool']) before it's allowed to become a staff-visible
+    // ServiceRequest — the system prompt's "confirm before calling" instruction is not
+    // a server-side guarantee. Returns the payload trimmed to only known fields, or
+    // null if the tool name doesn't match or a required field is missing/empty/wrong type.
+    private function validateToolInput(array $service, string $toolName, array $input): ?array
+    {
+        if ($toolName !== $service['tool']['name']) {
+            return null;
+        }
+
+        $validated = [];
+
+        foreach ($service['tool']['fields'] as $name => $field) {
+            $value = $input[$name] ?? null;
+
+            if ($value === null || $value === '') {
+                if (! empty($field['required'])) {
+                    return null;
+                }
+
+                continue;
+            }
+
+            $valid = match ($field['type'] ?? 'string') {
+                'integer' => is_int($value) || (is_string($value) && ctype_digit($value)),
+                'boolean' => is_bool($value),
+                default => is_string($value) || is_numeric($value),
+            };
+
+            if (! $valid) {
+                return null;
+            }
+
+            $validated[$name] = $value;
+        }
+
+        return $validated;
     }
 
     private function logAnswerEvent(

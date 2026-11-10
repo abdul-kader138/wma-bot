@@ -180,10 +180,15 @@ class WhatsAppClient implements MessagingChannel
         }
 
         return [
-            'message_id' => $message['id'] ?? null,
-            'phone'      => $message['from'],
-            'text'       => $text,
-            'reply_id'   => $replyId,
+            'message_id'  => $message['id'] ?? null,
+            'phone'       => $message['from'],
+            'text'        => $text,
+            'reply_id'    => $replyId,
+            // True for anything this parser didn't extract usable text/reply_id from
+            // (image, audio, document, video, sticker, location, contacts, an
+            // interactive reply of an unhandled subtype, ...) — lets the caller send a
+            // useful acknowledgement instead of feeding an empty turn to Claude.
+            'unsupported' => $text === null && $replyId === null,
         ];
     }
 
